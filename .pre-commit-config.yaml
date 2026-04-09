@@ -1,0 +1,42 @@
+repos:
+  # Markdownlint - same as GitHub Actions
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.13.0
+    hooks:
+      - id: markdownlint-cli2
+        name: Lint Markdown files
+        args: ["--config", ".markdownlint.json"]
+        exclude: ^(tmp/|\.git/|ansible-awesome-ai\.md)
+
+  # YAML lint - same as GitHub Actions
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        name: Lint YAML files
+        args: ["-d", "{extends: default, rules: {line-length: {max: 200}, truthy: {check-keys: false}}}"]
+        exclude: ^(tmp/|\.git/|node_modules/)
+
+  # Shellcheck - same as GitHub Actions
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        name: Check shell scripts
+        exclude: ^(tmp/|\.git/|node_modules/)
+
+  # JSON and file formatting
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-json
+        name: Validate JSON files
+      - id: end-of-file-fixer
+        name: Fix end of files
+        exclude: ^(tmp/|\.git/|node_modules/)
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+        exclude: ^(tmp/|\.git/|node_modules/)
+      - id: mixed-line-ending
+        name: Fix mixed line endings
+        exclude: ^(tmp/|\.git/|node_modules/)

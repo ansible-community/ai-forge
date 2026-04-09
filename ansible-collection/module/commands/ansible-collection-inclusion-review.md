@@ -3,7 +3,8 @@ description: Review an Ansible collection for inclusion in the Ansible community
 argument-hint: "<collection-path>"
 ---
 
-Review the Ansible collection at the specified path for inclusion in the Ansible community package. Conduct a systematic checklist-based review following the official Ansible collection requirements and inclusion criteria.
+Review the Ansible collection at the specified path for inclusion in the Ansible community package.
+Conduct a systematic checklist-based review following the official Ansible collection requirements and inclusion criteria.
 
 ## Arguments
 
@@ -50,40 +51,48 @@ Use these sources and verification steps when reviewing checklist items:
 
 ### Specific Verification Steps
 
-**Published on Ansible Galaxy**
+#### Published on Ansible Galaxy
+
 - Construct the Galaxy URL: `https://galaxy.ansible.com/{namespace}/{name}` using values from `galaxy.yml`
 - Verify the URL is reachable and the collection is present
 - Use WebFetch if needed to check accessibility
 
-**Has a public git repository**
+#### Has a public git repository
+
 - Use the `repository` URL from `galaxy.yml`
 - Verify the URL is accessible and points to a valid git repository
 
-**Has README.md**
+#### Has README.md
+
 - Check for the existence of a `README.md` file in the root of the collection directory
 - Verify it contains meaningful content (not just a stub)
 
-**Repository should not contain unnecessary files**
+#### Repository should not contain unnecessary files
+
 - Always report that this item needs manual review
 - Note: This requires human judgment about what constitutes "unnecessary"
 
-**Documentation and return sections use version_added**
+#### Documentation and return sections use version_added
+
 - For each module, parse the `DOCUMENTATION` string
 - Check that `version_added` is present for the module/plugin itself and for its options
 - Exception: options added in the very first release may omit this
 - Verify the version is the collection version, not the `ansible-core` version
 
-**Follows Ansible documentation standards**
+#### Follows Ansible documentation standards
+
 - Review module and plugin documentation against guidelines at the documentation URLs above
 - Check for adherence to best practices
 - Verify that `check_mode` support is specified in the `DOCUMENTATION` block of module files
 
-**Supports all Python versions**
+#### Supports all Python versions
+
 - Check `meta/runtime.yml` for the minimum supported `ansible-core` version
 - Cross-reference with the Python support matrix at the release and maintenance URL
 - If there are exceptions, verify they are documented in the collection's `README.md` and in documentation fragments/requirements module documentation sections
 
-**Follows development conventions**
+#### Follows development conventions
+
 - **Idempotency**: Review module logic to ensure running multiple times with the same parameters results in the same state (often requires manual inspection)
 - **`_info` modules**: Verify modules ending in `_info.py` only gather information and make no changes. Names should correspond to the information gathered (e.g., `user_info`)
 - **`_facts` modules**: Verify modules ending in `_facts.py` return `ansible_facts` and do not return other data
@@ -95,6 +104,7 @@ Use these sources and verification steps when reviewing checklist items:
 Generate a markdown report file with the following structure:
 
 ### Report File Naming
+
 - File name: `<namespace>_<collection_name>_review_report.md`
 - Example: `cisco_ise_review_report.md`
 
@@ -119,24 +129,28 @@ Generate a markdown report file with the following structure:
 Use these three formats for findings:
 
 **MUST FIX** - For requirements violations that block inclusion:
+
 ```markdown
 - [ ] have a Code of Conduct (CoC) compatible with the Ansible Code of Conduct
   **MUST FIX:** The collection repository does not contain a `CODE_OF_CONDUCT.md` file.
 ```
 
 **SHOULD FIX** - For strong recommendations (not blockers but highly recommended):
+
 ```markdown
 - [ ] collection dependencies must have a lower bound on the version
   **SHOULD FIX:** The upper bound for the `ansible.utils` dependency is very restrictive (`<7.0`). Consider removing the upper bound for better future compatibility.
 ```
 
 **NEEDS MANUAL REVIEW** - For items requiring human judgment:
+
 ```markdown
 - [ ] modules satisfy the concept of idempotency
-  **NEEDS MANUAL REVIEW:** Idempotency can only be partially checked automatically. A manual review of the module logic is required to confirm it is fully idempotent.
+  **NEEDS MANUAL REVIEW:** Idempotency can only be partially checked automatically.
+  A manual review of the module logic is required to confirm it is fully idempotent.
 ```
 
-4. **Next Steps**
+1. **Next Steps**
    - If there are MUST FIX items, list them clearly
    - Provide actionable guidance for the collection maintainer
    - Suggest priority order for addressing issues

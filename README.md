@@ -2,13 +2,15 @@
 
 ⚠️ This is a brand new repo, the structure and contents may change frequently as AI Tooling and standards evolve.
 
-⚠️ As with all AI tools, careful human review is needed. 
+⚠️ As with all AI tools, careful human review is needed.
 
 A repository of Lola modules for Ansible automation development following Red Hat Communities of Practice (CoP) automation good practices.
 
 ## What is This?
 
-This repository provides AI assistant skills and commands for developing Ansible content that follows industry best practices. Using the Lola package manager, you can install these modules to any AI coding assistant (Claude Code, Cursor, Gemini CLI, OpenCode, etc.) and get expert guidance for creating, reviewing, and improving Ansible automation.
+This repository provides AI assistant skills and commands for developing Ansible content that follows industry best practices.
+Using the Lola package manager, you can install these modules to any AI coding assistant (Claude Code, Cursor, Gemini CLI, OpenCode, etc.)
+and get expert guidance for creating, reviewing, and improving Ansible automation.
 
 ## Quick Start
 
@@ -43,9 +45,11 @@ lola install ansible-collection-development -a claude-code
 Collection development, review, and scaffolding tools.
 
 **Skills:**
+
 - `ansible-zen` - Zen of Ansible principles and philosophical code review
 
 **Commands:**
+
 - `/ansible-cop-review` - Review code against Red Hat CoP practices
 - `/ansible-scaffold-collection` - Create new collections
 - `/ansible-collection-inclusion-review` - Review collections for community inclusion
@@ -57,6 +61,7 @@ Collection development, review, and scaffolding tools.
 Role scaffolding tools.
 
 **Commands:**
+
 - `/ansible-scaffold-role` - Create new roles with interactive builder
 
 [Full documentation](./ansible-role/README.md)

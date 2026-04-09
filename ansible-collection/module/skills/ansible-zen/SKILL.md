@@ -88,7 +88,7 @@ rather than strict rule enforcement.
    to concrete review checks:
 
    | Principle | What to look for |
-   |---|---|
+   | --- | --- |
    | Ansible is not Python | Jinja2 abuse: complex filters, nested conditionals, inline Python logic in templates |
    | YAML sucks for coding | Overly clever YAML tricks, deep nesting, complex data transformations in vars |
    | Playbooks are not for programming | Control flow abuse: excessive `when` chains, recursive includes, loop-within-loop patterns |

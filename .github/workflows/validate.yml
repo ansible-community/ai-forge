@@ -2,9 +2,9 @@ name: Validate Lola Modules
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   validate-structure:
@@ -178,7 +178,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check for [REPLACE: text outside template/
+      - name: "Check for [REPLACE: text outside template/"
         run: |
           if grep -r '\[REPLACE:' --exclude-dir=template --exclude-dir=.git --exclude-dir=tmp .; then
             echo "❌ Found unreplaced placeholder text outside template/ directory"
