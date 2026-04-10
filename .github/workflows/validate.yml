@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module: [ansible-collection, ansible-role]
+        module: [ansible-collection, ansible-role, ansible-collection-development]
     steps:
       - uses: actions/checkout@v4
 

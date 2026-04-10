@@ -22,14 +22,18 @@ git clone https://github.com/ansible-community/ai-forge.git
 # Install all modules to Claude Code
 lola mod add ./ai-forge/ansible-collection
 lola mod add ./ai-forge/ansible-role
+lola mod add ./ai-forge/ansible-collection-development
 lola install ansible-collection -a claude-code
 lola install ansible-role -a claude-code
+lola install ansible-collection-development -a claude-code
 
 # Or install directly from GitHub
 lola mod add https://github.com/ansible-community/ai-forge/ansible-collection
 lola mod add https://github.com/ansible-community/ai-forge/ansible-role
+lola mod add https://github.com/ansible-community/ai-forge/ansible-collection-development
 lola install ansible-collection -a claude-code
 lola install ansible-role -a claude-code
+lola install ansible-collection-development -a claude-code
 ```
 
 ## Modules
@@ -56,6 +60,18 @@ Role scaffolding tools.
 - `/ansible-scaffold-role` - Create new roles with interactive builder
 
 [Full documentation](./ansible-role/README.md)
+
+### ansible-collection-development
+
+Collection development workflow tools.
+
+**Skills:**
+- `commit` - Conventional commits with FQCN scopes
+- `pr-review` - PR review against Ansible collection standards
+- `release` - Guided collection release process
+- `run-tests` - Run and write tests using ansible-test
+
+[Full documentation](./ansible-collection-development/README.md)
 
 ## What is Lola?
 
