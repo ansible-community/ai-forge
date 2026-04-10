@@ -1,6 +1,10 @@
 ---
 name: pr-review
-description: Reviews pull requests and code changes in an Ansible collection against project standards and the Ansible Collection Review Checklist. Use when asked to review a PR, patch, diff, or set of code changes. Do not use for GitHub Issues or general Q&A.
+description: >-
+  Reviews pull requests and code changes in an Ansible collection
+  against project standards and the Ansible Collection Review
+  Checklist. Use when asked to review a PR, patch, diff, or set
+  of code changes. Do not use for GitHub Issues or general Q&A.
 ---
 
 # Skill: pr-review

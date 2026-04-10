@@ -1,6 +1,13 @@
 ---
 name: release
-description: Guides the release of an Ansible collection following the upstream process (without release branches). Automatically determines the next version from changelog fragments. Outputs step-by-step instructions with commands for changelog generation, release PR, tagging, Galaxy publication, version bump, and GitHub release. Use when asked to release, publish, or tag a new collection version.
+description: >-
+  Guides the release of an Ansible collection following the
+  upstream process (without release branches). Automatically
+  determines the next version from changelog fragments. Outputs
+  step-by-step instructions with commands for changelog generation,
+  release PR, tagging, Galaxy publication, version bump, and GitHub
+  release. Use when asked to release, publish, or tag a new
+  collection version.
 ---
 
 # Skill: release

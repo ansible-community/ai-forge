@@ -1,6 +1,10 @@
 ---
 name: run-tests
-description: Runs and writes tests (sanity, unit, integration) for an Ansible collection using ansible-test. Use when asked to run, check, or write tests for a module or utility. Do not use for PR reviews or questions unrelated to testing.
+description: >-
+  Runs and writes tests (sanity, unit, integration) for an Ansible
+  collection using ansible-test. Use when asked to run, check, or
+  write tests for a module or utility. Do not use for PR reviews
+  or questions unrelated to testing.
 ---
 
 # Skill: run-tests

@@ -1,6 +1,10 @@
 ---
 name: commit
-description: "This skill should be used when the user asks to 'commit', 'create a commit', or 'git commit'. It creates conventional commits with FQCN scopes for Ansible collection content (roles, modules, plugins)."
+description: >-
+  This skill should be used when the user asks to 'commit',
+  'create a commit', or 'git commit'. It creates conventional
+  commits with FQCN scopes for Ansible collection content
+  (roles, modules, plugins).
 ---
 
 You are executing the `commit` skill. Follow these steps precisely.
