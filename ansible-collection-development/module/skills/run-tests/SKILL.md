@@ -80,7 +80,7 @@ Consult the project's testing documentation for available options.
 ## When Tests Are Required
 
 | Change type | Sanity | Unit | Integration |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | New module | yes | yes | yes |
 | New parameter | yes | if logic changed | yes |
 | Bug fix | yes | yes | yes |
