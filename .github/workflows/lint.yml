@@ -41,10 +41,10 @@ jobs:
           mkdir -p /tmp/frontmatter
 
           # Extract frontmatter from all .md files
-          find . -name "*.md" -not -path "./tmp/*" -not -path "./.git/*" | while read file; do
+          find . -name "*.md" -not -path "./tmp/*" -not -path "./.git/*" | while read -r file; do
             if head -1 "$file" | grep -q "^---$"; then
               # Extract frontmatter between --- markers
-              awk '/^---$/{i++}i==1{print;next}i==2{exit}' "$file" > "/tmp/frontmatter/$(basename $file).yml"
+              awk '/^---$/{i++}i==1{print;next}i==2{exit}' "$file" > "/tmp/frontmatter/$(basename "$file").yml"
             fi
           done
 
@@ -76,4 +76,4 @@ jobs:
         with:
           reporter: github-pr-review
           filter_mode: nofilter
-          fail_on_error: true
+          fail_level: error
