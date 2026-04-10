@@ -180,7 +180,7 @@ jobs:
 
       - name: Check for placeholder text outside template/
         run: |
-          if grep -r '\[REPLACE:' --exclude-dir=template --exclude-dir=.git --exclude-dir=tmp .; then
+          if grep -r '\[REPLACE:' --exclude-dir=template --exclude-dir=.git --exclude-dir=tmp --exclude-dir=.github .; then
             echo "❌ Found unreplaced placeholder text outside template/ directory"
             exit 1
           fi
