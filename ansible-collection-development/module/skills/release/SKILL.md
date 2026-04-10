@@ -14,15 +14,19 @@ description: >-
 
 ## Purpose
 
-Guide the release of an Ansible collection. This skill is collection-generic — it derives namespace, name, and current version from `galaxy.yml`, and automatically determines the next version from changelog fragment categories.
+Guide the release of an Ansible collection. This skill is collection-generic —
+it derives namespace, name, and current version from `galaxy.yml`,
+and automatically determines the next version from changelog fragment categories.
 
 ## When to Invoke
 
 TRIGGER when:
+
 - A user asks to release, publish, or tag a new collection version
 - A user asks about the release process or release checklist
 
 DO NOT TRIGGER when:
+
 - Reviewing a PR (use `pr-review` skill instead)
 - Running tests (use `run-tests` skill instead)
 - General changelog or versioning questions unrelated to performing a release
@@ -39,7 +43,9 @@ DO NOT TRIGGER when:
 
 ## Human Confirmation Gates
 
-**Do not proceed past a confirmation gate without explicit human approval.** Present the relevant information and wait for the human to confirm before continuing to the next step. Gates are marked with **CONFIRM** below.
+**Do not proceed past a confirmation gate without explicit human approval.**
+Present the relevant information and wait for the human to confirm
+before continuing to the next step. Gates are marked with **CONFIRM** below.
 
 ## Release Steps
 
@@ -66,11 +72,15 @@ If the user did not provide a target version, determine it automatically:
 | Minor | `minor_changes`, `deprecated_features`                   |
 | Patch | `bugfixes`, `security_fixes`, `known_issues`, `trivial`  |
 
-3. Apply the bump to `CURRENT_VERSION` (e.g. `2.0.0` + minor → `2.1.0`). When bumping major, reset minor and patch to 0. When bumping minor, reset patch to 0.
+1. Apply the bump to `CURRENT_VERSION` (e.g. `2.0.0` + minor -> `2.1.0`).
+   When bumping major, reset minor and patch to 0. When bumping minor, reset patch to 0.
 
 Use the resulting version as `VERSION`.
 
-**CONFIRM:** Present the extracted `NAMESPACE`, `COLLECTION`, `CURRENT_VERSION`, the detected fragment categories, the determined bump type, and the resulting `VERSION` to the human. Ask them to confirm these values are correct before proceeding. The human may override the version at this point.
+**CONFIRM:** Present the extracted `NAMESPACE`, `COLLECTION`, `CURRENT_VERSION`,
+the detected fragment categories, the determined bump type, and the resulting `VERSION`
+to the human. Ask them to confirm these values are correct before proceeding.
+The human may override the version at this point.
 
 ### Step 2 — Pre-flight checks
 
@@ -81,6 +91,7 @@ git pull --rebase upstream main
 ```
 
 Verify before continuing:
+
 - Working tree is clean (no uncommitted changes)
 - Changelog fragments exist: `ls changelogs/fragments/`
 
@@ -172,7 +183,9 @@ gh release create VERSION --title "VERSION" --notes "See [CHANGELOG.rst](https:/
 
 ### Step 11 — Bullhorn release announcement
 
-Generate and present the following announcement text for the user to post in the [Bullhorn newsletter](https://forum.ansible.com/c/news/bullhorn/17) after the user ensures the release has appeared on Ansible Galaxy:
+Generate and present the following announcement text for the user to post
+in the [Bullhorn newsletter](https://forum.ansible.com/c/news/bullhorn/17)
+after the user ensures the release has appeared on Ansible Galaxy:
 
 ```
 The [NAMESPACE.COLLECTION](https://galaxy.ansible.com/ui/repo/published/NAMESPACE/COLLECTION/) collection version [VERSION](https://github.com/ansible-collections/NAMESPACE.COLLECTION/blob/main/CHANGELOG.rst#vVERSION) has been released!
@@ -183,6 +196,7 @@ Replace `NAMESPACE`, `COLLECTION`, and `VERSION` with the actual values. In the 
 ## Output Format
 
 Present each step as a numbered section containing:
+
 1. What the step does (one line)
 2. The exact command(s) to run (with placeholders replaced by actual values)
 3. What to verify before proceeding to the next step

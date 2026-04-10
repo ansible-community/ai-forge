@@ -66,6 +66,7 @@ Role scaffolding tools.
 Collection development workflow tools.
 
 **Skills:**
+
 - `commit` - Conventional commits with FQCN scopes
 - `pr-review` - PR review against Ansible collection standards
 - `release` - Guided collection release process

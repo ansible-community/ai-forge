@@ -27,10 +27,12 @@ If the type is ambiguous, use `AskUserQuestion` to ask:
 ## Step 3: Draft commit message
 
 Follow conventional commits format:
+
 - **Component-specific**: `<type>(<component>): <imperative short description>`
 - **Project-level (no scope)**: `<type>: <imperative short description>`
 
 Rules:
+
 - Subject line ≤ 72 characters
 - Lowercase after the colon and space
 - No trailing period
@@ -39,6 +41,7 @@ Rules:
 - Always append a blank line followed by `Assisted-by: <AI tool/mode and its version>` (from Step 1) at the end of every message
 
 Examples:
+
 ```
 feat: add support for custom agent port to postgresql_info module
 

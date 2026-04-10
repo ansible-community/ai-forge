@@ -16,17 +16,23 @@ Run and write tests for an Ansible collection. Covers sanity, unit, and integrat
 ## When to Invoke
 
 TRIGGER when:
+
 - A user asks to run tests, check tests, or verify changes with tests
 - A user asks how to test a module or utility
 - A user asks to write tests for new or modified code
 
 DO NOT TRIGGER when:
+
 - Reviewing a PR for overall quality (use the `pr-review` skill instead)
 - The question is about module logic unrelated to testing
 
 ## Test Infrastructure
 
-All tests run inside Docker/Podman via `ansible-test --docker`. No local package installation is needed. The collection must be installed at `ansible_collections/<namespace>/<name>/` (relative to a directory on `ANSIBLE_COLLECTIONS_PATHS`) for imports to resolve correctly. Determine the namespace and name from `galaxy.yml`.
+All tests run inside Docker/Podman via `ansible-test --docker`.
+No local package installation is needed.
+The collection must be installed at `ansible_collections/<namespace>/<name>/`
+(relative to a directory on `ANSIBLE_COLLECTIONS_PATHS`) for imports to resolve correctly.
+Determine the namespace and name from `galaxy.yml`.
 
 ---
 
@@ -63,7 +69,11 @@ Integration tests live under `tests/integration/targets/<module_name>/`. Each ta
 
 ### Integration via Makefile
 
-If the project provides a Makefile for integration tests (check `TESTING.md` or `Makefile` in the project root), prefer using it as it handles spinning up required services and configuring the test environment. Consult the project's testing documentation for available options.
+If the project provides a Makefile for integration tests
+(check `TESTING.md` or `Makefile` in the project root),
+prefer using it as it handles spinning up required services
+and configuring the test environment.
+Consult the project's testing documentation for available options.
 
 ---
 
@@ -132,5 +142,6 @@ Every integration test target must follow this sequence:
 ```
 
 Tests must also cover:
+
 - **Idempotency**: run the same task a second time and assert `result is not changed`.
 - **`state: absent`**: where applicable, remove the resource and assert it is gone.

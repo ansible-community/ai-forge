@@ -16,10 +16,12 @@ Review pull requests and code changes in an Ansible collection.
 ## When to Invoke
 
 TRIGGER when:
+
 - A user asks to review a PR, patch, diff, or set of code changes
 - Validating changes against project standards before merge
 
 DO NOT TRIGGER when:
+
 - Reviewing GitHub Issues (not PRs/code changes)
 - General Q&A, documentation lookup, or debugging unrelated to a changeset
 
@@ -33,6 +35,7 @@ DO NOT TRIGGER when:
 ### Step 1 — Gather the changeset
 
 Obtain the diff using the appropriate method:
+
 - PR number provided -> read changed files and their diffs
 - Branch or commit reference -> run `git diff <base>..<ref>` or `git show <ref>`
 - File path provided -> read the file and review it in full
