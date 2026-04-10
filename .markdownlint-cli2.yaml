@@ -4,6 +4,5 @@ ignores:
   - node_modules
   - tmp
   - .git
-  - ansible-awesome-ai.md
 globs:
   - "**/*.md"

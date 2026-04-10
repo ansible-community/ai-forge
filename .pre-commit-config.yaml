@@ -6,7 +6,7 @@ repos:
       - id: markdownlint-cli2
         name: Lint Markdown files
         args: ["--config", ".markdownlint.json"]
-        exclude: ^(tmp/|\.git/|ansible-awesome-ai\.md)
+        exclude: ^(tmp/|\.git/)
 
   # YAML lint - same as GitHub Actions
   - repo: https://github.com/adrienverge/yamllint
