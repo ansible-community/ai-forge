@@ -16,7 +16,7 @@ and get expert guidance for creating, reviewing, and improving Ansible automatio
 
 ```bash
 # Install Lola package manager
-pip install lola-cli
+pip install lola-ai
 
 # Clone the repository
 git clone https://github.com/ansible-community/ai-forge.git
