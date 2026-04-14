@@ -13,6 +13,7 @@ A helper skill that determines upstream repository information using the GitHub 
 ## Purpose
 
 Extract and parse repository metadata to provide:
+
 - GitHub organisation name
 - Repository name
 - Fully qualified repository path (e.g., `ansible-collections/amazon.aws`)
@@ -23,11 +24,13 @@ This skill is designed to be invoked by other skills that need repository contex
 ## When to Invoke
 
 TRIGGER when:
+
 - Another skill needs to determine the upstream repository
 - You need to derive service-specific identifiers (SonarCloud, etc.)
 - You need to work with the canonical upstream (not fork)
 
 DO NOT TRIGGER when:
+
 - The user explicitly provides repository information
 - Working with local-only repositories
 
@@ -42,6 +45,7 @@ gh repo view --json parent,nameWithOwner,name,owner
 ```
 
 **Output example (fork):**
+
 ```json
 {
   "name": "amazon.aws",
@@ -59,6 +63,7 @@ gh repo view --json parent,nameWithOwner,name,owner
 ```
 
 **Output example (not a fork):**
+
 ```json
 {
   "name": "ai-forge",
@@ -73,16 +78,19 @@ gh repo view --json parent,nameWithOwner,name,owner
 ### 2. Determine Upstream
 
 **If `parent` exists (repository is a fork):**
+
 - Upstream organisation: `parent.owner.login`
 - Upstream repository: `parent.name`
 - Upstream full path: `parent.owner.login/parent.name`
 
 **If `parent` is null (not a fork):**
+
 - Upstream organisation: `owner.login`
 - Upstream repository: `name`
 - Upstream full path: `nameWithOwner`
 
 **Implementation:**
+
 ```bash
 REPO_INFO=$(gh repo view --json parent,nameWithOwner,name,owner)
 
@@ -103,22 +111,29 @@ UPSTREAM_PATH="${UPSTREAM_ORG}/${UPSTREAM_REPO}"
 ### 3. Derive Additional Identifiers
 
 **SonarCloud project key:**
+
 Replace `/` with `_` in the upstream path:
+
 ```bash
 SONARCLOUD_KEY="${UPSTREAM_PATH//\//_}"
 ```
+
 Example: `ansible-collections/amazon.aws` → `ansible-collections_amazon.aws`
 
 **GitHub API path:**
+
 ```bash
 GITHUB_API_PATH="repos/${UPSTREAM_PATH}"
 ```
+
 Example: `repos/ansible-collections/amazon.aws`
 
 **GitHub repository URL:**
+
 ```bash
 GITHUB_URL="https://github.com/${UPSTREAM_PATH}"
 ```
+
 Example: `https://github.com/ansible-collections/amazon.aws`
 
 ### 4. Return Information
@@ -157,6 +172,7 @@ CURRENT_PATH=octocat/amazon.aws
 ## Error Handling
 
 ### gh CLI Not Available
+
 ```bash
 if ! command -v gh &> /dev/null; then
     echo "Error: gh CLI is not installed or not in PATH"
@@ -166,6 +182,7 @@ fi
 ```
 
 ### Not a GitHub Repository
+
 ```bash
 if ! gh repo view &> /dev/null; then
     echo "Error: Current directory is not a GitHub repository or gh is not authenticated"
@@ -175,6 +192,7 @@ fi
 ```
 
 ### Authentication Issues
+
 ```bash
 if gh repo view --json parent 2>&1 | grep -q "authentication"; then
     echo "Error: gh CLI is not authenticated"
@@ -186,6 +204,7 @@ fi
 ## Example Usage
 
 ### Example 1: Fork Workflow
+
 ```
 Repository: octocat/amazon.aws (fork of ansible-collections/amazon.aws)
 
@@ -196,6 +215,7 @@ CURRENT_PATH=octocat/amazon.aws
 ```
 
 ### Example 2: Direct Clone (Not a Fork)
+
 ```
 Repository: ansible-community/ai-forge (not a fork)
 
@@ -210,6 +230,7 @@ CURRENT_PATH=ansible-community/ai-forge
 The upstream repository for a project **does not change during a session**. Skills and workflows should cache the result of `get-upstream-info` to avoid redundant API calls.
 
 **Single skill needing upstream info multiple times:**
+
 ```
 # At start of skill execution
 upstream_info = invoke get-upstream-info
@@ -223,6 +244,7 @@ SONARCLOUD_KEY = extract from upstream_info
 ```
 
 **Multiple skills in a workflow:**
+
 ```
 # At start of workflow
 upstream_info = invoke get-upstream-info once
@@ -235,11 +257,13 @@ Store values in session context
 ```
 
 **Benefits:**
+
 - Reduces `gh repo view` API calls (respects rate limiting)
 - Improves performance (fewer subprocess executions)
 - Ensures consistency across workflow
 
 **When to re-invoke:**
+
 - Never within the same session/workflow
 - Only if user explicitly changes to a different repository directory
 
@@ -248,24 +272,28 @@ Store values in session context
 This skill is designed to be referenced by other skills:
 
 **In sonarcloud-analysis skill:**
+
 ```
 Use the `get-upstream-info` skill to determine the SonarCloud project key.
 Cache the result at the start of the skill if used multiple times.
 ```
 
 **In get-pr-number skill:**
+
 ```
 Use the `get-upstream-info` skill to determine the upstream repository for PR lookups.
 Result should be cached if calling skill invokes both get-upstream-info and get-pr-number.
 ```
 
 **In create-pr skill:**
+
 ```
 Use the `get-upstream-info` skill to determine the target repository for the pull request.
 Cache the result for use in PR creation and changelog updates.
 ```
 
 **In release skill:**
+
 ```
 Use the `get-upstream-info` skill to determine the repository for creating GitHub releases.
 ```
@@ -283,6 +311,7 @@ Use the `get-upstream-info` skill to determine the repository for creating GitHu
 ### Dependency
 
 This skill requires:
+
 - `gh` CLI installed and available in PATH
 - GitHub authentication configured (`gh auth login`)
 - Current directory must be a GitHub repository
@@ -290,10 +319,12 @@ This skill requires:
 ### Fork vs Upstream
 
 The skill always returns the **upstream** (canonical) repository:
+
 - For forks: Returns the parent repository
 - For non-forks: Returns the current repository
 
 This matches the common development workflow where:
+
 - Contributors fork repositories
 - PRs target the upstream repository
 - CI/CD runs against the upstream
@@ -301,11 +332,13 @@ This matches the common development workflow where:
 ### Service-Specific Derivations
 
 Currently supports:
+
 - **SonarCloud**: `org_repo` format
 - **GitHub API**: `repos/org/repo` format
 - **GitHub URLs**: `https://github.com/org/repo`
 
 Future extensions could add:
+
 - CircleCI project identifiers
 - Travis CI repository slugs
 - Other CI/CD service identifiers

@@ -13,6 +13,7 @@ A helper skill that determines the pull request number for a Git branch using th
 ## Purpose
 
 Find pull request information for a branch:
+
 - PR number
 - PR status (open, closed, merged)
 - PR URL
@@ -23,11 +24,13 @@ This skill is designed to be invoked by other skills that need PR context.
 ## When to Invoke
 
 TRIGGER when:
+
 - Another skill needs to find the PR for the current branch
 - You need to check if a branch has an associated PR
 - You need PR metadata (number, URL, status)
 
 DO NOT TRIGGER when:
+
 - The user explicitly provides a PR number
 - Working with branches that shouldn't have PRs (main, master, devel, stable branches)
 
@@ -55,15 +58,19 @@ This ensures that when working in a fork, PRs are looked up in the upstream repo
 ### 2. Determine the Branch
 
 **If user provides a branch name:**
+
 Use the provided branch name.
 
 **If no branch specified:**
+
 Get the current branch:
+
 ```bash
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 ```
 
 **Handle special cases:**
+
 - If branch is `HEAD` (detached HEAD state): Report error
 - If branch is `main`, `master`, `devel`, or matches `stable-*`: Warn that these typically don't have PRs
 
@@ -72,6 +79,7 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 Use `gh` to find PRs for the branch in the upstream repository:
 
 **When working in a fork:**
+
 ```bash
 # Extract fork owner from CURRENT_PATH
 FORK_OWNER=$(echo "$CURRENT_PATH" | cut -d/ -f1)
@@ -81,11 +89,13 @@ gh pr list --repo "$UPSTREAM_PATH" --head "$FORK_OWNER:$BRANCH" --json number,st
 ```
 
 **When not a fork:**
+
 ```bash
 gh pr list --repo "$UPSTREAM_PATH" --head "$BRANCH" --json number,state,title,url
 ```
 
 **Output example (PR exists):**
+
 ```json
 [
   {
@@ -98,6 +108,7 @@ gh pr list --repo "$UPSTREAM_PATH" --head "$BRANCH" --json number,state,title,ur
 ```
 
 **Output example (no PR):**
+
 ```json
 []
 ```
@@ -105,6 +116,7 @@ gh pr list --repo "$UPSTREAM_PATH" --head "$BRANCH" --json number,state,title,ur
 ### 4. Process Results
 
 **No PR found:**
+
 ```
 No pull request found for branch: feature/add-caching
 
@@ -115,7 +127,9 @@ Suggestions:
 ```
 
 **Single PR found (most common):**
+
 Extract and return PR information:
+
 ```bash
 PR_NUMBER=$(echo "$RESULT" | jq -r '.[0].number')
 PR_STATE=$(echo "$RESULT" | jq -r '.[0].state')
@@ -124,7 +138,9 @@ PR_URL=$(echo "$RESULT" | jq -r '.[0].url')
 ```
 
 **Multiple PRs found:**
+
 Prefer OPEN PR if available, otherwise use the most recent:
+
 ```bash
 # Try to find an OPEN PR first
 PR_NUMBER=$(echo "$RESULT" | jq -r '.[] | select(.state == "OPEN") | .number' | head -1)
@@ -136,6 +152,7 @@ fi
 ```
 
 Warn the user:
+
 ```
 Warning: Multiple PRs found for branch feature/add-caching
 Using PR #1234 (OPEN)
@@ -172,6 +189,7 @@ PR_FOUND=true
 ```
 
 When no PR is found:
+
 ```
 BRANCH=feature/add-caching
 UPSTREAM_PATH=ansible-collections/amazon.aws
@@ -181,6 +199,7 @@ PR_FOUND=false
 ## Error Handling
 
 ### gh CLI Not Available
+
 ```bash
 if ! command -v gh &> /dev/null; then
     echo "Error: gh CLI is not installed or not in PATH"
@@ -190,6 +209,7 @@ fi
 ```
 
 ### Not a Git Repository
+
 ```bash
 if ! git rev-parse --git-dir &> /dev/null; then
     echo "Error: Current directory is not a Git repository"
@@ -198,6 +218,7 @@ fi
 ```
 
 ### Branch Not Pushed to Remote
+
 ```bash
 if ! git rev-parse --verify "origin/$BRANCH" &> /dev/null 2>&1; then
     echo "Warning: Branch '$BRANCH' does not exist on remote 'origin'"
@@ -206,6 +227,7 @@ fi
 ```
 
 ### Detached HEAD State
+
 ```bash
 if [ "$BRANCH" = "HEAD" ]; then
     echo "Error: Currently in detached HEAD state"
@@ -215,6 +237,7 @@ fi
 ```
 
 ### Protected/Main Branches
+
 ```bash
 if [[ "$BRANCH" =~ ^(main|master|devel)$ ]] || [[ "$BRANCH" =~ ^stable- ]]; then
     echo "Warning: Branch '$BRANCH' is a protected branch that typically doesn't have PRs"
@@ -223,6 +246,7 @@ fi
 ```
 
 ### Authentication Issues
+
 ```bash
 if gh pr list 2>&1 | grep -q "authentication"; then
     echo "Error: gh CLI is not authenticated"
@@ -232,6 +256,7 @@ fi
 ```
 
 ### get-upstream-info Failure
+
 ```bash
 if ! upstream_info=$(invoke get-upstream-info); then
     echo "Error: Failed to determine upstream repository"
@@ -243,6 +268,7 @@ fi
 ## Example Usage
 
 ### Example 1: Fork Workflow with Open PR
+
 ```
 Current repo: octocat/amazon.aws (fork)
 Upstream: ansible-collections/amazon.aws
@@ -263,6 +289,7 @@ PR_FOUND=true
 ```
 
 ### Example 2: Direct Clone (Not a Fork)
+
 ```
 Current repo: ansible-collections/amazon.aws (not a fork)
 Current branch: feature/add-caching
@@ -281,6 +308,7 @@ PR_FOUND=true
 ```
 
 ### Example 3: Branch Without PR
+
 ```
 Current branch: local-experiment
 
@@ -290,6 +318,7 @@ Suggestion: Create a PR with 'gh pr create --repo ansible-collections/amazon.aws
 ```
 
 ### Example 4: Protected Branch (Warning)
+
 ```
 Current branch: main
 Warning: Branch 'main' is a protected branch that typically doesn't have PRs
@@ -303,23 +332,27 @@ PR_FOUND=false
 This skill is designed to be referenced by other skills:
 
 **In sonarcloud-analysis skill:**
+
 ```
 Use the `get-pr-number` skill to determine if the current work has an associated PR.
 If PR_FOUND is true, use PR_NUMBER to fetch PR-specific SonarCloud issues.
 ```
 
 **In pr-review skill:**
+
 ```
 Use the `get-pr-number` skill to find the PR to review.
 Use PR_NUMBER to fetch PR metadata, files changed, and comments.
 ```
 
 **In changelog skill (update mode):**
+
 ```
 Use the `get-pr-number` skill to determine which PR number to add to changelog fragments.
 ```
 
 **In create-pr skill:**
+
 ```
 Use the `get-pr-number` skill to check if a PR already exists for the current branch.
 If PR_FOUND is true, warn the user before creating a duplicate.
@@ -330,6 +363,7 @@ If PR_FOUND is true, warn the user before creating a duplicate.
 ### Fork-Qualified Branch Names
 
 When working in a fork, PRs in the upstream repository are identified by `owner:branch` format:
+
 - Your fork: `octocat/amazon.aws` on branch `feature/add-caching`
 - Upstream PR: `ansible-collections/amazon.aws` PR with head `octocat:feature/add-caching`
 
@@ -338,6 +372,7 @@ The skill handles this automatically by using `get-upstream-info` to detect fork
 ### Protected Branch Names
 
 The following branches are considered protected and typically don't have PRs:
+
 - `main` - Primary development branch (GitHub default)
 - `master` - Primary development branch (Git default)
 - `devel` - Development branch (common in Ansible projects)
@@ -352,6 +387,7 @@ The following branches are considered protected and typically don't have PRs:
 ### Multiple PRs per Branch
 
 Whilst rare, it's possible to have multiple PRs for the same branch:
+
 - An old closed PR
 - A new open PR after reopening work
 
@@ -360,6 +396,7 @@ The skill handles this by preferring OPEN PRs.
 ### Why Use --repo Parameter
 
 Without `--repo`, `gh pr list` looks for PRs in the current repository:
+
 - In a fork: Would find PRs targeting the fork (rarely what you want)
 - In upstream: Would work, but inconsistent behaviour
 
