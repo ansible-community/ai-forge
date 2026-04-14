@@ -26,7 +26,12 @@ Module provides skills for Ansible collection development workflows: conventiona
 - **sonarcloud-analysis skill**: Use the `sonarcloud-analysis` skill to fetch and analyse SonarCloud issues and technical debt for Ansible collections.
   Invoke when asked to check, review, or analyse SonarCloud results, code smells, security hotspots, or static analysis findings.
 
+- **next-release skill**: Use the `next-release` skill to calculate next patch/minor/major release versions following SemVer.
+  Invoke when asked what version to use for version_added tags or about next release versions.
+
 ### Utility Skills
+
+- **current-release skill**: Helper skill that fetches the current release version from git tags/branches or galaxy.yml. Used internally by other skills.
 
 - **get-pr-number skill**: Helper skill that determines the pull request number for a branch. Used internally by other skills.
 

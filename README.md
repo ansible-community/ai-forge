@@ -83,6 +83,8 @@ Full lifecycle: commits, PRs, releases, tests.
 - `release` - Guided collection release process
 - `run-tests` - Run and write tests using ansible-test
 - `sonarcloud-analysis` - Analyse SonarCloud issues and technical debt
+- `next-release` - Calculate next patch/minor/major versions for version_added tags
+- `current-release` - Fetch current release version (helper)
 - `get-upstream-info` - Determine upstream repository info (helper)
 - `get-pr-number` - Find PR number for branch (helper)
 

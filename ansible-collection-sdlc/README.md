@@ -38,9 +38,11 @@ lola install ansible-collection-sdlc -a opencode
 - **release** - Guide collection releases with automatic version detection from changelog fragments
 - **run-tests** - Run and write sanity, unit, and integration tests using ansible-test
 - **sonarcloud-analysis** - Fetch and analyse SonarCloud issues for projects or pull requests
+- **next-release** - Calculate next patch/minor/major release versions for version_added tags following SemVer
 
 #### Helper Skills
 
+- **current-release** - Fetch current release version from git tags/branches or galaxy.yml (used by other skills)
 - **get-upstream-info** - Determine upstream repository information and service identifiers (used by other skills)
 - **get-pr-number** - Determine pull request number for a branch (used by other skills)
 
