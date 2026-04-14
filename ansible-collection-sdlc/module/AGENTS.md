@@ -19,13 +19,23 @@ Module provides skills for Ansible collection development workflows: conventiona
 
 - **run-tests skill**: Use the `run-tests` skill to run or write sanity, unit, and integration tests using `ansible-test`. Invoke when asked to run, check, or write tests for a module or utility.
 
+- **sonarcloud-analysis skill**: Use the `sonarcloud-analysis` skill to fetch and analyse SonarCloud issues and technical debt for Ansible collections.
+  Invoke when asked to check, review, or analyse SonarCloud results, code smells, security hotspots, or static analysis findings.
+
+### Utility Skills
+
+- **get-pr-number skill**: Helper skill that determines the pull request number for a branch. Used internally by other skills.
+
+- **get-upstream-info skill**: Helper skill that determines upstream repository information and service identifiers (GitHub/GitLab). Used internally by other skills.
+
 ## Configuration
 
 **Optional Dependencies:**
 
 - `antsibull-changelog` - Used by the release skill for changelog generation
-- `gh` CLI - Used by the release skill for creating GitHub releases and PRs
+- `gh` CLI - Used by the release skill for creating GitHub releases and PRs, and by the sonarcloud-analysis skill for PR detection
 - `ansible-test` - Used by the run-tests skill
+- `curl` - Used by the sonarcloud-analysis skill for fetching static analysis results
 
 **Required Context:**
 
