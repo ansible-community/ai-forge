@@ -35,6 +35,12 @@ lola install ansible-collection-sdlc -a opencode
 - **pr-review** - Review PRs against project standards and the Ansible Collection Review Checklist
 - **release** - Guide collection releases with automatic version detection from changelog fragments
 - **run-tests** - Run and write sanity, unit, and integration tests using ansible-test
+- **sonarcloud-analysis** - Fetch and analyse SonarCloud issues for projects or pull requests
+
+#### Helper Skills
+
+- **get-upstream-info** - Determine upstream repository information and service identifiers (used by other skills)
+- **get-pr-number** - Determine pull request number for a branch (used by other skills)
 
 ### Commands
 
@@ -66,8 +72,9 @@ ansible-collection-sdlc/
 ## Dependencies
 
 - **antsibull-changelog** (optional) - Used by the release skill for changelog generation
-- **gh CLI** (optional) - Used by the release skill for creating GitHub releases and PRs
+- **gh CLI** (optional) - Used by the release skill for creating GitHub releases and PRs, and by the sonarcloud-analysis skill for PR detection
 - **ansible-test** - Used by the run-tests skill for running sanity, unit, and integration tests
+- **curl** (optional) - Used by the sonarcloud-analysis skill for fetching static analysis results
 
 ## License
 

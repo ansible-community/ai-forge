@@ -81,6 +81,9 @@ Full lifecycle: commits, PRs, releases, tests.
 - `pr-review` - PR review against Ansible collection standards
 - `release` - Guided collection release process
 - `run-tests` - Run and write tests using ansible-test
+- `sonarcloud-analysis` - Analyse SonarCloud issues and technical debt
+- `get-upstream-info` - Determine upstream repository info (helper)
+- `get-pr-number` - Find PR number for branch (helper)
 
 [Full documentation](./ansible-collection-sdlc/README.md)
 
