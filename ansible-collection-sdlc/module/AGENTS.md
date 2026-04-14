@@ -1,12 +1,16 @@
 # Ansible Collection Development
 
-Module provides skills for Ansible collection development workflows: conventional commits, PR review, releases, and testing.
+Module provides skills for Ansible collection development workflows: conventional commits, changelog fragments, PR review, releases, and testing.
 
 ## When to Use
 
 - **commit skill**: Use the `commit` skill when you want to create a conventional commit
   with FQCN scopes for Ansible collection content.
   Invoke when the user asks to "commit", "create a commit", or "git commit".
+
+- **changelog-fragment skill**: Use the `changelog-fragment` skill to create or update changelog fragments for documenting changes.
+  Supports automatic change analysis and PR URL updates.
+  Invoke when asked to create a changelog fragment, add a fragment, or update fragments with PR URLs.
 
 - **pr-review skill**: Use the `pr-review` skill to review pull requests and code changes
   against project standards and the Ansible Collection Review Checklist.
@@ -46,5 +50,6 @@ Module provides skills for Ansible collection development workflows: conventiona
 
 - All skills follow Ansible collection conventions and best practices
 - The commit skill uses Conventional Commits 1.0.0 standard
+- The changelog-fragment skill supports two modes: creating new fragments and updating existing fragments with PR URLs
 - The release skill includes human confirmation gates at critical steps
 - The pr-review skill produces structured reports with blockers/warnings/suggestions and a verdict

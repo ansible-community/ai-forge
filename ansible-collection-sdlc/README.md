@@ -1,7 +1,8 @@
 # Ansible Collection SDLC Module
 
-A Lola module for the full software development lifecycle of Ansible collections: conventional commits, PR reviews, releases, and testing.
-Streamlines day-to-day development workflows from code commit to production release.
+A Lola module for the full software development lifecycle of Ansible collections: conventional commits, changelog
+fragments, PR reviews, releases, and testing.  Streamlines day-to-day development workflows from code commit to
+production release.
 
 ## Installation
 
@@ -32,6 +33,7 @@ lola install ansible-collection-sdlc -a opencode
 ### Skills
 
 - **commit** - Create conventional commits with FQCN scopes for Ansible collection content
+- **changelog-fragment** - Create or update changelog fragments for documenting changes with automatic change analysis
 - **pr-review** - Review PRs against project standards and the Ansible Collection Review Checklist
 - **release** - Guide collection releases with automatic version detection from changelog fragments
 - **run-tests** - Run and write sanity, unit, and integration tests using ansible-test
