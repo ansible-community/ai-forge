@@ -1,5 +1,6 @@
 ---
 description: Check SonarCloud analysis results for the current pull request
+argument-hint: "[pr-number]"
 ---
 
 Check the SonarCloud static analysis results for the current pull request.

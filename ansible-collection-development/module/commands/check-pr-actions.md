@@ -1,5 +1,6 @@
 ---
 description: Check GitHub Actions/GitLab CI status and analyze failures
+argument-hint: "[pr-number]"
 ---
 
 Check the status of GitHub Actions/GitLab CI for the current pull request or branch.
