@@ -48,12 +48,13 @@ lola install ansible-collection-sdlc -a opencode
 
 - **current-release** - Fetch current release version from git tags/branches or galaxy.yml (used by other skills)
 - **get-branch-changes** - Determine merge-base and changed files for current branch, avoiding unrelated changes when behind target (used by other skills)
+- **get-pr-action-results** - Get GitHub Actions/GitLab CI results for PRs and branches, analyze failures, and suggest fixes (used by other skills)
 - **get-pr-number** - Determine pull request number for a branch (used by other skills)
 - **get-upstream-info** - Determine upstream repository information and service identifiers (used by other skills)
 
 ### Commands
 
-None currently defined.
+- **/check-pr-actions** - Check GitHub Actions/GitLab CI status and analyze failures
 
 ### Agents
 

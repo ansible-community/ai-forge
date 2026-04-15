@@ -90,6 +90,7 @@ Full lifecycle: commits, PRs, releases, tests.
 - `next-release` - Calculate next patch/minor/major versions for version_added tags
 - `current-release` - Fetch current release version (helper)
 - `get-branch-changes` - Determine merge-base and changed files (helper)
+- `get-pr-action-results` - Get GitHub Actions/GitLab CI results and analyze failures (helper)
 - `get-pr-number` - Find PR number for branch (helper)
 - `get-upstream-info` - Determine upstream repository info (helper)
 

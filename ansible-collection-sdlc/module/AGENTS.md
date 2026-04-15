@@ -1,8 +1,16 @@
 # Ansible Collection Development
 
-Module provides skills for Ansible collection development workflows including commits, PRs, releases, and testing.
+Module provides skills and commands for Ansible collection development workflows including commits, PRs, releases, and testing.
 
 ## When to Use
+
+### Commands
+
+- **/check-pr-actions command**: Use the `/check-pr-actions` command to check GitHub Actions or GitLab CI status for the current pull request or branch.
+  Analyzes failures by examining logs, identifying patterns across matrix tests, and suggesting specific fixes.
+  Invoke when asked to check PR status, CI status, "why is the PR failing?", or to troubleshoot GitHub Actions/GitLab CI failures.
+
+### Skills
 
 - **commit skill**: Use the `commit` skill when you want to create a conventional commit
   with FQCN scopes for Ansible collection content.
@@ -51,6 +59,9 @@ Module provides skills for Ansible collection development workflows including co
 
 - **get-branch-changes skill**: Helper skill that determines merge-base and changed files for the current branch, avoiding inclusion of unrelated changes when branch is behind target.
   Used internally by changelog-fragment and create-pr skills.
+
+- **get-pr-action-results skill**: Helper skill that gets GitHub Actions/GitLab CI results for a pull request or branch, analyzes failures, and suggests fixes.
+  Used internally by check-pr-actions command and other workflows.
 
 - **get-pr-number skill**: Helper skill that determines the pull request number for a branch. Used internally by other skills.
 
