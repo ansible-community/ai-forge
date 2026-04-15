@@ -55,6 +55,7 @@ lola install ansible-collection-sdlc -a opencode
 ### Commands
 
 - **/check-pr-actions** - Check GitHub Actions/GitLab CI status and analyze failures
+- **/check-pr-sonarcloud** - Check SonarCloud analysis results for the current pull request
 
 ### Agents
 

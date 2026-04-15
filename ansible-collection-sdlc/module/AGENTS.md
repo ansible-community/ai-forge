@@ -10,6 +10,10 @@ Module provides skills and commands for Ansible collection development workflows
   Analyzes failures by examining logs, identifying patterns across matrix tests, and suggesting specific fixes.
   Invoke when asked to check PR status, CI status, "why is the PR failing?", or to troubleshoot GitHub Actions/GitLab CI failures.
 
+- **/check-pr-sonarcloud command**: Use the `/check-pr-sonarcloud` command to check SonarCloud static analysis results for the current pull request.
+  Uses get-pr-number to detect the PR and sonarcloud-analysis to fetch and analyze PR-specific issues.
+  Invoke when asked to check SonarCloud for the PR, review static analysis results, or see what code quality issues affect the current PR.
+
 ### Skills
 
 - **commit skill**: Use the `commit` skill when you want to create a conventional commit
