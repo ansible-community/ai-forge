@@ -79,14 +79,16 @@ Full lifecycle: commits, PRs, releases, tests.
 
 - `commit` - Conventional commits with FQCN scopes
 - `changelog-fragment` - Create and update changelog fragments
+- `create-pr` - Create draft PRs with pre-flight checks and validation
 - `pr-review` - PR review against Ansible collection standards
 - `release` - Guided collection release process
 - `run-tests` - Run and write tests using ansible-test
 - `sonarcloud-analysis` - Analyse SonarCloud issues and technical debt
 - `next-release` - Calculate next patch/minor/major versions for version_added tags
 - `current-release` - Fetch current release version (helper)
-- `get-upstream-info` - Determine upstream repository info (helper)
+- `get-branch-changes` - Determine merge-base and changed files (helper)
 - `get-pr-number` - Find PR number for branch (helper)
+- `get-upstream-info` - Determine upstream repository info (helper)
 
 [Full documentation](./ansible-collection-sdlc/README.md)
 

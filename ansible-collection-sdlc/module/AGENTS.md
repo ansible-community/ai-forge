@@ -1,6 +1,6 @@
 # Ansible Collection Development
 
-Module provides skills for Ansible collection development workflows: conventional commits, changelog fragments, PR review, releases, and testing.
+Module provides skills for Ansible collection development workflows including commits, PRs, releases, and testing.
 
 ## When to Use
 
@@ -11,6 +11,10 @@ Module provides skills for Ansible collection development workflows: conventiona
 - **changelog-fragment skill**: Use the `changelog-fragment` skill to create or update changelog fragments for documenting changes.
   Supports automatic change analysis and PR URL updates.
   Invoke when asked to create a changelog fragment, add a fragment, or update fragments with PR URLs.
+
+- **create-pr skill**: Use the `create-pr` skill to create a draft pull request with pre-flight checks, changelog validation, and automated formatting.
+  Performs branch validation, checks for changelog fragments, optionally runs tests, analyzes changes to suggest PR details, and updates fragments with PR number.
+  Invoke when asked to "create a PR", "make a pull request", or "open a PR".
 
 - **pr-review skill**: Use the `pr-review` skill to review pull requests and code changes
   against project standards and the Ansible Collection Review Checklist.
@@ -33,6 +37,9 @@ Module provides skills for Ansible collection development workflows: conventiona
 
 - **current-release skill**: Helper skill that fetches the current release version from git tags/branches or galaxy.yml. Used internally by other skills.
 
+- **get-branch-changes skill**: Helper skill that determines merge-base and changed files for the current branch, avoiding inclusion of unrelated changes when branch is behind target.
+  Used internally by changelog-fragment and create-pr skills.
+
 - **get-pr-number skill**: Helper skill that determines the pull request number for a branch. Used internally by other skills.
 
 - **get-upstream-info skill**: Helper skill that determines upstream repository information and service identifiers (GitHub/GitLab). Used internally by other skills.
@@ -41,10 +48,10 @@ Module provides skills for Ansible collection development workflows: conventiona
 
 **Optional Dependencies:**
 
-- `antsibull-changelog` - Used by the release skill for changelog generation
-- `gh` CLI - Used by the release skill for creating GitHub releases and PRs, and by the sonarcloud-analysis skill for PR detection
-- `ansible-test` - Used by the run-tests skill
-- `curl` - Used by the sonarcloud-analysis skill for fetching static analysis results
+- `antsibull-changelog` - Used for changelog generation
+- `gh` CLI - Used for GitHub/GitLab operations (PRs, releases, upstream detection)
+- `ansible-test` - Used for running sanity, unit, and integration tests
+- `curl` - Used for fetching SonarCloud analysis results
 
 **Required Context:**
 

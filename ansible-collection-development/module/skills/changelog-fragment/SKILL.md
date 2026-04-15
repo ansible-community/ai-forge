@@ -55,19 +55,14 @@ grep -E '^(namespace|name):' galaxy.yml 2>/dev/null
 
 Automatically analyze what has changed to suggest fragment content.
 
-First, determine the merge base (common ancestor) with the main branch:
+**Use `get-branch-changes` helper skill** to determine:
 
-```bash
-MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD main)
-```
+- Target branch (origin/main, origin/stable-X, etc.)
+- Merge-base commit
+- Changed files since merge-base
+- Commits in branch
 
-Then analyze changes since that point:
-
-```bash
-git status
-git diff $MERGE_BASE...HEAD --name-only
-git log $MERGE_BASE..HEAD --oneline
-```
+This ensures we only analyze changes in the current branch, avoiding unrelated changes when branch is behind target.
 
 Based on this analysis, suggest:
 
@@ -180,14 +175,13 @@ List all fragment files that are part of current changes.
 
 First, determine the merge base with the main branch:
 
-```bash
-MERGE_BASE=$(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD main)
-```
+**Use `get-branch-changes` helper skill** to get the merge-base and changed files for this branch.
 
-Then find changelog fragments changed since that point:
+Then filter for changelog fragments:
 
 ```bash
-git diff $MERGE_BASE...HEAD --name-only | grep 'changelogs/fragments/' | grep -E '\.(yml|yaml)$'
+# Filter changed files for changelog fragments only
+grep 'changelogs/fragments/' | grep -E '\.(yml|yaml)$'
 ```
 
 ### Step 4 — Check and update each fragment
@@ -225,6 +219,7 @@ Report which fragments were updated.
 
 ## Integration with Other Skills
 
+- **get-branch-changes**: Used to determine merge-base and changed files for fragment analysis
 - **get-upstream-info**: Used to determine repository context and construct PR URLs
 - **get-pr-number**: Used to auto-detect PR numbers in update-pr-url mode
 - **commit skill**: May create commits that need changelog fragments

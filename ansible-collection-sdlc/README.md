@@ -34,6 +34,7 @@ lola install ansible-collection-sdlc -a opencode
 
 - **commit** - Create conventional commits with FQCN scopes for Ansible collection content
 - **changelog-fragment** - Create or update changelog fragments for documenting changes with automatic change analysis
+- **create-pr** - Create draft pull requests with pre-flight checks, changelog validation, and automated formatting
 - **pr-review** - Review PRs against project standards and the Ansible Collection Review Checklist
 - **release** - Guide collection releases with automatic version detection from changelog fragments
 - **run-tests** - Run and write sanity, unit, and integration tests using ansible-test
@@ -43,8 +44,9 @@ lola install ansible-collection-sdlc -a opencode
 #### Helper Skills
 
 - **current-release** - Fetch current release version from git tags/branches or galaxy.yml (used by other skills)
-- **get-upstream-info** - Determine upstream repository information and service identifiers (used by other skills)
+- **get-branch-changes** - Determine merge-base and changed files for current branch, avoiding unrelated changes when behind target (used by other skills)
 - **get-pr-number** - Determine pull request number for a branch (used by other skills)
+- **get-upstream-info** - Determine upstream repository information and service identifiers (used by other skills)
 
 ### Commands
 
@@ -75,10 +77,10 @@ ansible-collection-sdlc/
 
 ## Dependencies
 
-- **antsibull-changelog** (optional) - Used by the release skill for changelog generation
-- **gh CLI** (optional) - Used by the release skill for creating GitHub releases and PRs, and by the sonarcloud-analysis skill for PR detection
-- **ansible-test** - Used by the run-tests skill for running sanity, unit, and integration tests
-- **curl** (optional) - Used by the sonarcloud-analysis skill for fetching static analysis results
+- **antsibull-changelog** (optional) - Used for changelog generation
+- **gh CLI** (optional) - Used for GitHub/GitLab operations (PRs, releases, upstream detection)
+- **ansible-test** - Used for running sanity, unit, and integration tests
+- **curl** (optional) - Used for fetching SonarCloud analysis results
 
 ## License
 
