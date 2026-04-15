@@ -37,6 +37,7 @@ lola install ansible-collection-sdlc -a opencode
 - **create-pr** - Create draft pull requests with pre-flight checks, changelog validation, and automated formatting
 - **pr-review** - Review PRs against project standards and the Ansible Collection Review Checklist
 - **release** - Guide collection releases with automatic version detection from changelog fragments
+- **remove-deprecations** - Find and remediate overdue deprecation warnings with guided removal workflow
 - **run-tests** - Run and write sanity, unit, and integration tests using ansible-test
 - **sonarcloud-analysis** - Fetch and analyse SonarCloud issues for projects or pull requests
 - **next-release** - Calculate next patch/minor/major release versions for version_added tags following SemVer

@@ -82,6 +82,7 @@ Full lifecycle: commits, PRs, releases, tests.
 - `create-pr` - Create draft PRs with pre-flight checks and validation
 - `pr-review` - PR review against Ansible collection standards
 - `release` - Guided collection release process
+- `remove-deprecations` - Find and remove overdue deprecations
 - `run-tests` - Run and write tests using ansible-test
 - `sonarcloud-analysis` - Analyse SonarCloud issues and technical debt
 - `next-release` - Calculate next patch/minor/major versions for version_added tags

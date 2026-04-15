@@ -20,6 +20,10 @@ Module provides skills for Ansible collection development workflows including co
   against project standards and the Ansible Collection Review Checklist.
   Invoke when asked to review a PR, patch, diff, or set of code changes.
 
+- **remove-deprecations skill**: Use the `remove-deprecations` skill to find and remediate overdue deprecation warnings.
+  Identifies deprecated code past removal date/version, categorizes by priority, and guides implementation of removal changes.
+  Invoke when preparing for releases, cleaning up technical debt, or when asked to remove deprecations.
+
 - **release skill**: Use the `release` skill to guide the release of an Ansible collection.
   Automatically determines the next version from changelog fragments
   and outputs step-by-step instructions.
