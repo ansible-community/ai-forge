@@ -77,8 +77,9 @@ Full lifecycle: commits, PRs, releases, tests.
 
 **Skills:**
 
-- `commit` - Conventional commits with FQCN scopes
 - `changelog-fragment` - Create and update changelog fragments
+- `commit` - Conventional commits with FQCN scopes
+- `create-branch` - Create feature branches following conventions
 - `create-pr` - Create draft PRs with pre-flight checks and validation
 - `pr-review` - PR review against Ansible collection standards
 - `release` - Guided collection release process

@@ -32,8 +32,9 @@ lola install ansible-collection-sdlc -a opencode
 
 ### Skills
 
-- **commit** - Create conventional commits with FQCN scopes for Ansible collection content
 - **changelog-fragment** - Create or update changelog fragments for documenting changes with automatic change analysis
+- **commit** - Create conventional commits with FQCN scopes for Ansible collection content
+- **create-branch** - Create feature branches following project conventions with proper fork workflow setup
 - **create-pr** - Create draft pull requests with pre-flight checks, changelog validation, and automated formatting
 - **pr-review** - Review PRs against project standards and the Ansible Collection Review Checklist
 - **release** - Guide collection releases with automatic version detection from changelog fragments

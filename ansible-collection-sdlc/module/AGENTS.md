@@ -12,6 +12,10 @@ Module provides skills for Ansible collection development workflows including co
   Supports automatic change analysis and PR URL updates.
   Invoke when asked to create a changelog fragment, add a fragment, or update fragments with PR URLs.
 
+- **create-branch skill**: Use the `create-branch` skill to create a new feature branch following project conventions.
+  Fetches latest from origin, bases branch off origin/main, and unsets upstream for fork workflows.
+  Invoke when asked to create a branch, start new work, or "create a branch for...".
+
 - **create-pr skill**: Use the `create-pr` skill to create a draft pull request with pre-flight checks, changelog validation, and automated formatting.
   Performs branch validation, checks for changelog fragments, optionally runs tests, analyzes changes to suggest PR details, and updates fragments with PR number.
   Invoke when asked to "create a PR", "make a pull request", or "open a PR".
