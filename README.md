@@ -22,27 +22,32 @@ pip install lola-ai
 git clone https://github.com/ansible-community/ai-forge.git
 
 # Install all modules to Claude Code
-lola mod add ./ai-forge/ansible-collection
+lola mod add ./ai-forge/ansible-collection-standards
 lola mod add ./ai-forge/ansible-role
-lola mod add ./ai-forge/ansible-collection-development
-lola install ansible-collection -a claude-code
+lola mod add ./ai-forge/ansible-collection-sdlc
+lola install ansible-collection-standards -a claude-code
 lola install ansible-role -a claude-code
-lola install ansible-collection-development -a claude-code
+lola install ansible-collection-sdlc -a claude-code
 
 # Or install directly from GitHub
-lola mod add https://github.com/ansible-community/ai-forge/ansible-collection
+lola mod add https://github.com/ansible-community/ai-forge/ansible-collection-standards
 lola mod add https://github.com/ansible-community/ai-forge/ansible-role
-lola mod add https://github.com/ansible-community/ai-forge/ansible-collection-development
-lola install ansible-collection -a claude-code
+lola mod add https://github.com/ansible-community/ai-forge/ansible-collection-sdlc
+lola install ansible-collection-standards -a claude-code
 lola install ansible-role -a claude-code
-lola install ansible-collection-development -a claude-code
+lola install ansible-collection-sdlc -a claude-code
+
+# Or install globally (available in all projects)
+lola install ansible-collection-standards -a claude-code ~
+lola install ansible-role -a claude-code ~
+lola install ansible-collection-sdlc -a claude-code ~
 ```
 
 ## Modules
 
-### ansible-collection
+### ansible-collection-standards
 
-Collection development, review, and scaffolding tools.
+Standards and guidelines compliance, scaffolding.
 
 **Skills:**
 
@@ -52,9 +57,9 @@ Collection development, review, and scaffolding tools.
 
 - `/ansible-cop-review` - Review code against Red Hat CoP practices
 - `/ansible-scaffold-collection` - Create new collections
-- `/ansible-collection-inclusion-review` - Review collections for community inclusion
+- `/ansible-collection-standards-inclusion-review` - Review collections for community inclusion
 
-[Full documentation](./ansible-collection/README.md)
+[Full documentation](./ansible-collection-standards/README.md)
 
 ### ansible-role
 
@@ -66,9 +71,9 @@ Role scaffolding tools.
 
 [Full documentation](./ansible-role/README.md)
 
-### ansible-collection-development
+### ansible-collection-sdlc
 
-Collection development workflow tools.
+Full lifecycle: commits, PRs, releases, tests.
 
 **Skills:**
 
@@ -77,7 +82,7 @@ Collection development workflow tools.
 - `release` - Guided collection release process
 - `run-tests` - Run and write tests using ansible-test
 
-[Full documentation](./ansible-collection-development/README.md)
+[Full documentation](./ansible-collection-sdlc/README.md)
 
 ## What is Lola?
 
@@ -85,14 +90,13 @@ Lola is a universal AI package manager that allows you to write skills and comma
 
 ## Contributing
 
-We welcome contributions from the community. This project follows the [Red Hat Communities of Practice contributing guidelines](https://redhat-cop.github.io/contrib/).
+We welcome contributions from the community. See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed instructions on:
 
-### Adding New Skills or Commands
+- Setting up pre-commit hooks and linting
+- Adding new skills or commands
+- Making skills available via Lola
 
-1. Fork the repository
-2. Add your skill/command to the appropriate module following the Lola structure
-3. Update the module's README.md and AGENTS.md
-4. Open a pull request
+This project follows the [Red Hat Communities of Practice contributing guidelines](https://redhat-cop.github.io/contrib/).
 
 ### Reporting Issues
 

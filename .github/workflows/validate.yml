@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module: [ansible-collection, ansible-role, ansible-collection-development]
+        module: [ansible-collection-standards, ansible-role, ansible-collection-sdlc]
     steps:
       - uses: actions/checkout@v4
 
@@ -194,7 +194,7 @@ jobs:
 
       - name: Check zen-of-ansible.txt exists
         run: |
-          if [ ! -f "ansible-collection/module/skills/ansible-zen/zen-of-ansible.txt" ]; then
+          if [ ! -f "ansible-collection-standards/module/skills/ansible-zen/zen-of-ansible.txt" ]; then
             echo "❌ zen-of-ansible.txt missing"
             exit 1
           fi

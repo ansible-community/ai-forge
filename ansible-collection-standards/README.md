@@ -1,6 +1,7 @@
-# Ansible Collection Module
+# Ansible Collection Standards Module
 
-A Lola module providing skills and commands for Ansible collection development, review, and scaffolding following Red Hat Communities of Practice (CoP) automation good practices.
+A Lola module for standards and guidelines compliance, scaffolding, and code review against Red Hat Communities of Practice (CoP) automation good practices.
+Provides tools to ensure your Ansible collections meet community standards and inclusion criteria.
 
 ## Installation
 
@@ -9,21 +10,21 @@ A Lola module providing skills and commands for Ansible collection development, 
 pip install lola-cli
 
 # Register the module from GitHub
-lola mod add https://github.com/ansible-community/ai-forge/ansible-collection
+lola mod add https://github.com/ansible-community/ai-forge/ansible-collection-standards
 
 # Or clone and register locally
 git clone https://github.com/ansible-community/ai-forge.git
-lola mod add ./ai-forge/ansible-collection
+lola mod add ./ai-forge/ansible-collection-standards
 
 # Install to Claude Code
-lola install ansible-collection -a claude-code
+lola install ansible-collection-standards -a claude-code
 
 # Install to Cursor
-lola install ansible-collection -a cursor
+lola install ansible-collection-standards -a cursor
 
 # Install to other assistants
-lola install ansible-collection -a gemini-cli
-lola install ansible-collection -a opencode
+lola install ansible-collection-standards -a gemini-cli
+lola install ansible-collection-standards -a opencode
 ```
 
 ## Components
@@ -36,7 +37,7 @@ lola install ansible-collection -a opencode
 
 - **ansible-cop-review** - Review Ansible code against Red Hat CoP automation good practices with severity classification, diff-aware mode, and auto-fix capabilities
 - **ansible-scaffold-collection** - Scaffold a new Ansible content collection with plugin generation, CI/CD pipelines, and full CoP compliance
-- **ansible-collection-inclusion-review** - Review an Ansible collection for inclusion in the Ansible community package
+- **ansible-collection-standards-inclusion-review** - Review an Ansible collection for inclusion in the Ansible community package
 
 ### Agents
 
@@ -51,7 +52,7 @@ None currently defined.
 This module follows the Lola module structure:
 
 ```
-ansible-collection/
+ansible-collection-standards/
 ├── README.md           # This file
 └── module/             # Lola-importable content
     ├── AGENTS.md       # Module-level instructions

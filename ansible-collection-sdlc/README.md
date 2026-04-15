@@ -1,6 +1,7 @@
-# Ansible Collection Development Module
+# Ansible Collection SDLC Module
 
-A Lola module providing skills for Ansible collection development workflows: conventional commits, PR review, releases, and testing.
+A Lola module for the full software development lifecycle of Ansible collections: conventional commits, PR reviews, releases, and testing.
+Streamlines day-to-day development workflows from code commit to production release.
 
 ## Installation
 
@@ -9,21 +10,21 @@ A Lola module providing skills for Ansible collection development workflows: con
 pip install lola-cli
 
 # Register the module from GitHub
-lola mod add https://github.com/ansible-community/ai-forge/ansible-collection-development
+lola mod add https://github.com/ansible-community/ai-forge/ansible-collection-sdlc
 
 # Or clone and register locally
 git clone https://github.com/ansible-community/ai-forge.git
-lola mod add ./ai-forge/ansible-collection-development
+lola mod add ./ai-forge/ansible-collection-sdlc
 
 # Install to Claude Code
-lola install ansible-collection-development -a claude-code
+lola install ansible-collection-sdlc -a claude-code
 
 # Install to Cursor
-lola install ansible-collection-development -a cursor
+lola install ansible-collection-sdlc -a cursor
 
 # Install to other assistants
-lola install ansible-collection-development -a gemini-cli
-lola install ansible-collection-development -a opencode
+lola install ansible-collection-sdlc -a gemini-cli
+lola install ansible-collection-sdlc -a opencode
 ```
 
 ## Components
@@ -52,7 +53,7 @@ None currently defined.
 This module follows the Lola module structure:
 
 ```
-ansible-collection-development/
+ansible-collection-sdlc/
 ├── README.md           # This file
 └── module/             # Lola-importable content
     ├── AGENTS.md       # Module-level instructions
