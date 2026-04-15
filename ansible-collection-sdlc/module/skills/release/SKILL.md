@@ -33,13 +33,14 @@ DO NOT TRIGGER when:
 
 ## Inputs
 
-- `version` (optional): the target release version, e.g. `2.1.0`. If not provided, the version is automatically determined from changelog fragments (see Step 1).
+- `version` (optional): the target release version, e.g. `2.1.0`. If not provided, the version is automatically determined from changelog fragments (see Step 2).
 
 ## Prerequisites
 
 - `antsibull-changelog` installed (`pip install antsibull-changelog`)
 - `gh` CLI installed and authenticated
 - Push access to the upstream remote
+- Git remote named `upstream` configured to point to the canonical repository
 
 ## Human Confirmation Gates
 
@@ -49,7 +50,19 @@ before continuing to the next step. Gates are marked with **CONFIRM** below.
 
 ## Release Steps
 
-### Step 1 — Read collection context and determine version
+### Step 1 — Determine repository information
+
+Use the `get-upstream-info` helper skill to determine the upstream repository.
+
+This returns:
+
+- `UPSTREAM_ORG`: GitHub organisation (e.g., `ansible-collections`)
+- `UPSTREAM_REPO`: Repository name (e.g., `amazon.aws`)
+- `UPSTREAM_PATH`: Full path (e.g., `ansible-collections/amazon.aws`)
+
+Cache these values for use in subsequent steps.
+
+### Step 2 — Read collection context and determine version
 
 Extract collection identity from `galaxy.yml`:
 
@@ -82,7 +95,7 @@ the detected fragment categories, the determined bump type, and the resulting `V
 to the human. Ask them to confirm these values are correct before proceeding.
 The human may override the version at this point.
 
-### Step 2 — Pre-flight checks
+### Step 3 — Pre-flight checks
 
 ```bash
 git status
@@ -95,7 +108,7 @@ Verify before continuing:
 - Working tree is clean (no uncommitted changes)
 - Changelog fragments exist: `ls changelogs/fragments/`
 
-### Step 3 — Update galaxy.yml version
+### Step 4 — Update galaxy.yml version
 
 If `CURRENT_VERSION` in `galaxy.yml` does not match `VERSION`, update it:
 
@@ -103,13 +116,13 @@ If `CURRENT_VERSION` in `galaxy.yml` does not match `VERSION`, update it:
 sed -i "s/^version: .*/version: VERSION/" galaxy.yml
 ```
 
-### Step 4 — Create release branch
+### Step 5 — Create release branch
 
 ```bash
 git checkout -b release_VERSION
 ```
 
-### Step 5 — Generate changelog
+### Step 6 — Generate changelog
 
 Determine the release type from `VERSION` and suggest a release summary using this template:
 
@@ -141,7 +154,7 @@ antsibull-changelog release --reload-plugins
 
 **CONFIRM:** Show the human the generated `CHANGELOG.rst` diff and ask them to confirm the content is correct before continuing.
 
-### Step 6 — Commit and push release branch
+### Step 7 — Commit and push release branch
 
 ```bash
 git add -A
@@ -149,15 +162,15 @@ git commit -m "Release VERSION"
 git push origin release_VERSION
 ```
 
-### Step 7 — Create pull request
+### Step 8 — Create pull request
 
 ```bash
-gh pr create --title "Release VERSION" --body "Release VERSION of NAMESPACE.COLLECTION."
+gh pr create --repo UPSTREAM_PATH --title "Release VERSION" --body "Release VERSION of NAMESPACE.COLLECTION."
 ```
 
 **CONFIRM:** Wait for the human to confirm that CI has passed and the PR has been reviewed and merged before continuing.
 
-### Step 8 — Update local main
+### Step 9 — Update local main
 
 After the PR is merged:
 
@@ -166,7 +179,7 @@ git checkout main
 git pull --rebase upstream main
 ```
 
-### Step 9 — Tag and push
+### Step 10 — Tag and push
 
 **CONFIRM:** Ask the human to confirm before creating and pushing the tag. This action is irreversible.
 
@@ -175,23 +188,23 @@ git tag -a VERSION -m "NAMESPACE.COLLECTION: VERSION"
 git push upstream VERSION
 ```
 
-### Step 10 — Create GitHub release
+### Step 11 — Create GitHub release
 
 ```bash
-gh release create VERSION --title "VERSION" --notes "See [CHANGELOG.rst](https://github.com/NAMESPACE/COLLECTION/blob/main/CHANGELOG.rst) for details."
+gh release create VERSION --repo UPSTREAM_PATH --title "VERSION" --notes "See [CHANGELOG.rst](https://github.com/UPSTREAM_PATH/blob/main/CHANGELOG.rst) for details."
 ```
 
-### Step 11 — Bullhorn release announcement
+### Step 12 — Bullhorn release announcement
 
 Generate and present the following announcement text for the user to post
 in the [Bullhorn newsletter](https://forum.ansible.com/c/news/bullhorn/17)
 after the user ensures the release has appeared on Ansible Galaxy:
 
 ```
-The [NAMESPACE.COLLECTION](https://galaxy.ansible.com/ui/repo/published/NAMESPACE/COLLECTION/) collection version [VERSION](https://github.com/ansible-collections/NAMESPACE.COLLECTION/blob/main/CHANGELOG.rst#vVERSION) has been released!
+The [NAMESPACE.COLLECTION](https://galaxy.ansible.com/ui/repo/published/NAMESPACE/COLLECTION/) collection version [VERSION](https://github.com/UPSTREAM_PATH/blob/main/CHANGELOG.rst#vVERSION) has been released!
 ```
 
-Replace `NAMESPACE`, `COLLECTION`, and `VERSION` with the actual values. In the anchor fragment (`#vVERSION`), replace dots with hyphens (e.g. `#v2-1-0` for version `2.1.0`).
+Replace `NAMESPACE`, `COLLECTION`, `VERSION`, and `UPSTREAM_PATH` with the actual values. In the anchor fragment (`#vVERSION`), replace dots with hyphens (e.g. `#v2-1-0` for version `2.1.0`).
 
 ## Output Format
 
@@ -200,3 +213,9 @@ Present each step as a numbered section containing:
 1. What the step does (one line)
 2. The exact command(s) to run (with placeholders replaced by actual values)
 3. What to verify before proceeding to the next step
+
+## Integration with Other Skills
+
+- **get-upstream-info**: Used in Step 1 to determine upstream repository path for gh CLI commands (`gh pr create`, `gh release create`)
+- **current-release**: Not currently used; release skill reads galaxy.yml directly to get namespace, name, and version together
+- **next-release**: Not used; release skill has unique logic to scan changelog fragments and determine bump type for actual releases (next-release is for version_added tags)
