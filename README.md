@@ -81,6 +81,7 @@ Full lifecycle: commits, PRs, releases, tests.
 - `commit` - Conventional commits with FQCN scopes
 - `create-branch` - Create feature branches following conventions
 - `create-pr` - Create draft PRs with pre-flight checks and validation
+- `implement-sonarcloud-fixes` - Implement fixes for SonarCloud issues
 - `pr-review` - PR review against Ansible collection standards
 - `release` - Guided collection release process
 - `remove-deprecations` - Find and remove overdue deprecations

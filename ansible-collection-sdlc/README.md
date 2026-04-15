@@ -36,6 +36,7 @@ lola install ansible-collection-sdlc -a opencode
 - **commit** - Create conventional commits with FQCN scopes for Ansible collection content
 - **create-branch** - Create feature branches following project conventions with proper fork workflow setup
 - **create-pr** - Create draft pull requests with pre-flight checks, changelog validation, and automated formatting
+- **implement-sonarcloud-fixes** - Implement fixes for SonarCloud issues with testing and PR creation
 - **pr-review** - Review PRs against project standards and the Ansible Collection Review Checklist
 - **release** - Guide collection releases with automatic version detection from changelog fragments
 - **remove-deprecations** - Find and remediate overdue deprecation warnings with guided removal workflow

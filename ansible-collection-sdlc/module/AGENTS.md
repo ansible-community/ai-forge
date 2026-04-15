@@ -20,6 +20,10 @@ Module provides skills for Ansible collection development workflows including co
   Performs branch validation, checks for changelog fragments, optionally runs tests, analyzes changes to suggest PR details, and updates fragments with PR number.
   Invoke when asked to "create a PR", "make a pull request", or "open a PR".
 
+- **implement-sonarcloud-fixes skill**: Use the `implement-sonarcloud-fixes` skill to implement fixes for SonarCloud issues.
+  Takes analysis results from sonarcloud-analysis skill and implements suggested fixes with testing and PR creation.
+  Invoke when asked to fix, implement, or address SonarCloud issues after analysis has been done.
+
 - **pr-review skill**: Use the `pr-review` skill to review pull requests and code changes
   against project standards and the Ansible Collection Review Checklist.
   Invoke when asked to review a PR, patch, diff, or set of code changes.
