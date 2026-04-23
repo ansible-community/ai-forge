@@ -131,21 +131,20 @@ When stable branch major < current major (and no rebase warning), check if curre
 Current version: A.0.0 (IN DEVELOPMENT on main - MAJOR RELEASE)
 Stable branch version: X.Y.Z (stable-X)
 
-Next versions available:
-- Next patch on stable-X: X.Y.(Z+1)
-- Next minor on stable-X: X.(Y+1).0
-- Next major on main: A.0.0
-
-→ Bugfixes (backportable as patch): Use version_added: "X.Y.(Z+1)"
+For minor changes that will be backported:
+→ Bugfixes: Use version_added: "X.Y.(Z+1)"
    Merge to main first, then backport to stable-X for release as X.Y.(Z+1)
 
-→ New features (backportable as minor): Use version_added: "X.(Y+1).0"
+→ New features: Use version_added: "X.(Y+1).0"
    Merge to main first, then backport to stable-X for release as X.(Y+1).0
 
-→ Breaking changes: Use version_added: "A.0.0" (allowed in major releases)
+→ Breaking changes: Use version_added: "A.0.0"
    Cannot be backported - merge to main for release as A.0.0
 
 Workflow: Merge to main → Backport to stable-X → Release from stable-X
+
+The version_added tag should reflect where the feature will actually be released
+(the backport version), not the main branch version.
 ```
 
 **If current is A.B.C where B>0 or C>0 (INCONSISTENCY)**:
@@ -271,7 +270,7 @@ Most PRs should be based on the latest code. Confirm your intent before proceedi
 
 ### Example 2: Major release with stable branch (Case 2a - backport scenario)
 
-User: "I'm adding a new parameter, can this be backported to stable-9?"
+User: "I'm adding a new parameter, what version should I use?"
 
 current-release returns: `10.0.0` (IN DEVELOPMENT, from galaxy.yml: 10.0.0-dev0 on main)
 Stable branch: stable-9 at 9.2.0
@@ -282,22 +281,17 @@ Response:
 Current version: 10.0.0 (IN DEVELOPMENT on main - MAJOR RELEASE)
 Stable branch version: 9.2.0 (stable-9)
 
-Next versions available:
-- Next patch on stable-9: 9.2.1
-- Next minor on stable-9: 9.3.0
-- Next major on main: 10.0.0
-
-→ Bugfixes (backportable as patch): Use version_added: "9.2.1"
+For minor changes that will be backported:
+→ Bugfixes: Use version_added: "9.2.1"
    Merge to main first, then backport to stable-9 for release as 9.2.1
 
-→ New features (backportable as minor): Use version_added: "9.3.0"
+→ New features: Use version_added: "9.3.0"
    Merge to main first, then backport to stable-9 for release as 9.3.0
 
-→ Breaking changes: Use version_added: "10.0.0" (allowed in major releases)
+→ Breaking changes: Use version_added: "10.0.0"
    Cannot be backported - merge to main for release as 10.0.0
 
-For your new parameter (a feature), use version_added: "9.3.0" if you plan to backport it,
-or "10.0.0" if it should only be in the major release.
+For your new parameter (a minor feature), use version_added: "9.3.0".
 
 Workflow: Merge to main → Backport to stable-9 → Release from stable-9
 ```
