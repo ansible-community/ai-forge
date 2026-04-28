@@ -47,12 +47,42 @@ None currently defined.
 
 ## Scope
 
-This module is for **public, community-facing** cloud automation skills. Examples include:
+This module is for **public, community-facing** cloud automation skills.
 
-- Cloud resource provisioning helpers
-- Infrastructure-as-code validation
+### What is a Cloud Collection?
+
+A **Cloud Collection** provides modules and plugins for managing cloud-based services via APIs.
+This includes infrastructure services (compute, storage, networking), platform services (databases, AI/ML, secrets management, messaging), and more.
+
+Examples: `amazon.aws`, `amazon.ai`, `community.aws`, `azure.azcollection`, `google.cloud`, `hashicorp.vault`, `openstack.cloud`
+
+### What Makes Cloud Collections Different
+
+Cloud collections share common development patterns:
+
+- **Connection**: Standard Python using REST APIs or provider SDKs
+- **State handling**: CRUD operations with eventual consistency and async provisioning
+- **Authentication**: API keys, service accounts, IAM roles, environment variables
+- **Idempotency**: Check resource existence via API before acting
+
+### Planned Skills
+
+| Skill | Description |
+|-------|-------------|
+| `cloud-module-scaffold` | Generate cloud module boilerplate with proper SDK integration, pagination handling, and waiter patterns |
+| `cloud-inventory-plugin` | Scaffold dynamic inventory plugins for cloud providers with proper caching and filtering |
+| `cloud-auth-patterns` | Guide for implementing credential chain patterns (env vars → config files → instance metadata) |
+| `cloud-async-operations` | Patterns for handling long-running operations (polling, waiters, callbacks) |
+| `cloud-pagination` | Implement pagination for list operations with configurable page sizes |
+| `cloud-integration-tests` | Generate integration test structure using cloud provider test accounts |
+
+### Example Use Cases
+
+- Provisioning cloud resources with proper wait conditions
+- Multi-cloud abstraction modules
 - Cloud provider API interaction patterns
-- Multi-cloud workflow development aids
+- Infrastructure-as-code validation
+- Cost optimization helpers
 
 Internal or business-specific cloud skills should be contributed to the private repository.
 
