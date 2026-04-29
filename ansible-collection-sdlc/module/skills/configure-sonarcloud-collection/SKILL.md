@@ -165,7 +165,7 @@ after the minimal Sonar workflow merges (matches common staged rollout).
 
 Add either:
 
-- A **README** section covering SonarCloud, coverage expectation (~80% codebase target where policy applies), and fork secret behavior, or
+- A **README** section covering SonarCloud, coverage expectation (~90% codebase target where policy applies), and fork secret behavior, or
 - A dedicated **`sonarcloud.md`** (or similar) linked from the README.
 
 ### 7. Validate locally (optional but recommended)
@@ -174,7 +174,7 @@ See [reference.md](reference.md) for SonarScanner CLI install, `SONAR_TOKEN`, an
 
 ## Quality expectations
 
-Where org policy applies, collections should **aim for ~80%** coverage across the codebase; Sonar setup makes coverage visible—raising coverage is separate work.
+Where org policy applies, collections should **aim for ~90%** coverage across the codebase; Sonar setup makes coverage visible—raising coverage is separate work.
 
 ## Integration with other skills
 

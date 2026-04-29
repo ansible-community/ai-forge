@@ -57,8 +57,7 @@ Concrete file-level examples appear in public collection PRs (e.g. amazon.aws So
 
 ## Security references (forks, secrets, trusted CI)
 
-Use these alongside the **Security** section in [SKILL.md](SKILL.md). Prefer **public** sources here;
-your employer or upstream may also maintain **internal** runbooks—use those when available.
+Use these alongside the **Security** section in [SKILL.md](SKILL.md). Prefer **public** sources here; upstream may also maintain **internal** runbooks—use those when available.
 
 - [Using secrets in GitHub Actions](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions)
 - [Approving workflow runs from forks](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/approving-workflow-runs-from-public-forks)
