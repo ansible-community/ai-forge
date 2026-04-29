@@ -54,3 +54,19 @@ This matches workflows where unit jobs historically only produced HTML coverage 
 ## Example community reference
 
 Concrete file-level examples appear in public collection PRs (e.g. amazon.aws SonarCloud onboarding). Use them as templates; adapt paths and Python versions to each collection.
+
+## Security references (forks, secrets, trusted CI)
+
+Use these alongside the **Security** section in [SKILL.md](SKILL.md). Prefer **public** sources here;
+your employer or upstream may also maintain **internal** runbooks—use those when available.
+
+- [Using secrets in GitHub Actions](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions)
+- [Approving workflow runs from forks](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/approving-workflow-runs-from-public-forks)
+- [`workflow_run` event](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_run)
+- [SonarQube Cloud — CI-based analysis](https://docs.sonarsource.com/sonarqube-cloud/analyzing-source-code/ci-based-analysis)
+
+## Assistant / skill usage
+
+Skills and coding assistants must **not** write real tokens into repositories or conversations. Prefer
+human-reviewed workflow YAML, org-provided secret names, and the patterns above—especially when fork
+PRs must receive Sonar results with coverage.

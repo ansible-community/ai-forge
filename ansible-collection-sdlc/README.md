@@ -34,7 +34,9 @@ lola install ansible-collection-sdlc -a opencode
 
 - **changelog-fragment** - Create or update changelog fragments for documenting changes with automatic change analysis
 - **commit** - Create conventional commits with FQCN scopes for Ansible collection content
-- **configure-sonarcloud-collection** - Add SonarCloud configuration: sonar-project.properties, CI workflow, coverage.xml, and contributor documentation
+- **configure-sonarcloud-collection** - Add SonarCloud configuration: `sonar-project.properties`, CI
+  workflow, coverage.xml, contributor docs, and assistant-safe fork/secret guidance (see skill Security
+  section)
 - **create-branch** - Create feature branches following project conventions with proper fork workflow setup
 - **create-pr** - Create draft pull requests with pre-flight checks, changelog validation, and automated formatting
 - **implement-sonarcloud-fixes** - Implement fixes for SonarCloud issues with testing and PR creation

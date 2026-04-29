@@ -3,8 +3,9 @@ name: configure-sonarcloud-collection
 description: >-
   Adds SonarCloud (SonarQube Cloud) static analysis to an Ansible collection repo:
   sonar-project.properties, GitHub Actions scanner workflow, XML coverage for Sonar,
-  and contributor-facing docs. Use when onboarding SonarCloud, wiring CI secrets,
-  producing coverage.xml, or mirroring ansible-collections setups like amazon.aws.
+  and contributor-facing docs; includes fork/secret and assistant-safe patterns (see Security section).
+  Use when onboarding SonarCloud, wiring CI secrets, producing coverage.xml, or mirroring
+  ansible-collections setups like amazon.aws.
 ---
 
 # Configure SonarCloud for an Ansible Collection
@@ -56,6 +57,46 @@ GitHub **does not** expose secrets to workflows triggered by pull requests **fro
 - Alternatively, accept that fork PRs skip Sonar until merge.
 
 Document this in the workflow comments or contributor docs.
+
+## Security (assistants, CI, and secrets)
+
+GitHub **does not expose secrets** to workflows triggered from **forked** pull requests the same way
+as for PRs from branches on the same repository. Treat fork PR runs as **less trusted** when designing
+jobs that need `SONAR_TOKEN` or other org secrets. See GitHub’s documentation on
+[using secrets in GitHub Actions](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions)
+and on [forks and permissions](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/approving-workflow-runs-from-public-forks).
+
+Workflow files changed in a PR often run with **default-branch** definitions until merged; review
+workflow edits carefully because the next **trusted** run on the default branch can execute new
+steps with access to secrets.
+
+When **fork PRs** must still get SonarCloud results **with coverage**, a common pattern is: (1) a
+workflow triggered by the PR runs tests and **uploads coverage (and PR metadata) as artifacts**
+without using the Sonar token in that job; (2) a **separate** workflow runs in a trusted context,
+**downloads** those artifacts, and runs the official **SonarSource** scanner with secrets. That
+follow-up job often uses GitHub’s
+[`workflow_run` event](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_run).
+
+Your **GitHub and SonarCloud administrators** may document a concrete layout (job names, permissions,
+variable names) in **internal** repos or handbooks; follow that guidance rather than inventing
+org-specific wiring from this skill alone.
+
+When this skill is applied by an assistant (Claude, Cursor, or similar):
+
+- **Never** commit, generate, or paste real **Sonar tokens** or other credentials into repo files, PR
+  bodies, commits, or transcripts. Workflows must reference existing GitHub **Actions secrets** only
+  (e.g. `${{ secrets.… }}`). If your org uses a **Variable** to hold the secret *name*, use the
+  indirection pattern your admins document (for example `secrets[format('{0}', vars.SOME_NAME)]`)
+  **without** embedding secret values.
+- **Human-review** every `.github/workflows/` change before merge; mistaken or malicious steps can
+  exfiltrate secrets the next time a **trusted** job runs on the default branch.
+- Prefer the **artifact + follow-up workflow** pattern when policy requires **fork PR** scanning **with**
+  coverage while keeping org tokens out of untrusted fork contexts.
+- **Do not** add `echo`, upload, or debug steps that print secret values; keep Sonar steps to official
+  **SonarSource** actions and SonarCloud endpoints your org already approves.
+- **Provisioning** (SonarCloud project, keys, which secret or variable names to use) stays with **org
+  admins** and your internal support channels; assistants must not invent production keys or create org
+  tokens on their own.
 
 ## Workflow for the agent
 
@@ -151,4 +192,5 @@ Where org policy applies, collections should **aim for ~80%** coverage across th
 - [ ] coverage.xml produced at repo root before Sonar step (or staged follow-up PR)
 - [ ] Test workflow updated if needed for XML coverage
 - [ ] README or sonarcloud.md explains Sonar + coverage for contributors
+- [ ] No literal Sonar tokens in commits; workflows use secrets/vars only; fork/trust model documented
 ```
