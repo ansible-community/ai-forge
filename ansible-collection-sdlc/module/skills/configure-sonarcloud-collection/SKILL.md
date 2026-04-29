@@ -9,7 +9,8 @@ description: >-
 
 # Configure SonarCloud for an Ansible Collection
 
-Guide repository changes so SonarCloud can analyze Python/plugins/tests and display coverage. Complements `sonarcloud-analysis` (read findings) and `implement-sonarcloud-fixes` (fix findings)—run those **after** the project exists on SonarCloud and CI uploads analysis.
+Guide repository changes so SonarCloud can analyze Python/plugins/tests and display coverage.
+Complements `sonarcloud-analysis` (read findings) and `implement-sonarcloud-fixes` (fix findings)—run those **after** the project exists on SonarCloud and CI uploads analysis.
 
 ## Purpose
 
@@ -39,18 +40,20 @@ DO NOT TRIGGER when:
 Before CI can succeed end-to-end:
 
 1. **SonarCloud project** exists and is linked to the GitHub repo (Analyze new project → pick repo). Project key on SonarCloud **must match** `sonar.projectKey` in `sonar-project.properties`.
-2. **Org-level secret** available to workflows: for `ansible-collections`, GitHub Actions use  
-   `SONAR_TOKEN: ${{ secrets.ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT }}`  
-   (Fork PRs do not receive org/repo secrets—see below.)
+2. **Org-level secret** available to workflows: for `ansible-collections`, GitHub Actions use
+   `SONAR_TOKEN: ${{ secrets.ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT }}`
 3. **Coordinate access** with collection/Sonar org admins if the project is missing or mis-keyed (internal Ansible channels/sponsor as applicable).
 
-Use `get-upstream-info` to derive `UPSTREAM_ORG`, repo name, and the SonarCloud-style project key (typically `ORG_COLLECTIONNAME` with dots in the collection name replaced—e.g. `ansible-collections/amazon.aws` → `ansible-collections_amazon.aws`).
+Use `get-upstream-info` to derive `UPSTREAM_ORG`, repo name, and the SonarCloud-style project key
+(typically `ORG_COLLECTIONNAME` with dots in the collection name replaced—e.g.
+`ansible-collections/amazon.aws` → `ansible-collections_amazon.aws`).
 
 ## Fork and secret limitation
 
 GitHub **does not** expose secrets to workflows triggered by pull requests **from forks**. Plan accordingly:
 
-- Sonar jobs that need `SONAR_TOKEN` should run on **push** to default branch and on PRs **from the same repository** (internal contributors), not from forks—or accept that fork PRs skip Sonar until merge.
+- Sonar jobs that need `SONAR_TOKEN` should run on **push** to the default branch and on PRs **from the same repository** (internal contributors), not from forks.
+- Alternatively, accept that fork PRs skip Sonar until merge.
 
 Document this in the workflow comments or contributor docs.
 
@@ -104,7 +107,8 @@ Reference implementations: search sibling collections or community examples (e.g
 
 `sonar-project.properties` expects **`coverage.xml` at the repository root** unless paths are changed.
 
-**Option A — Workflow job:** Run unit tests with XML report directly, e.g. pytest with `--cov-report xml:coverage.xml` at repo root, then run Sonar in the same workflow (or upload artifact between jobs).
+**Option A — Workflow job:** Run unit tests with XML report directly, e.g. pytest with `--cov-report xml:coverage.xml` at repo root, then run Sonar in the same workflow
+(or upload artifact between jobs).
 
 **Option B — tox:** Add `--cov-report xml:coverage.xml` (or equivalent) to the relevant tox env; copy or configure output so the final file is **`coverage.xml` at repo root** before the Sonar step.
 
@@ -112,13 +116,15 @@ Until XML coverage is produced, SonarCloud still reports issues and duplication,
 
 ### 5. Integrate with existing test workflows
 
-Update the primary unit-test workflow (may be named `tests.yml`, `units.yml`, etc.) so CI reliably generates coverage used by Sonar **without** duplicating unnecessary work—often a **second focused PR** after the minimal Sonar workflow merges (matches common staged rollout).
+Update the primary unit-test workflow (may be named `tests.yml`, `units.yml`, etc.) so CI reliably
+generates coverage used by Sonar **without** duplicating unnecessary work—often a **second focused PR**
+after the minimal Sonar workflow merges (matches common staged rollout).
 
 ### 6. Documentation
 
 Add either:
 
-- A **README** section covering SonarCloud, coverage expectation (~80% codebase target where policy applies), and fork secret behavior, or  
+- A **README** section covering SonarCloud, coverage expectation (~80% codebase target where policy applies), and fork secret behavior, or
 - A dedicated **`sonarcloud.md`** (or similar) linked from the README.
 
 ### 7. Validate locally (optional but recommended)
@@ -132,7 +138,7 @@ Where org policy applies, collections should **aim for ~80%** coverage across th
 ## Integration with other skills
 
 | Phase | Skill |
-|------|--------|
+| ----- | ----- |
 | Derive org/repo/Sonar key | `get-upstream-info` |
 | After CI uploads analysis | `sonarcloud-analysis` |
 | Fix findings | `implement-sonarcloud-fixes` |

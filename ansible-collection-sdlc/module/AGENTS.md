@@ -20,8 +20,11 @@ Module provides skills and commands for Ansible collection development workflows
   with FQCN scopes for Ansible collection content.
   Invoke when the user asks to "commit", "create a commit", or "git commit".
 
-- **configure-sonarcloud-collection skill**: Use the `configure-sonarcloud-collection` skill to add SonarCloud (SonarQube Cloud) to a collection repository: `sonar-project.properties`, GitHub Actions workflow with org `SONAR_TOKEN`, XML coverage at the repo root for Sonar, and README or dedicated docs.
-  Invoke when asked to set up, onboard, or configure SonarCloud/SonarQube analysis for a collection, wire CI for the scanner, or add coverage.xml for Sonar.
+- **configure-sonarcloud-collection skill**: Use the `configure-sonarcloud-collection` skill to add
+  SonarCloud (SonarQube Cloud) to a collection repository: `sonar-project.properties`, GitHub Actions
+  workflow with org `SONAR_TOKEN`, XML coverage at the repo root for Sonar, and README or dedicated docs.
+  Invoke when asked to set up, onboard, or configure SonarCloud/SonarQube analysis for a collection,
+  wire CI for the scanner, or add coverage.xml for Sonar.
 
 - **changelog-fragment skill**: Use the `changelog-fragment` skill to create or update changelog fragments for documenting changes.
   Supports automatic change analysis and PR URL updates.

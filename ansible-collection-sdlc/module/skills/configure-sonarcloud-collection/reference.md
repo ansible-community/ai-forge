@@ -23,6 +23,8 @@ Secret is configured at **organization** level; repository workflows reference i
 
 Useful to validate `sonar-project.properties` and layout before relying on CI.
 
+<!-- markdownlint-disable MD029 -->
+
 1. Install [SonarScanner CLI](https://docs.sonarqube.org/latest/analyzing-source-code/scanners/sonarscanner/) and put `bin` on `PATH`.
 2. Create a user token in SonarCloud (**My Account → Security**) and export:
 
@@ -37,6 +39,8 @@ sonar-scanner -Dsonar.projectBaseDir=. -Dsonar.host.url=https://sonarcloud.io
 ```
 
 4. Check the end of the log for errors. Results appear under the project on SonarCloud.
+
+<!-- markdownlint-enable MD029 -->
 
 ## Staged PRs
 
