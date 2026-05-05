@@ -90,7 +90,6 @@ Choose the appropriate module for your skill:
 | `ansible-role` | Role development and scaffolding |
 | `network_content` | Network automation specific skills |
 | `cloud_content` | Cloud automation specific skills |
-| `partner_engineering` | Partner integrations and certification |
 
 ## Contribution Process
 
