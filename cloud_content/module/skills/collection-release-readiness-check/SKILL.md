@@ -31,7 +31,7 @@ If the answer to (1) is no, stop — there is nothing to prepare for that branch
 ## Inputs
 
 | Input | Required | Description |
-|-------|----------|-------------|
+| ----- | -------- | ----------- |
 | `collection_git_url` | **Yes** | Clone URL or absolute path to a local clone |
 | `target_stable_branch` | No | e.g. `stable-11`. Defaults to the highest `stable-*` branch found. |
 | `release_kind` | No | `minor`, `patch`, or **`auto`** (default — infer from fragments). |
@@ -48,11 +48,13 @@ If the answer to (1) is no, stop — there is nothing to prepare for that branch
 ### Step 1 — Obtain checkout
 
 **Local path:**
+
 ```bash
 cd <collection_git_url> && git fetch --all --prune
 ```
 
 **Remote URL:**
+
 ```bash
 short_hash=$(echo "<collection_git_url>" | md5sum | cut -c1-8)
 git clone --filter=blob:none <collection_git_url> /tmp/collection-release-readiness-${short_hash}
@@ -62,6 +64,7 @@ git fetch origin
 ```
 
 Record default branch name:
+
 ```bash
 git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||' \
   || git remote show origin | grep 'HEAD branch' | awk '{print $NF}'
@@ -86,6 +89,7 @@ git branch -r \
 ```
 
 If `target_stable_branch` is given, use only that branch. Otherwise:
+
 - Select the **two most recent** stable branches (e.g., `stable-11` and `stable-10`)
 - Check both branches for release readiness
 - Team policy expects patch fixes to be assessed for multiple supported stable lines
@@ -112,19 +116,21 @@ git checkout <default_branch> 2>/dev/null || git checkout -
 Classify top-level keys found ([full category reference](https://docs.ansible.com/projects/ansible/latest/community/collection_development_process.html#creating-a-changelog-fragment)):
 
 | Fragment key(s) | Indicates |
-|-----------------|-----------|
+| --------------- | --------- |
 | `minor_changes`, `deprecated_features`, `add plugin.*`, `add object.*` | **Minor** release |
 | `bugfixes`, `security_fixes`, `known_issues` | **Patch** release |
 | `trivial` | Not a release driver — ignore |
 | `breaking_changes`, `major_changes`, `removed_features` | **Major** — out of scope for this skill; redirect to major release process |
 
-> **Note:** New modules and plugins do not generate changelog fragments — tooling detects them via `version_added`. If no fragments exist, also check for new module/plugin commits since the last tag:
-> ```bash
-> last_tag=$(git describe --tags --abbrev=0 ${UPSTREAM_REMOTE}/<target_stable_branch> 2>/dev/null)
-> git log "${last_tag}..${UPSTREAM_REMOTE}/<target_stable_branch>" --oneline --no-merges \
->   | grep -v 'Merge\|changelog\|version bump'
-> ```
-> New module commits with no fragments still indicate a **minor** release.
+**Note:** New modules and plugins do not generate changelog fragments — tooling detects them via `version_added`. If no fragments exist, also check for new module/plugin commits since the last tag:
+
+```bash
+last_tag=$(git describe --tags --abbrev=0 ${UPSTREAM_REMOTE}/<target_stable_branch> 2>/dev/null)
+git log "${last_tag}..${UPSTREAM_REMOTE}/<target_stable_branch>" --oneline --no-merges \
+  | grep -v 'Merge\|changelog\|version bump'
+```
+
+New module commits with no fragments still indicate a **minor** release.
 
 **Verdict for Question 1:**
 
@@ -161,7 +167,8 @@ gh pr list --repo UPSTREAM_PATH \
   | jq '.[] | select(.labels | map(.name) | contains(["backport-N"]))'
 ```
 
-> **Note**: The jq filter `map(.name) | contains(["backport-N"])` correctly checks if the array of label names contains the backport label. The simpler `.labels[].name == "backport-N"` syntax does not work reliably with jq's select function.
+**Note:** The jq filter `map(.name) | contains(["backport-N"])` correctly checks if the array of label names contains the backport label.
+The simpler `.labels[].name == "backport-N"` syntax does not work reliably with jq's select function.
 
 Open backport PRs → **BLOCKER** — merge them before creating the prep PR.
 
@@ -194,9 +201,12 @@ gh pr list --repo UPSTREAM_PATH \
   | jq --arg since "$last_tag_date" '[.[] | select(.mergedAt != null and .mergedAt > $since)]'
 ```
 
-> **Important**: Use GitHub API to get the **actual tag creation date** (when the tag was pushed to GitHub), not the git commit date. This ensures accurate scoping of the backport failure check to the current release cycle. The Galaxy/Automation Hub publish date may lag by hours or days after the tag is created.
+**Important:** Use GitHub API to get the **actual tag creation date** (when the tag was pushed to GitHub), not the git commit date.
+This ensures accurate scoping of the backport failure check to the current release cycle.
+The Galaxy/Automation Hub publish date may lag by hours or days after the tag is created.
 
 Patchback failures → **BLOCKER** — manually cherry-pick the change to `stable-N` before the prep PR:
+
 ```bash
 git fetch upstream
 git checkout -b <fix-branch> upstream/<target_stable_branch>
@@ -236,7 +246,7 @@ READY | NOT READY | SKIPPED (gh unavailable)
 
 When checking multiple branches (default behavior), repeat the above structure for each branch, ordered from newest to oldest (e.g., `stable-11` then `stable-10`).
 
-**Important**: Always report tag dates using the actual GitHub tag creation date from the API, and include a human-readable time reference (e.g., "~2 weeks ago", "~3 months ago") to provide context.
+**Important:** Always report tag dates using the actual GitHub tag creation date from the API, and include a human-readable time reference (e.g., "~2 weeks ago", "~3 months ago") to provide context.
 
 ---
 
@@ -250,6 +260,7 @@ When checking multiple branches (default behavior), repeat the above structure f
 
 - `hashicorp.vault` canonical repo is `ansible-automation-platform/hashicorp.vault` — `get-upstream-info` resolves this.
 - Release manager decisions override this skill's output; it **informs**, it does **not** approve.
-- **Tag dates**: Always use GitHub API (`gh api repos/<org>/<repo>/git/refs/tags/<tag>`) to get actual tag creation dates, not `git log` which returns commit dates. Verify against GitHub tags page (`https://github.com/<org>/<repo>/tags`) if in doubt.
+- **Tag dates**: Always use GitHub API (`gh api repos/<org>/<repo>/git/refs/tags/<tag>`) to get actual tag creation dates, not `git log` which returns commit dates.
+  Verify against GitHub tags page (`https://github.com/<org>/<repo>/tags`) if in doubt.
 - **Backport PR checks**: Check both PRs targeting the stable branch AND PRs with backport labels across all open PRs (some may target main but need to be backported).
 - **Multi-branch default**: By default, checks the two most recent stable branches (e.g., `stable-11` and `stable-10`). Override with `target_stable_branch` to check only one.
