@@ -1,3 +1,8 @@
+---
+name: ansible-collection-sdlc
+description: Skills and commands for Ansible collection development workflows including commits, PRs, releases, and testing
+---
+
 # Ansible Collection Development
 
 Module provides skills and commands for Ansible collection development workflows including commits, PRs, releases, and testing.

@@ -1,3 +1,8 @@
+---
+name: ansible-role
+description: Commands for scaffolding Ansible roles following Red Hat CoP automation good practices
+---
+
 # Ansible Role
 
 Module provides commands for scaffolding Ansible roles following Red Hat CoP automation good practices.

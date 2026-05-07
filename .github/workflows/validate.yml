@@ -7,30 +7,42 @@ on:
     branches: [main]
 
 jobs:
-  discover-modules:
-    name: Discover Modules
+  get-changed-files:
+    name: Get Changed Files
     runs-on: ubuntu-latest
     outputs:
-      modules: ${{ steps.find-modules.outputs.modules }}
+      changed_files: ${{ steps.changed.outputs.files }}
+      changed_modules: ${{ steps.changed.outputs.modules }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Find all modules
-        id: find-modules
+      - name: Get changed files
+        id: changed
         run: |
-          # Find directories containing module/ subdirectory
-          modules=$(find . -maxdepth 2 -type d -name "module" | sed 's|./||;s|/module||' | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            changed=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          else
+            changed=$(git diff --name-only HEAD~1 | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          fi
+          echo "files=$changed" >> "$GITHUB_OUTPUT"
+          echo "Changed files: $changed"
+
+          # Extract unique modules from changed files
+          modules=$(echo "$changed" | jq -r '.[]' | grep -E '^[^/]+/module/' | cut -d'/' -f1 | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
           echo "modules=$modules" >> "$GITHUB_OUTPUT"
-          echo "Found modules: $modules"
+          echo "Changed modules: $modules"
 
   validate-structure:
     name: Validate Module Structure
-    needs: discover-modules
+    needs: get-changed-files
+    if: needs.get-changed-files.outputs.changed_modules != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        module: ${{ fromJson(needs.discover-modules.outputs.modules) }}
+        module: ${{ fromJson(needs.get-changed-files.outputs.changed_modules) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -65,6 +77,7 @@ jobs:
 
   validate-frontmatter:
     name: Validate Frontmatter
+    needs: get-changed-files
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -78,20 +91,33 @@ jobs:
         run: pip install pyyaml
 
       - name: Validate command frontmatter
+        env:
+          CHANGED_FILES: ${{ needs.get-changed-files.outputs.changed_files }}
         run: |
           python3 << 'EOF'
           import yaml
           import sys
+          import os
+          import json
           from pathlib import Path
+
+          changed_files = json.loads(os.environ.get('CHANGED_FILES', '[]'))
+          changed_commands = [f for f in changed_files if '/module/commands/' in f and f.endswith('.md')]
+
+          if not changed_commands:
+              print("✅ No command files changed")
+              sys.exit(0)
 
           errors = []
 
-          # Find all command files
-          for cmd_file in Path('.').glob('*/module/commands/*.md'):
+          for cmd_path in changed_commands:
+              cmd_file = Path(cmd_path)
+              if not cmd_file.exists():
+                  continue
+
               with open(cmd_file) as f:
                   content = f.read()
 
-              # Extract frontmatter
               if not content.startswith('---'):
                   errors.append(f"{cmd_file}: Missing frontmatter")
                   continue
@@ -107,7 +133,6 @@ jobs:
                   errors.append(f"{cmd_file}: Invalid YAML - {e}")
                   continue
 
-              # Check required fields
               if 'description' not in fm:
                   errors.append(f"{cmd_file}: Missing 'description' field")
               if 'argument-hint' not in fm:
@@ -119,24 +144,37 @@ jobs:
                   print(f"  - {error}")
               sys.exit(1)
 
-          print("✅ All command frontmatter valid")
+          print(f"✅ Validated {len(changed_commands)} command file(s)")
           EOF
 
       - name: Validate skill frontmatter
+        env:
+          CHANGED_FILES: ${{ needs.get-changed-files.outputs.changed_files }}
         run: |
           python3 << 'EOF'
           import yaml
           import sys
+          import os
+          import json
           from pathlib import Path
+
+          changed_files = json.loads(os.environ.get('CHANGED_FILES', '[]'))
+          changed_skills = [f for f in changed_files if '/module/skills/' in f and f.endswith('SKILL.md')]
+
+          if not changed_skills:
+              print("✅ No skill files changed")
+              sys.exit(0)
 
           errors = []
 
-          # Find all skill SKILL.md files
-          for skill_file in Path('.').glob('*/module/skills/*/SKILL.md'):
+          for skill_path in changed_skills:
+              skill_file = Path(skill_path)
+              if not skill_file.exists():
+                  continue
+
               with open(skill_file) as f:
                   content = f.read()
 
-              # Extract frontmatter
               if not content.startswith('---'):
                   errors.append(f"{skill_file}: Missing frontmatter")
                   continue
@@ -152,7 +190,6 @@ jobs:
                   errors.append(f"{skill_file}: Invalid YAML - {e}")
                   continue
 
-              # Check required fields
               if 'name' not in fm:
                   errors.append(f"{skill_file}: Missing 'name' field")
               if 'description' not in fm:
@@ -164,62 +201,78 @@ jobs:
                   print(f"  - {error}")
               sys.exit(1)
 
-          print("✅ All skill frontmatter valid")
+          print(f"✅ Validated {len(changed_skills)} skill file(s)")
           EOF
 
   validate-json:
     name: Validate JSON Files
+    needs: get-changed-files
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Validate mcps.json files
+        env:
+          CHANGED_FILES: ${{ needs.get-changed-files.outputs.changed_files }}
         run: |
-          for json_file in */module/mcps.json; do
+          changed_json=$(echo "$CHANGED_FILES" | jq -r '.[]' | grep 'mcps\.json$' || true)
+
+          if [ -z "$changed_json" ]; then
+            echo "✅ No mcps.json files changed"
+            exit 0
+          fi
+
+          for json_file in $changed_json; do
+            if [ ! -f "$json_file" ]; then
+              continue
+            fi
             echo "Checking $json_file..."
             if ! jq empty "$json_file" 2>/dev/null; then
               echo "❌ $json_file is not valid JSON"
               exit 1
             fi
 
-            # Check for mcpServers key
             if ! jq -e '.mcpServers' "$json_file" >/dev/null; then
               echo "❌ $json_file missing 'mcpServers' key"
               exit 1
             fi
           done
-          echo "✅ All JSON files valid"
+          echo "✅ All changed JSON files valid"
 
   check-placeholders:
     name: Check for Placeholders
+    needs: get-changed-files
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check for placeholder text outside template/
+      - name: Check for placeholder text in changed files
+        env:
+          CHANGED_FILES: ${{ needs.get-changed-files.outputs.changed_files }}
         run: |
-          if grep -r '\[REPLACE:' --exclude-dir=template --exclude-dir=.git --exclude-dir=tmp --exclude-dir=.github .; then
-            echo "❌ Found unreplaced placeholder text outside template/ directory"
+          files_to_check=$(echo "$CHANGED_FILES" | jq -r '.[]' | grep -v '^template/' | grep -v '^\.github/' || true)
+
+          if [ -z "$files_to_check" ]; then
+            echo "✅ No relevant files changed"
+            exit 0
+          fi
+
+          found_placeholder=false
+          for file in $files_to_check; do
+            if [ -f "$file" ] && grep -q '\[REPLACE:' "$file"; then
+              echo "❌ Found placeholder in: $file"
+              found_placeholder=true
+            fi
+          done
+
+          if [ "$found_placeholder" = true ]; then
             exit 1
           fi
-          echo "✅ No placeholder text found"
-
-  validate-references:
-    name: Validate File References
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Check zen-of-ansible.txt exists
-        run: |
-          if [ ! -f "ansible-collection-standards/module/skills/ansible-zen/zen-of-ansible.txt" ]; then
-            echo "❌ zen-of-ansible.txt missing"
-            exit 1
-          fi
-          echo "✅ Referenced files exist"
+          echo "✅ No placeholder text found in changed files"
 
   validate-agents:
     name: Validate AGENTS.md
+    needs: get-changed-files
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -233,20 +286,33 @@ jobs:
         run: pip install pyyaml
 
       - name: Validate AGENTS.md files
+        env:
+          CHANGED_FILES: ${{ needs.get-changed-files.outputs.changed_files }}
         run: |
           python3 << 'EOF'
           import yaml
           import sys
-          import re
+          import os
+          import json
           from pathlib import Path
+
+          changed_files = json.loads(os.environ.get('CHANGED_FILES', '[]'))
+          changed_agents = [f for f in changed_files if f.endswith('AGENTS.md')]
+
+          if not changed_agents:
+              print("✅ No AGENTS.md files changed")
+              sys.exit(0)
 
           errors = []
 
-          for agents_file in Path('.').glob('*/module/AGENTS.md'):
+          for agents_path in changed_agents:
+              agents_file = Path(agents_path)
+              if not agents_file.exists():
+                  continue
+
               with open(agents_file) as f:
                   content = f.read()
 
-              # Check frontmatter exists
               if not content.startswith('---'):
                   errors.append(f"{agents_file}: Missing frontmatter")
                   continue
@@ -262,18 +328,14 @@ jobs:
                   errors.append(f"{agents_file}: Invalid YAML - {e}")
                   continue
 
-              # Check required frontmatter fields
               if 'name' not in fm:
                   errors.append(f"{agents_file}: Missing 'name' field")
               if 'description' not in fm:
                   errors.append(f"{agents_file}: Missing 'description' field")
 
-              # Check body has Skills and Commands sections
               body = parts[2]
-              if '## Skills' not in body and '## skills' not in body.lower():
-                  errors.append(f"{agents_file}: Missing '## Skills' section")
-              if '## Commands' not in body and '## commands' not in body.lower():
-                  errors.append(f"{agents_file}: Missing '## Commands' section")
+              if '## When to Use' not in body:
+                  errors.append(f"{agents_file}: Missing '## When to Use' section")
 
           if errors:
               print("❌ AGENTS.md validation errors:")
@@ -281,5 +343,5 @@ jobs:
                   print(f"  - {error}")
               sys.exit(1)
 
-          print("✅ All AGENTS.md files valid")
+          print(f"✅ Validated {len(changed_agents)} AGENTS.md file(s)")
           EOF

@@ -1,3 +1,8 @@
+---
+name: cloud-content
+description: Skills for cloud automation workflows specific to Ansible cloud collections
+---
+
 # Cloud Content
 
 Module provides skills for cloud automation workflows specific to Ansible cloud collections.

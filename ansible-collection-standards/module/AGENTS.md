@@ -1,3 +1,8 @@
+---
+name: ansible-collection-standards
+description: Skills and commands for Ansible collection development, review, and scaffolding following Red Hat CoP automation good practices
+---
+
 # Ansible Collection
 
 Module provides skills and commands for Ansible collection development, review, and scaffolding following Red Hat CoP automation good practices.

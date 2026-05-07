@@ -1,3 +1,8 @@
+---
+name: network-content
+description: Skills for network automation workflows specific to Ansible network collections
+---
+
 # Network Content
 
 Module provides skills for network automation workflows specific to Ansible network collections.
