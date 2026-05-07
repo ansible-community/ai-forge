@@ -1,0 +1,101 @@
+name: Commit Checks
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-commits:
+    name: Validate Commit Messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for AI attribution in commits
+        run: |
+          echo "Checking commits in this PR for AI co-authorship attribution..."
+
+          # Get commits in this PR
+          commits=$(git log --format="%H" origin/main..HEAD)
+
+          if [ -z "$commits" ]; then
+            echo "No new commits to check"
+            exit 0
+          fi
+
+          missing_attribution=()
+
+          for sha in $commits; do
+            message=$(git log -1 --format="%B" "$sha")
+            short_sha=$(git log -1 --format="%h" "$sha")
+            subject=$(git log -1 --format="%s" "$sha")
+
+            # Check if commit mentions AI assistance
+            if echo "$message" | grep -qiE "(claude|ai|copilot|gpt|llm|chatgpt|gemini)"; then
+              # If AI is mentioned, check for proper Co-Authored-By
+              if ! echo "$message" | grep -qiE "Co-Authored-By:.*(@anthropic|@openai|@github|@google|claude|copilot|gpt|gemini)"; then
+                missing_attribution+=("$short_sha: $subject")
+              fi
+            fi
+          done
+
+          if [ ${#missing_attribution[@]} -gt 0 ]; then
+            echo ""
+            echo "⚠️  The following commits mention AI tools but lack proper Co-Authored-By attribution:"
+            for commit in "${missing_attribution[@]}"; do
+              echo "  - $commit"
+            done
+            echo ""
+            echo "Please add a trailer like:"
+            echo "  Co-Authored-By: Claude <noreply@anthropic.com>"
+            echo ""
+            echo "This is a warning only - not blocking the PR."
+          else
+            echo "✅ All commits with AI mentions have proper attribution"
+          fi
+
+      - name: Check conventional commit format
+        run: |
+          echo "Checking commit message format..."
+
+          commits=$(git log --format="%H" origin/main..HEAD)
+
+          if [ -z "$commits" ]; then
+            echo "No new commits to check"
+            exit 0
+          fi
+
+          invalid_commits=()
+          valid_types="feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert"
+
+          for sha in $commits; do
+            subject=$(git log -1 --format="%s" "$sha")
+            short_sha=$(git log -1 --format="%h" "$sha")
+
+            # Skip merge commits
+            if echo "$subject" | grep -qE "^Merge "; then
+              continue
+            fi
+
+            # Check conventional commit format: type(scope): description
+            if ! echo "$subject" | grep -qE "^($valid_types)(\(.+\))?: .+"; then
+              invalid_commits+=("$short_sha: $subject")
+            fi
+          done
+
+          if [ ${#invalid_commits[@]} -gt 0 ]; then
+            echo ""
+            echo "⚠️  The following commits don't follow conventional commit format:"
+            for commit in "${invalid_commits[@]}"; do
+              echo "  - $commit"
+            done
+            echo ""
+            echo "Expected format: type(scope): description"
+            echo "Valid types: $valid_types"
+            echo ""
+            echo "This is a warning only - not blocking the PR."
+          else
+            echo "✅ All commits follow conventional commit format"
+          fi

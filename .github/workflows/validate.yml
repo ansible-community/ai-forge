@@ -7,12 +7,30 @@ on:
     branches: [main]
 
 jobs:
+  discover-modules:
+    name: Discover Modules
+    runs-on: ubuntu-latest
+    outputs:
+      modules: ${{ steps.find-modules.outputs.modules }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find all modules
+        id: find-modules
+        run: |
+          # Find directories containing module/ subdirectory
+          modules=$(find . -maxdepth 2 -type d -name "module" | sed 's|./||;s|/module||' | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "modules=$modules" >> "$GITHUB_OUTPUT"
+          echo "Found modules: $modules"
+
   validate-structure:
     name: Validate Module Structure
+    needs: discover-modules
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        module: [ansible-collection-standards, ansible-role, ansible-collection-sdlc]
+        module: ${{ fromJson(needs.discover-modules.outputs.modules) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -54,7 +72,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: pip install pyyaml
@@ -199,3 +217,69 @@ jobs:
             exit 1
           fi
           echo "✅ Referenced files exist"
+
+  validate-agents:
+    name: Validate AGENTS.md
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Validate AGENTS.md files
+        run: |
+          python3 << 'EOF'
+          import yaml
+          import sys
+          import re
+          from pathlib import Path
+
+          errors = []
+
+          for agents_file in Path('.').glob('*/module/AGENTS.md'):
+              with open(agents_file) as f:
+                  content = f.read()
+
+              # Check frontmatter exists
+              if not content.startswith('---'):
+                  errors.append(f"{agents_file}: Missing frontmatter")
+                  continue
+
+              parts = content.split('---', 2)
+              if len(parts) < 3:
+                  errors.append(f"{agents_file}: Invalid frontmatter format")
+                  continue
+
+              try:
+                  fm = yaml.safe_load(parts[1])
+              except yaml.YAMLError as e:
+                  errors.append(f"{agents_file}: Invalid YAML - {e}")
+                  continue
+
+              # Check required frontmatter fields
+              if 'name' not in fm:
+                  errors.append(f"{agents_file}: Missing 'name' field")
+              if 'description' not in fm:
+                  errors.append(f"{agents_file}: Missing 'description' field")
+
+              # Check body has Skills and Commands sections
+              body = parts[2]
+              if '## Skills' not in body and '## skills' not in body.lower():
+                  errors.append(f"{agents_file}: Missing '## Skills' section")
+              if '## Commands' not in body and '## commands' not in body.lower():
+                  errors.append(f"{agents_file}: Missing '## Commands' section")
+
+          if errors:
+              print("❌ AGENTS.md validation errors:")
+              for error in errors:
+                  print(f"  - {error}")
+              sys.exit(1)
+
+          print("✅ All AGENTS.md files valid")
+          EOF
