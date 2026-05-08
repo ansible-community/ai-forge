@@ -121,7 +121,7 @@ Add your skill to the Components section in the module's `README.md`.
 
 ### Making the Skill Available
 
-After adding your skill, users can install it using [Lola](https://redhatproductsecurity.github.io/lola/):
+After adding your skill, users can install it using [Lola](https://lobstertrap.org/lola/):
 
 ```bash
 # Register or update the module
