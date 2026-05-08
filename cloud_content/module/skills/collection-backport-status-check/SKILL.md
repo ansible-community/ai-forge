@@ -1,40 +1,42 @@
 ---
-name: collection-release-readiness-check
+name: collection-backport-status-check
 description: >-
-  Checks whether a given Ansible collection Git repository needs a minor or
-  patch release and whether it is ready to create a release prep PR. By default,
-  checks the two most recent stable branches. Requires collection_git_url (or
-  local path). Does not perform the release itself. For major releases, redirect
-  to the handbook and release skill.
-version: "1.0"
+  Checks backport and patchback workflow blockers for Ansible collection stable
+  branches. Detects open backport PRs and patchback failures that must be resolved
+  before creating a release prep PR. Complements version analysis skills by focusing
+  on process blockers. By default, checks the two most recent stable branches.
+version: "2.0"
 ---
 
-# Skill: collection-release-readiness-check
+# Skill: collection-backport-status-check
 
 ## Purpose
 
-Answer two questions for each stable branch (default: **two most recent** stable branches), in order:
+Check if a collection's stable branch is **ready for a prep PR** from a workflow perspective:
 
-1. **Is a release needed?** — are there substantial changes on the stable branch worth releasing?
-2. **Is the repo ready to create a prep PR?** — are all backports merged and patchback failures resolved?
+- ✅ Are all backport PRs merged?
+- ✅ Are all patchback failures resolved?
+- ✅ Can I safely create a release prep PR now?
 
-If the answer to (1) is no, stop — there is nothing to prepare for that branch.
+This skill focuses on **process blockers**, not version calculation. Use **`stable-release-analyze`** to determine if a release is needed and what version to use.
 
-**Out of scope:** Major releases, prep PR execution, tagging, publishing. For those use the **`release`** skill.
+**Out of scope:** Version calculation, changelog analysis, actual release execution. For those use the **`stable-release-analyze`** and **`release`** skills.
 
 ## When to invoke
 
-- "Is `<repo>` ready for a minor/patch release?"
-- "Do I need to release `<collection>`?"
-- "Can I create a prep PR for `stable-X`?"
+- "Are there any backport blockers for `stable-X`?"
+- "Can I create a prep PR for `stable-X`?" (after version is already determined)
+- "Check backport status before release prep"
+- "Are there any patchback failures to resolve?"
+
+**Note:** For "do I need a release?" or "what version?" questions, use **`stable-release-analyze`** instead.
 
 ## Inputs
 
 | Input | Required | Description |
 | ----- | -------- | ----------- |
 | `collection_git_url` | **Yes** | Clone URL or absolute path to a local clone |
-| `target_stable_branch` | No | e.g. `stable-11`. Defaults to the highest `stable-*` branch found. |
-| `release_kind` | No | `minor`, `patch`, or **`auto`** (default — infer from fragments). |
+| `target_stable_branch` | No | e.g. `stable-11`. Defaults to checking the two most recent `stable-*` branches. |
 
 ## Prerequisites
 
@@ -100,50 +102,11 @@ If no `stable-*` branches exist, **STOP** — collection does not use stable bra
 
 ---
 
-### Question 1 — Is a release needed?
+### Backport Workflow Checks
 
-Checkout the target stable branch and scan changelog fragments:
+**Prerequisites:** This skill assumes you've already determined a release is needed (use `stable-release-analyze` for that).
 
-```bash
-git checkout ${UPSTREAM_REMOTE}/<target_stable_branch> --detach 2>/dev/null
-
-find changelogs/fragments -maxdepth 1 \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null \
-  | grep -v 'changelogs/fragments/archive'
-
-git checkout <default_branch> 2>/dev/null || git checkout -
-```
-
-Classify top-level keys found ([full category reference](https://docs.ansible.com/projects/ansible/latest/community/collection_development_process.html#creating-a-changelog-fragment)):
-
-| Fragment key(s) | Indicates |
-| --------------- | --------- |
-| `minor_changes`, `deprecated_features`, `add plugin.*`, `add object.*` | **Minor** release |
-| `bugfixes`, `security_fixes`, `known_issues` | **Patch** release |
-| `trivial` | Not a release driver — ignore |
-| `breaking_changes`, `major_changes`, `removed_features` | **Major** — out of scope for this skill; redirect to major release process |
-
-**Note:** New modules and plugins do not generate changelog fragments — tooling detects them via `version_added`. If no fragments exist, also check for new module/plugin commits since the last tag:
-
-```bash
-last_tag=$(git describe --tags --abbrev=0 ${UPSTREAM_REMOTE}/<target_stable_branch> 2>/dev/null)
-git log "${last_tag}..${UPSTREAM_REMOTE}/<target_stable_branch>" --oneline --no-merges \
-  | grep -v 'Merge\|changelog\|version bump'
-```
-
-New module commits with no fragments still indicate a **minor** release.
-
-**Verdict for Question 1:**
-
-- Patch or minor drivers found → **Release needed** — proceed to Question 2.
-- Only `trivial` / no drivers and no new module commits → **NO RELEASE NEEDED** — stop here.
-- `release_kind` mismatch (e.g. patch requested but only minor fragments) → report the conflict and ask RM to confirm.
-- Major-category fragments → **NOT IN SCOPE** — redirect to major release process.
-
----
-
-### Question 2 — Is the repo ready for a prep PR?
-
-Run both checks. Any blocker means **NOT READY**.
+Run both checks below. Any blocker means **NOT READY** for prep PR.
 
 #### Check A — Open backport PRs (requires `gh` + `jq`)
 
@@ -222,26 +185,32 @@ If `gh` / `jq` unavailable: mark both checks as **SKIPPED** — recommend manual
 When checking a single branch:
 
 ```text
-## Stable Branch: <target_stable_branch>
+## Backport Status: <target_stable_branch>
 
-### Question 1 — Release needed?
-YES (minor) | YES (patch) | NO | OUT OF SCOPE (major)
-
-### Question 2 — Ready for prep PR?
-READY | NOT READY | SKIPPED (gh unavailable)
+### Ready for prep PR?
+READY | NOT READY | SKIPPED (gh/jq unavailable)
 
 ### Blockers (if NOT READY)
-- <list each>
+- Open backport PRs: <count> (<list PR numbers>)
+- Patchback failures: <count> (<list PR numbers>)
 
-### Notes
+### Context
 - Last tag: <tag_name> (created <YYYY-MM-DD> from GitHub API, ~N weeks/months ago)
-- <warnings, informational items>
+- Open backport PRs targeting this branch: <count>
+- Backport-labeled PRs needing manual cherry-pick: <count>
 
-### Next steps (if READY)
-1. Create prep branch: git checkout -b prep_release_x_y_z <target_stable_branch>
-2. Bump galaxy.yml version, run: antsibull-changelog release
-3. Open prep PR targeting <target_stable_branch>
-4. Follow the `release` skill for CI, tagging, and publish steps
+### Next steps
+If READY:
+  - Proceed with release prep PR creation
+  - Use `stable-release-analyze` if you need version calculation
+
+If NOT READY:
+  - Merge open backport PRs first
+  - Manually cherry-pick patchback failures:
+    git fetch upstream
+    git checkout -b fix-backport upstream/<target_stable_branch>
+    git cherry-pick -x <sha>  # use -m 1 for merge commits
+  - Re-run this check after resolving blockers
 ```
 
 When checking multiple branches (default behavior), repeat the above structure for each branch, ordered from newest to oldest (e.g., `stable-11` then `stable-10`).
@@ -252,15 +221,25 @@ When checking multiple branches (default behavior), repeat the above structure f
 
 ## Integration
 
-- **`get-upstream-info`** — required in step 2
-- **`next-release`** — determine the version number for the prep PR
-- **`release`** — execute the release after prep PR is merged
+**Recommended workflow:**
+
+1. **`stable-release-analyze`** — Determine if a release is needed and calculate the version
+2. **`collection-backport-status-check`** (this skill) — Check for backport/patchback blockers
+3. **`release-prep`** — Create the prep PR (once blockers are cleared)
+4. **`release`** — Execute the full release after prep PR is merged
+
+**Dependencies:**
+
+- **`get-upstream-info`** — Required for upstream remote resolution
 
 ## Notes
 
+- **Scope**: This skill ONLY checks backport/patchback workflow blockers. It does NOT determine if a release is needed or calculate versions — use `stable-release-analyze` for that.
+- **Complementary skills**: Run `stable-release-analyze` first to determine version, then use this skill to check for process blockers before creating the prep PR.
 - `hashicorp.vault` canonical repo is `ansible-automation-platform/hashicorp.vault` — `get-upstream-info` resolves this.
 - Release manager decisions override this skill's output; it **informs**, it does **not** approve.
 - **Tag dates**: Always use GitHub API (`gh api repos/<org>/<repo>/git/refs/tags/<tag>`) to get actual tag creation dates, not `git log` which returns commit dates.
   Verify against GitHub tags page (`https://github.com/<org>/<repo>/tags`) if in doubt.
 - **Backport PR checks**: Check both PRs targeting the stable branch AND PRs with backport labels across all open PRs (some may target main but need to be backported).
 - **Multi-branch default**: By default, checks the two most recent stable branches (e.g., `stable-11` and `stable-10`). Override with `target_stable_branch` to check only one.
+- **Graceful degradation**: If `gh` or `jq` are unavailable, the skill reports SKIPPED and recommends manual PR review.
