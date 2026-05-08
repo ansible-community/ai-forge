@@ -104,7 +104,7 @@ cloud_content/
     ├── AGENTS.md       # Module-level instructions
     ├── mcps.json       # MCP server configuration
     └── skills/         # Skill folders with SKILL.md
-        └── collection-release-readiness-check/
+        └── collection-backport-status-check/
             └── SKILL.md
 ```
 
