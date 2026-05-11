@@ -27,6 +27,12 @@ Module provides skills and commands for Ansible collection development workflows
   skill). Invoke when asked to set up, onboard, or configure SonarCloud/SonarQube analysis for
   a collection, wire CI for the scanner, or add coverage.xml for Sonar.
 
+- **configure-sonarcloud-coverage skill**: Use the `configure-sonarcloud-coverage` skill for the **second phase**
+  of SonarCloud setup: CI jobs that emit XML coverage, passing `sonar.python.coverage.reportPaths` to the
+  scanner, optional `workflow_run` + artifact flows (as in public amazon.aws coverage PRs), aggregator
+  workflows, and README or docs badges. Invoke when Sonar already runs but coverage is missing or when the
+  user asks to mirror amazon.aws-style coverage integration after initial Sonar onboarding.
+
 - **changelog-fragment skill**: Use the `changelog-fragment` skill to create or update changelog fragments for documenting changes.
   Supports automatic change analysis and PR URL updates.
   Invoke when asked to create a changelog fragment, add a fragment, or update fragments with PR URLs.

@@ -155,11 +155,15 @@ Reference implementations: search sibling collections or community examples (e.g
 
 Until XML coverage is produced, SonarCloud still reports issues and duplication, but **coverage stays empty** in the UI.
 
+For a **second PR** focused on coverage jobs, **`workflow_run`** wiring, aggregator gates, badges, and
+path rewriting, use the companion skill **`configure-sonarcloud-coverage`**.
+
 ### 5. Integrate with existing test workflows
 
 Update the primary unit-test workflow (may be named `tests.yml`, `units.yml`, etc.) so CI reliably
 generates coverage used by Sonar **without** duplicating unnecessary work—often a **second focused PR**
-after the minimal Sonar workflow merges (matches common staged rollout).
+after the minimal Sonar workflow merges (matches common staged rollout). Detailed steps for that phase
+live in **`configure-sonarcloud-coverage`**.
 
 ### 6. Documentation
 
@@ -181,6 +185,7 @@ Where org policy applies, collections should **aim for ~90%** coverage across th
 | Phase | Skill |
 | ----- | ----- |
 | Derive org/repo/Sonar key | `get-upstream-info` |
+| Sonar coverage CI (`workflow_run`, artifacts, badges) | `configure-sonarcloud-coverage` |
 | After CI uploads analysis | `sonarcloud-analysis` |
 | Fix findings | `implement-sonarcloud-fixes` |
 

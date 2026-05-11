@@ -37,6 +37,8 @@ lola install ansible-collection-sdlc -a opencode
 - **configure-sonarcloud-collection** - Add SonarCloud configuration: `sonar-project.properties`, CI
   workflow, coverage.xml, contributor docs, and assistant-safe fork/secret guidance (see skill Security
   section)
+- **configure-sonarcloud-coverage** - Second-phase SonarCloud coverage: XML reports in CI,
+  `workflow_run`/artifacts, aggregator gates, README badges (see companion to configure-sonarcloud-collection)
 - **create-branch** - Create feature branches following project conventions with proper fork workflow setup
 - **create-pr** - Create draft pull requests with pre-flight checks, changelog validation, and automated formatting
 - **implement-sonarcloud-fixes** - Implement fixes for SonarCloud issues with testing and PR creation

@@ -69,3 +69,6 @@ Use these alongside the **Security** section in [SKILL.md](SKILL.md). Prefer **p
 Skills and coding assistants must **not** write real tokens into repositories or conversations. Prefer
 human-reviewed workflow YAML, org-provided secret names, and the patterns above—especially when fork
 PRs must receive Sonar results with coverage.
+
+For the **second-phase** coverage rollout (artifacts, `workflow_run`, badges), see the sibling skill
+`configure-sonarcloud-coverage` in this module.
