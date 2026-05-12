@@ -201,7 +201,8 @@ in the [Bullhorn newsletter](https://forum.ansible.com/c/news/bullhorn/17)
 after the user ensures the release has appeared on Ansible Galaxy:
 
 ```
-The [NAMESPACE.COLLECTION](https://galaxy.ansible.com/ui/repo/published/NAMESPACE/COLLECTION/) collection version [VERSION](https://github.com/UPSTREAM_PATH/blob/main/CHANGELOG.rst#vVERSION) has been released!
+The [NAMESPACE.COLLECTION](https://galaxy.ansible.com/ui/repo/published/NAMESPACE/COLLECTION/) collection
+version [VERSION](https://github.com/UPSTREAM_PATH/blob/main/CHANGELOG.rst#vVERSION) has been released!
 ```
 
 Replace `NAMESPACE`, `COLLECTION`, `VERSION`, and `UPSTREAM_PATH` with the actual values. In the anchor fragment (`#vVERSION`), replace dots with hyphens (e.g. `#v2-1-0` for version `2.1.0`).

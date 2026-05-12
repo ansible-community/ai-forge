@@ -26,11 +26,19 @@ Produce consistent, reviewable setup across collections:
 
 Org policy: **keep GitHub Actions YAML identical across repos** (same pins, same secret name, same job layout) unless GitHub / Sonar maintainers roll out a coordinated change.
 
-1. Open **`module/skills/sonarcloud-workflow-templates/README.md`** in this module (path may differ if the module is installed via Lola from another clone).
-2. Copy **`sonar-project.properties.template`** to the collection repo root as **`sonar-project.properties`** and replace every **`__PLACEHOLDER__`** using the legend in that file plus **`galaxy.yml`** and the SonarCloud project UI (**`sonar.projectKey`** must match exactly).
-3. Copy **one** workflow template to **`.github/workflows/sonarcloud.yml`** without structural edits (see **`module/skills/sonarcloud-workflow-templates/README.md`** for **`workflow_run` vs `workflow_call`**):
-   - **`sonarcloud.workflow_run.yml.template`** for the **amazon.aws** pattern: aggregator **`name: all_green`**, **`workflow_run`**, job **`finalize`**, **`dawidd6/action-download-artifact`** with **`pattern: coverage*`**, and **`permissions.actions: read`**.
-   - **`sonarcloud.workflow_call.yml.template`** when policy requires reusable Sonar under the caller’s **`pull_request`** / **`push`** (add a job with **`uses: ./.github/workflows/sonarcloud.yml`** and **`secrets: inherit`** after coverage; upload **one** artifact with **`name: coverage`** exactly—**`actions/download-artifact@v4`** in the template matches that name).
+1. Open **`module/skills/sonarcloud-workflow-templates/README.md`** in this module (path may differ if the
+   module is installed via Lola from another clone).
+2. Copy **`sonar-project.properties.template`** to the collection repo root as **`sonar-project.properties`**.
+   Replace every **`__PLACEHOLDER__`** using the legend in that file plus **`galaxy.yml`** and the SonarCloud
+   project UI. **`sonar.projectKey`** must match the SonarCloud UI exactly.
+3. Copy **one** workflow template to **`.github/workflows/sonarcloud.yml`** without structural edits. See the
+   same **`README.md`** for **`workflow_run`** vs **`workflow_call`**.
+   - **`sonarcloud.workflow_run.yml.template`**: **amazon.aws** pattern — aggregator **`name: all_green`**,
+     **`workflow_run`**, job **`finalize`**, **`dawidd6/action-download-artifact`**, **`pattern: coverage*`**,
+     **`permissions.actions: read`**.
+   - **`sonarcloud.workflow_call.yml.template`**: reusable Sonar — caller on **`pull_request`** / **`push`**;
+     job with **`uses: ./.github/workflows/sonarcloud.yml`** and **`secrets: inherit`**; one upload with
+     **`name: coverage`**; template uses **`actions/download-artifact@v4`** for that name.
 
 Do **not** rename **`ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT`** for ansible-collections repos so CI works without per-repo secret lookup changes.
 
@@ -144,9 +152,11 @@ sonar.exclusions=tests/**,.tox/**
 
 ### 3. Add a SonarCloud GitHub Actions workflow
 
-- **Prefer copying** from **`module/skills/sonarcloud-workflow-templates/`** (see **Canonical templates** above) so the file stays **identical** to other ansible-collections repos except optional commented guards.
+- **Prefer copying** from **`module/skills/sonarcloud-workflow-templates/`** (see **Canonical templates**
+  above) so the file stays **identical** to other ansible-collections repos except optional commented guards.
 - Typical filename: `.github/workflows/sonarcloud.yml` (match sibling repos if an org convention exists).
-- Job must checkout the repo, optionally **produce `coverage.xml`** (step 4), then run SonarScanner (official SonarCloud GitHub Action or `sonar-scanner` CLI) with:
+- Job must checkout the repo, optionally **produce `coverage.xml`** (step 4), then run SonarScanner (official
+  SonarCloud GitHub Action or **`sonar-scanner`** CLI) with:
 
 ```yaml
 env:

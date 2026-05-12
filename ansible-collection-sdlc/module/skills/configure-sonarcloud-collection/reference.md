@@ -53,7 +53,15 @@ This matches workflows where unit jobs historically only produced HTML coverage 
 
 ## Canonical workflow YAML in this module
 
-For **ansible-collections** repos, copy from **`module/skills/sonarcloud-workflow-templates/`** (see **`README.md`** there): **`sonar-project.properties.template`**, **`sonarcloud.workflow_run.yml.template`**, or **`sonarcloud.workflow_call.yml.template`**. Keep workflow YAML identical org-wide unless maintainers coordinate a pin or layout change.
+For **ansible-collections** repos, copy templates from **`module/skills/sonarcloud-workflow-templates/`**.
+
+Read **`sonarcloud-workflow-templates/README.md`** there first. Then copy one or more of:
+
+- **`sonar-project.properties.template`**
+- **`sonarcloud.workflow_run.yml.template`**
+- **`sonarcloud.workflow_call.yml.template`**
+
+Keep workflow YAML **identical** org-wide unless maintainers coordinate a pin or layout change.
 
 ## Example community reference
 

@@ -13,24 +13,45 @@ them to a collection unless **GitHub / Sonar org maintainers** approve a coordin
 
 ## Choosing `workflow_run` vs `workflow_call`
 
-| | [workflow_run](sonarcloud.workflow_run.yml.template) | [workflow_call](sonarcloud.workflow_call.yml.template) |
-| - | - | - |
-| **Trigger** | Separate workflow runs when **`all_green`** finishes | Invoked from caller with `uses: ./.github/workflows/sonarcloud.yml` |
-| **Checkout** | `ref: ${{ github.event.workflow_run.head_sha }}` | PR head SHA or `github.sha` from caller event |
-| **Coverage download** | [dawidd6/action-download-artifact](https://github.com/dawidd6/action-download-artifact) with **`pattern: coverage*`** across the triggering run | [actions/download-artifact@v4](https://github.com/actions/download-artifact) with **`name: coverage`** (one artifact) |
-| **Extra permissions** | `actions: read` (cross-workflow artifact read) | Not required for that download pattern |
-| **PR metadata** | Shell + **`gh`** when `workflow_run.event == pull_request` | Native `github.event.pull_request.*` on PR callers |
-| **Secrets** | Repo/org secret in job `env` | Caller passes `secrets: inherit` (or maps `ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT` into the called workflow) |
+Compare [workflow_run](sonarcloud.workflow_run.yml.template) and
+[workflow_call](sonarcloud.workflow_call.yml.template):
 
-Use **`workflow_call`** when org policy avoids **`workflow_run`** + **`head_sha`** checkout (e.g. Sonar security hotspot / quality gate). Otherwise **`workflow_run`** matches the common **amazon.aws**-style aggregator pattern.
+- **Trigger** — **`workflow_run`**: separate workflow runs when **`all_green`** finishes. **`workflow_call`**:
+  invoked from caller with `uses: ./.github/workflows/sonarcloud.yml`.
+- **Checkout** — **`workflow_run`**: `ref: ${{ github.event.workflow_run.head_sha }}`. **`workflow_call`**: PR
+  head SHA or `github.sha` from caller event.
+- **Coverage download** — **`workflow_run`**: third-party download action (see
+  **`sonarcloud.workflow_run.yml.template`**) with **`pattern: coverage*`** on the triggering run.
+  **`workflow_call`**: **`actions/download-artifact@v4`** with **`name: coverage`** (one artifact). Pin and
+  repo names match the template YAML.
+- **Extra permissions** — **`workflow_run`**: `actions: read` (cross-workflow artifact read). **`workflow_call`**:
+  not required for that download pattern.
+- **PR metadata** — **`workflow_run`**: shell + **`gh`** when `workflow_run.event == pull_request`. **`workflow_call`**:
+  native `github.event.pull_request.*` on PR callers.
+- **Secrets** — **`workflow_run`**: repo/org secret in job `env`. **`workflow_call`**: caller passes
+  `secrets: inherit` (or maps `ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT` into the called workflow).
+
+Use **`workflow_call`** when org policy avoids **`workflow_run`** + **`head_sha`** checkout (e.g. Sonar security
+hotspot / quality gate). Otherwise **`workflow_run`** matches the common **amazon.aws**-style aggregator pattern.
 
 ## What to copy where
 
-| Template | Destination | Allowed edits |
-| -------- | ----------- | ------------- |
-| [sonar-project.properties.template](sonar-project.properties.template) | Repo root `sonar-project.properties` | Replace every `__PLACEHOLDER__` per table in that file. Paths (`sonar.tests`, `sonar.exclusions`) may be tuned for tree layout **only** if SonarCloud project settings agree. |
-| [sonarcloud.workflow_run.yml.template](sonarcloud.workflow_run.yml.template) | `.github/workflows/sonarcloud.yml` | **None** in YAML structure or pins. Optional: uncomment the `if:` guard on the **`finalize`** job if your org requires same-repo-only finalize (see comments in file). Upstream **`all_green`** must upload artifacts matching **`coverage*`** (e.g. `coverage.xml`, `coverage-unit.xml`). |
-| [sonarcloud.workflow_call.yml.template](sonarcloud.workflow_call.yml.template) | `.github/workflows/sonarcloud.yml` (alternative) | **None** in YAML structure or pins. Caller must upload **one** artifact whose **`name:`** is exactly **`coverage`** (see header comment in template); then add a job with `uses: ./.github/workflows/sonarcloud.yml` and `secrets: inherit` after the coverage upload step. |
+| Template | Destination |
+| -------- | ----------- |
+| [sonar-project.properties.template](sonar-project.properties.template) | Repo root `sonar-project.properties` |
+| [sonarcloud.workflow_run.yml.template](sonarcloud.workflow_run.yml.template) | `.github/workflows/sonarcloud.yml` |
+| [sonarcloud.workflow_call.yml.template](sonarcloud.workflow_call.yml.template) | `.github/workflows/sonarcloud.yml` (alternative) |
+
+**Allowed edits** (otherwise keep YAML structure, pins, and secret names unchanged):
+
+- **sonar-project.properties.template** — Replace every `__PLACEHOLDER__` per legend in that file. Paths
+  (`sonar.tests`, `sonar.exclusions`) may be tuned for tree layout **only** if SonarCloud project settings agree.
+- **sonarcloud.workflow_run.yml.template** — **None** in YAML structure or pins. Optional: uncomment the `if:`
+  guard on the **`finalize`** job for same-repo-only finalize (see comments in file). Upstream **`all_green`**
+  must upload artifacts matching **`coverage*`** (e.g. `coverage.xml`, `coverage-unit.xml`).
+- **sonarcloud.workflow_call.yml.template** — **None** in YAML structure or pins. Caller uploads **one**
+  artifact whose **`name:`** is exactly **`coverage`** (see template header); then add a job with
+  `uses: ./.github/workflows/sonarcloud.yml` and `secrets: inherit` after the coverage upload step.
 
 ## Aggregator workflow name (`workflow_run` template)
 

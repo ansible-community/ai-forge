@@ -33,7 +33,12 @@ Module provides skills and commands for Ansible collection development workflows
   workflows, and README or docs badges. Invoke when Sonar already runs but coverage is missing or when the
   user asks to mirror amazon.aws-style coverage integration after initial Sonar onboarding.
 
-- **sonarcloud-workflow-templates** (folder under `module/skills/`): Canonical **`sonar-project.properties`** and **GitHub Actions** YAML for the **ansible-collections** org—not a separate skill. Read **`sonarcloud-workflow-templates/README.md`** before copying templates; it documents **`workflow_run`** vs **`workflow_call`**, aggregator **`name: all_green`**, and artifact naming (**`coverage*`** vs exact **`coverage`**).
+- **sonarcloud-workflow-templates** (under `module/skills/`): Canonical Sonar workflow and properties
+  templates for the **ansible-collections** GitHub org. Not a standalone skill.
+- Before copying files into a collection repo, read **`sonarcloud-workflow-templates/README.md`** in this
+  module.
+- That README compares **`workflow_run`** vs **`workflow_call`**, documents aggregator **`name: all_green`**,
+  and explains **`coverage*`** artifact patterns vs a single artifact named **`coverage`**.
 
 - **changelog-fragment skill**: Use the `changelog-fragment` skill to create or update changelog fragments for documenting changes.
   Supports automatic change analysis and PR URL updates.

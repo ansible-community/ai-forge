@@ -8,7 +8,11 @@ Public references for `configure-sonarcloud-coverage`.
 
 ## Canonical templates in this module
 
-- **`module/skills/sonarcloud-workflow-templates/README.md`** — index of **`sonarcloud.workflow_run.yml.template`** vs **`sonarcloud.workflow_call.yml.template`** (artifact **`coverage*`** vs single **`coverage`**, **`dawidd6/action-download-artifact`** vs **`actions/download-artifact`**, permissions).
+- **`module/skills/sonarcloud-workflow-templates/README.md`** — template index:
+  - **`sonarcloud.workflow_run.yml.template`** vs **`sonarcloud.workflow_call.yml.template`**
+  - Artifact names: **`coverage*`** vs a single **`coverage`**
+  - Download actions: **`dawidd6/action-download-artifact`** vs **`actions/download-artifact`**
+  - Workflow **`permissions`** differences
 
 ## Example merged PR (coverage + workflow_run)
 
