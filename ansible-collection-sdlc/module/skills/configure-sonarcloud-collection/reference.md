@@ -51,6 +51,10 @@ Common rollout:
 
 This matches workflows where unit jobs historically only produced HTML coverage reports.
 
+## Canonical workflow YAML in this module
+
+For **ansible-collections** repos, copy from **`module/skills/sonarcloud-workflow-templates/`** (see **`README.md`** there): **`sonar-project.properties.template`**, **`sonarcloud.workflow_run.yml.template`**, or **`sonarcloud.workflow_call.yml.template`**. Keep workflow YAML identical org-wide unless maintainers coordinate a pin or layout change.
+
 ## Example community reference
 
 Concrete file-level examples appear in public collection PRs (e.g. amazon.aws SonarCloud onboarding). Use them as templates; adapt paths and Python versions to each collection.

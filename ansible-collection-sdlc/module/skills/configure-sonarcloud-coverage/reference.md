@@ -6,6 +6,10 @@ Public references for `configure-sonarcloud-coverage`.
 
 - [Project overview (SonarCloud)](https://sonarcloud.io/project/overview?id=ansible-collections_kubernetes.core)
 
+## Canonical templates in this module
+
+- **`module/skills/sonarcloud-workflow-templates/README.md`** — index of **`sonarcloud.workflow_run.yml.template`** vs **`sonarcloud.workflow_call.yml.template`** (artifact **`coverage*`** vs single **`coverage`**, **`dawidd6/action-download-artifact`** vs **`actions/download-artifact`**, permissions).
+
 ## Example merged PR (coverage + workflow_run)
 
 - [ansible-collections/amazon.aws#2871](https://github.com/ansible-collections/amazon.aws/pull/2871) —

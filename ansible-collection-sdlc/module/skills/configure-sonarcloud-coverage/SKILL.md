@@ -2,8 +2,8 @@
 name: configure-sonarcloud-coverage
 description: >-
   Second-phase SonarCloud setup for Ansible collections: CI emits XML coverage (ansible-test and/or
-  tox/pytest-cov), passes reports to the scanner via workflow_run + artifacts or inline scan,
-  aggregator gates, README badges. Use after Sonar project and sonar-project.properties exist; mirrors
+  tox/pytest-cov), passes reports to the scanner via workflow_run + artifacts, reusable workflow_call
+  Sonar, or inline scan, aggregator gates, README badges. Use after Sonar project and sonar-project.properties exist; mirrors
   ansible-collections/amazon.aws coverage patterns (e.g. PR 2871).
 ---
 
@@ -17,9 +17,20 @@ This is typically a **follow-up PR** after minimal Sonar onboarding (`configure-
 - Produce **`coverage*.xml`** (or equivalent) in CI reliably
 - Ensure the Sonar scan step receives **`sonar.python.coverage.reportPaths`** (properties file and/or
   scanner `-D` arguments)
-- Optionally adopt an **aggregator workflow** plus **`workflow_run`** so Sonar runs only after linters,
-  sanity, units, and coverage succeed—matching patterns discussed in public collection PRs such as
+- Optionally adopt an **aggregator workflow** plus **`workflow_run`** (or a reusable **`workflow_call`**
+  Sonar workflow) so Sonar runs only after linters, sanity, units, and coverage succeed—matching patterns
+  discussed in public collection PRs such as
   [amazon.aws#2871](https://github.com/ansible-collections/amazon.aws/pull/2871)
+
+## Canonical templates (ansible-collections)
+
+Use **`module/skills/sonarcloud-workflow-templates/`** in this module:
+
+- **`sonarcloud.workflow_run.yml.template`** — paste into **`.github/workflows/sonarcloud.yml`** for Pattern B: listens for **`all_green`** via **`workflow_run`**, uses **`dawidd6/action-download-artifact`** with **`pattern: coverage*`**, and needs **`permissions.actions: read`**. Optional commented **`if:`** on job **`finalize`** for stricter trust (see template comments).
+- **`sonarcloud.workflow_call.yml.template`** — same filename for **Pattern B2** (reusable Sonar): caller runs on **`pull_request`** / **`push`** and **`uses:`** this workflow with **`secrets: inherit`**. The coverage job must upload **one** artifact with **`name: coverage`** (exact string); the template uses **`actions/download-artifact@v4`** with that name—not a wildcard. See **`sonarcloud-workflow-templates/README.md`** comparison table.
+- **`sonar-project.properties.template`** — only file that should differ per repo (placeholders).
+
+Keep YAML **identical** across repos; do not change action SHAs or **`ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT`** without an org-wide rollout.
 
 ## When to Invoke
 
@@ -60,6 +71,8 @@ same job as the scanner.
 
 ### 2. Pick an integration pattern
 
+Start from **`module/skills/sonarcloud-workflow-templates/README.md`**: copy the matching **`sonarcloud.*.yml.template`** to **`.github/workflows/sonarcloud.yml`** without edits, then wire **`all_green`** / coverage jobs to match that template's expectations (artifact names, workflow **`name:`**).
+
 #### Pattern A — Inline scan with coverage (simplest)
 
 One job runs tests with coverage, writes XML (repo root or fixed path), then runs
@@ -82,7 +95,7 @@ ansible-test coverage xml --venv --python X.Y --requirements
    coverage job runs **tox** or **pytest** with **`--cov-report xml`** (amazon.aws), or **`ansible-test`**
    **`coverage xml`** (kubernetes.core-style); locate **`coverage.xml`**, often under **`.tox`** or
    **`tests/output/reports/`**, and optionally **rewrite paths** so sources are repo-relative.
-2. Upload artifacts named like **`coverage*`** (`actions/upload-artifact`).
+2. Upload artifacts whose names match **`coverage*`** (`actions/upload-artifact`), e.g. **`coverage`**, **`coverage-unit.xml`** as separate uploads—consistent with **`sonarcloud.workflow_run.yml.template`** (`pattern: coverage*`).
 3. A separate **`sonarcloud.yml`** triggers on **`workflow_run`** when that workflow completes
    successfully. The **`workflows:`** list must match the aggregator workflow **`name:`** (for example
    **`all_green`**), not necessarily the YAML filename (**`all_green_check.yaml`**). Check out
@@ -92,7 +105,11 @@ ansible-test coverage xml --venv --python X.Y --requirements
    does not run twice.
 
 Grant **`permissions: actions: read`** (and **`contents`**, **`pull-requests`** as required) on the Sonar
-workflow so artifact download from the prior run is allowed.
+workflow so **`dawidd6/action-download-artifact`** can read the triggering run’s artifacts.
+
+#### Pattern B2 — Aggregator + reusable **`workflow_call`** Sonar
+
+Same **`all_green`** / coverage jobs as Pattern B, but Sonar lives in **`sonarcloud.workflow_call.yml.template`**: a final job in **`all_green`** (or equivalent) calls **`uses: ./.github/workflows/sonarcloud.yml`** with **`secrets: inherit`** after a single **`actions/upload-artifact`** step with **`name: coverage`** (exact). Do **not** mix this with the **`workflow_run`** template in the same repo unless maintainers intentionally run two scanners.
 
 #### Pattern C — Fork-safe
 
@@ -128,9 +145,7 @@ default-branch context (see GitHub docs linked from `configure-sonarcloud-collec
    **units**, **coverage** (XML + artifact **`coverage*`**), and a final **all_green** assert (skip
    **linters** on **push**), mirroring
    [amazon.aws all_green_check.yml](https://github.com/ansible-collections/amazon.aws/blob/main/.github/workflows/all_green_check.yml).
-3. Replace inline Sonar jobs with **`sonarcloud.yml`** on **`workflow_run`** for **`all_green`**, pinned
-   **`dawidd6/action-download-artifact`** and **`SonarSource/sonarqube-scan-action`**, matching
-   [amazon.aws sonarcloud.yml](https://github.com/ansible-collections/amazon.aws/blob/main/.github/workflows/sonarcloud.yml).
+3. Copy **`sonarcloud.workflow_run.yml.template`** to **`.github/workflows/sonarcloud.yml`** (or keep org file identical to template). **`workflow_run.workflows`** must list the aggregator **`name:`** (e.g. **`all_green`**), not only the YAML filename.
 4. **README**: SonarCloud badges and a link to **`https://sonarcloud.io/project/overview?id=<projectKey>`**.
 
 PRs may run linters/sanity/units **twice** (standalone plus **`all_green`**) until maintainers consolidate
@@ -164,8 +179,9 @@ checks.
 ```
 - [ ] CI emits XML coverage on every path Sonar should analyze (tox/pytest and/or ansible-test)
 - [ ] Sonar scan receives sonar.python.coverage.reportPaths (file and/or -D args)
-- [ ] If using workflow_run: aggregator **`name:`** matches **`workflow_run.workflows`**; uploads artifacts
-  matching **coverage***; Sonar workflow downloads for **`head_sha`**; old inline Sonar job removed if present
+- [ ] If using **workflow_run**: aggregator **`name:`** matches **`workflow_run.workflows`**; uploads artifacts
+  matching **`coverage*`**; Sonar workflow downloads for **`head_sha`**; old inline Sonar job removed if present
+- [ ] If using **workflow_call** Sonar template: caller uploads **one** artifact named exactly **`coverage`** before **`uses: ./.github/workflows/sonarcloud.yml`**
 - [ ] Path rewriting / relative_files addressed if Sonar shows 0% coverage with XML present
 - [ ] README or docs updated (badges, contributor notes)
 - [ ] No secrets in logs; workflows reviewed for fork/trust model

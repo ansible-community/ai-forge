@@ -39,6 +39,9 @@ lola install ansible-collection-sdlc -a opencode
   section)
 - **configure-sonarcloud-coverage** - Second-phase SonarCloud coverage: XML reports in CI,
   `workflow_run`/artifacts, aggregator gates, README badges (see companion to configure-sonarcloud-collection)
+- **sonarcloud-workflow-templates** - Canonical `sonar-project.properties` and Sonar workflow YAML under
+  `module/skills/sonarcloud-workflow-templates/` for **ansible-collections** org parity (see that folder’s
+  `README.md` for `workflow_run` vs reusable `workflow_call` and artifact naming)
 - **create-branch** - Create feature branches following project conventions with proper fork workflow setup
 - **create-pr** - Create draft pull requests with pre-flight checks, changelog validation, and automated formatting
 - **implement-sonarcloud-fixes** - Implement fixes for SonarCloud issues with testing and PR creation
@@ -79,7 +82,7 @@ ansible-collection-sdlc/
 ├── README.md           # This file
 └── module/             # Lola-importable content
     ├── AGENTS.md       # Module-level instructions
-    ├── skills/         # Skill folders with SKILL.md
+    ├── skills/         # Skill folders with SKILL.md (includes sonarcloud-workflow-templates/ for canonical CI YAML)
     ├── commands/       # Slash command .md files
     ├── agents/         # Subagent .md files
     └── mcps.json       # MCP server configuration
