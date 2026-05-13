@@ -60,6 +60,8 @@ Read **`sonarcloud-workflow-templates/README.md`** there first. Then copy one or
 - **`sonar-project.properties.template`**
 - **`sonarcloud.workflow_run.yml.template`**
 - **`sonarcloud.workflow_call.yml.template`**
+- **`all_green-caller.sonarcloud-job.yml.template`** (paste **`sonarcloud`** job into **`all_green_check.yaml`**
+  when using **`workflow_call`** Sonar; see [kubernetes.core#1124](https://github.com/ansible-collections/kubernetes.core/pull/1124))
 
 Keep workflow YAML **identical** org-wide unless maintainers coordinate a pin or layout change.
 

@@ -1,9 +1,8 @@
-## SonarCloud scan (reusable) — ansible-collections template
+## SonarCloud scan (reusable)
 #
-# TEMPLATE: copy to .github/workflows/sonarcloud.yml without structural edits.
-# Invoked from **all_green** (or another caller) via **workflow_call** after aggregate gate + **coverage**.
-# Caller must run on **pull_request** / **push** so **github.event.pull_request** is available when needed.
-# Artifact name must be **coverage** (single upload) unless you change both caller and this file in one PR.
+# Invoked from **all_green** after the aggregate gate and **coverage** succeed. Uses the **caller's**
+# **pull_request** / **push** event so **actions/checkout** can use **github.event.pull_request.head.sha**
+# on PRs (Sonar-compliant). Not triggered by **workflow_run** + **workflow_run.head_sha** checkout.
 
 ---
 name: SonarCloud

@@ -31,9 +31,15 @@ Use **`module/skills/sonarcloud-workflow-templates/`** in this module:
   **`pattern: coverage*`**. Needs **`permissions.actions: read`**. Optional **`if:`** on **`finalize`** (see
   template comments).
 - **`sonarcloud.workflow_call.yml.template`** — Pattern B2 (reusable Sonar). Same destination filename.
-  Caller on **`pull_request`** / **`push`** with **`uses:`** this workflow and **`secrets: inherit`**. Upload
-  **one** artifact **`name: coverage`**. Template uses **`actions/download-artifact@v4`**. See template
-  **`README.md`** comparison.
+  Body stays **line-for-line** with merged **kubernetes.core** **`.github/workflows/sonarcloud.yml`**
+  (e.g. [PR #1124](https://github.com/ansible-collections/kubernetes.core/pull/1124)). Upload **one**
+  artifact **`name: coverage`**; template uses **`actions/download-artifact@v4`**.
+- **`all_green-caller.sonarcloud-job.yml.template`** — **`sonarcloud`** job block to paste into
+  **`all_green_check.yaml`** (or equivalent): **`needs: [all_green, coverage]`**, fork-safe **`if:`**,
+  **`uses: ./.github/workflows/sonarcloud.yml`**, explicit **`secrets:`** for
+  **`ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT`** (not **`secrets: inherit`** when the callee lists only
+  that secret; GitHub may report **"Only pass required secrets to this workflow."**). See template
+  **`README.md`**.
 - **`sonar-project.properties.template`** — only file that should differ per repo (placeholders).
 
 Keep YAML **identical** across repos; do not change action SHAs or **`ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT`** without an org-wide rollout.
@@ -120,8 +126,11 @@ workflow so **`dawidd6/action-download-artifact`** can read the triggering run�
 
 Same **`all_green`** / coverage jobs as Pattern B. Sonar lives in **`sonarcloud.workflow_call.yml.template`**.
 
-Add a final job in **`all_green`** (or equivalent) that calls **`uses: ./.github/workflows/sonarcloud.yml`**
-with **`secrets: inherit`** after **`actions/upload-artifact`** with **`name: coverage`** (exact).
+Copy the **`sonarcloud`** job from **`all_green-caller.sonarcloud-job.yml.template`** into
+**`all_green_check.yaml`** (YAML only; drop the file’s leading **`#`** comment lines), or mirror the merged
+**kubernetes.core** layout ([PR #1124](https://github.com/ansible-collections/kubernetes.core/pull/1124)).
+Requires **`actions/upload-artifact`** with **`name: coverage`** (exact) before **`uses: ./.github/workflows/sonarcloud.yml`**
+and explicit **`secrets:`** mapping for **`ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT`**.
 
 Do **not** mix this with the **`workflow_run`** template in the same repo unless maintainers intentionally run
 two scanners.
@@ -198,7 +207,9 @@ checks.
 - [ ] Sonar scan receives sonar.python.coverage.reportPaths (file and/or -D args)
 - [ ] If using **workflow_run**: aggregator **`name:`** matches **`workflow_run.workflows`**; uploads artifacts
   matching **`coverage*`**; Sonar workflow downloads for **`head_sha`**; old inline Sonar job removed if present
-- [ ] If using **workflow_call** Sonar template: caller uploads **one** artifact named exactly **`coverage`** before **`uses: ./.github/workflows/sonarcloud.yml`**
+- [ ] If using **workflow_call** Sonar template: **`sonarcloud`** job from **all_green-caller.sonarcloud-job.yml.template**
+  (or **kubernetes.core** [PR #1124](https://github.com/ansible-collections/kubernetes.core/pull/1124)); caller uploads **one**
+  artifact named exactly **`coverage`** before **`uses: ./.github/workflows/sonarcloud.yml`**
 - [ ] Path rewriting / relative_files addressed if Sonar shows 0% coverage with XML present
 - [ ] README or docs updated (badges, contributor notes)
 - [ ] No secrets in logs; workflows reviewed for fork/trust model

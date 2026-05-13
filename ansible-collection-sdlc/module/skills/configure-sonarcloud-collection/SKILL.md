@@ -33,12 +33,19 @@ Org policy: **keep GitHub Actions YAML identical across repos** (same pins, same
    project UI. **`sonar.projectKey`** must match the SonarCloud UI exactly.
 3. Copy **one** workflow template to **`.github/workflows/sonarcloud.yml`** without structural edits. See the
    same **`README.md`** for **`workflow_run`** vs **`workflow_call`**.
+   For **`workflow_call`**, also add the **`sonarcloud`** caller job from **`all_green-caller.sonarcloud-job.yml.template`**
+   into **`all_green_check.yaml`** (or your aggregator file) after **`all_green`** and **`coverage`** succeed.
    - **`sonarcloud.workflow_run.yml.template`**: **amazon.aws** pattern — aggregator **`name: all_green`**,
      **`workflow_run`**, job **`finalize`**, **`dawidd6/action-download-artifact`**, **`pattern: coverage*`**,
      **`permissions.actions: read`**.
-   - **`sonarcloud.workflow_call.yml.template`**: reusable Sonar — caller on **`pull_request`** / **`push`**;
-     job with **`uses: ./.github/workflows/sonarcloud.yml`** and **`secrets: inherit`**; one upload with
-     **`name: coverage`**; template uses **`actions/download-artifact@v4`** for that name.
+   - **`sonarcloud.workflow_call.yml.template`**: reusable Sonar — body matches merged **kubernetes.core**
+     **`sonarcloud.yml`** (e.g. [PR #1124](https://github.com/ansible-collections/kubernetes.core/pull/1124)).
+     Caller on **`pull_request`** / **`push`**; one upload with **`name: coverage`**; template uses
+     **`actions/download-artifact@v4`** for that name.
+   - **`all_green-caller.sonarcloud-job.yml.template`**: paste the **`sonarcloud`** job into
+     **`all_green_check.yaml`** with **`uses: ./.github/workflows/sonarcloud.yml`** and explicit **`secrets:`**
+     for **`ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT`** (not **`secrets: inherit`** if GitHub reports
+     **"Only pass required secrets to this workflow"**).
 
 Do **not** rename **`ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT`** for ansible-collections repos so CI works without per-repo secret lookup changes.
 
@@ -154,6 +161,11 @@ sonar.exclusions=tests/**,.tox/**
 
 - **Prefer copying** from **`module/skills/sonarcloud-workflow-templates/`** (see **Canonical templates**
   above) so the file stays **identical** to other ansible-collections repos except optional commented guards.
+- When the Sonar workflow is **`workflow_call`**-only, the caller (e.g. **`all_green_check.yaml`**) must pass
+  **`secrets:`** explicitly for each secret declared under **`on.workflow_call.secrets`** (typically only
+  **`ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT`**). Use **`all_green-caller.sonarcloud-job.yml.template`**
+  as the canonical job block. Using **`secrets: inherit`** can fail validation with **"Only pass required
+  secrets to this workflow."**
 - Typical filename: `.github/workflows/sonarcloud.yml` (match sibling repos if an org convention exists).
 - Job must checkout the repo, optionally **produce `coverage.xml`** (step 4), then run SonarScanner (official
   SonarCloud GitHub Action or **`sonar-scanner`** CLI) with:
@@ -165,7 +177,9 @@ env:
 
 Use the **same default branch** name in `sonar.newCode.referenceBranch` as in GitHub (`main` vs `devel`).
 
-Reference implementations: **`sonarcloud-workflow-templates/`** in this module, and sibling collections (e.g. **amazon.aws** Sonar onboarding PRs) for **`all_green`** naming and matrix parity.
+Reference implementations: **`sonarcloud-workflow-templates/`** in this module; **kubernetes.core**
+**`workflow_call`** Sonar and **`all_green`** caller ([PR #1124](https://github.com/ansible-collections/kubernetes.core/pull/1124));
+**amazon.aws** Sonar onboarding PRs for **`workflow_run`** + **`all_green`** naming and matrix parity.
 
 ### 4. Ensure `coverage.xml` exists at repo root before Sonar runs
 
@@ -217,6 +231,7 @@ Where org policy applies, collections should **aim for ~90%** coverage across th
 ```
 - [ ] sonar-project.properties at repo root; projectKey matches SonarCloud UI
 - [ ] Sonar workflow uses org SONAR_TOKEN secret (and triggers documented for forks)
+- [ ] If **sonarcloud.yml** is **workflow_call**-only: **all_green_check.yaml** (or aggregator) includes **sonarcloud** job with explicit **secrets:** (see **all_green-caller.sonarcloud-job.yml.template**)
 - [ ] coverage.xml produced at repo root before Sonar step (or staged follow-up PR)
 - [ ] Test workflow updated if needed for XML coverage
 - [ ] README or sonarcloud.md explains Sonar + coverage for contributors

@@ -10,6 +10,8 @@ Public references for `configure-sonarcloud-coverage`.
 
 - **`module/skills/sonarcloud-workflow-templates/README.md`** — template index:
   - **`sonarcloud.workflow_run.yml.template`** vs **`sonarcloud.workflow_call.yml.template`**
+  - **`all_green-caller.sonarcloud-job.yml.template`** — **`sonarcloud`** job for **`all_green_check.yaml`**
+    (**`workflow_call`** path: explicit **`secrets:`**, fork **`if:`**)
   - Artifact names: **`coverage*`** vs a single **`coverage`**
   - Download actions: **`dawidd6/action-download-artifact`** vs **`actions/download-artifact`**
   - Workflow **`permissions`** differences
@@ -23,6 +25,15 @@ Public references for `configure-sonarcloud-coverage`.
 - Reference workflows in that repository:
   [all_green_check.yml](https://github.com/ansible-collections/amazon.aws/blob/main/.github/workflows/all_green_check.yml),
   [sonarcloud.yml](https://github.com/ansible-collections/amazon.aws/blob/main/.github/workflows/sonarcloud.yml).
+
+## Example merged PR (coverage + workflow_call)
+
+- [ansible-collections/kubernetes.core#1124](https://github.com/ansible-collections/kubernetes.core/pull/1124) —
+  **`all_green`** aggregate gate, **coverage** artifact **`name: coverage`**, reusable **`sonarcloud.yml`**
+  (**`workflow_call`**), caller job with explicit **`secrets:`** and fork-safe **`if:`**.
+- Reference workflows in that repository:
+  [all_green_check.yaml](https://github.com/ansible-collections/kubernetes.core/blob/main/.github/workflows/all_green_check.yaml),
+  [sonarcloud.yml](https://github.com/ansible-collections/kubernetes.core/blob/main/.github/workflows/sonarcloud.yml).
 
 ## Documentation
 

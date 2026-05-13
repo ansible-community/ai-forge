@@ -38,7 +38,9 @@ Module provides skills and commands for Ansible collection development workflows
 - Before copying files into a collection repo, read **`sonarcloud-workflow-templates/README.md`** in this
   module.
 - That README compares **`workflow_run`** vs **`workflow_call`**, documents aggregator **`name: all_green`**,
-  and explains **`coverage*`** artifact patterns vs a single artifact named **`coverage`**.
+  and explains **`coverage*`** artifact patterns vs a single artifact named **`coverage`**. For **`workflow_call`**,
+  also use **`all_green-caller.sonarcloud-job.yml.template`** for the **`sonarcloud`** job in **`all_green_check.yaml`**
+  (explicit **`secrets:`**); live reference: **kubernetes.core** [PR #1124](https://github.com/ansible-collections/kubernetes.core/pull/1124).
 
 - **changelog-fragment skill**: Use the `changelog-fragment` skill to create or update changelog fragments for documenting changes.
   Supports automatic change analysis and PR URL updates.
