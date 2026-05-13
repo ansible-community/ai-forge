@@ -1,6 +1,206 @@
 # Ansible Collection Development
 
-Module provides skills and commands for Ansible collection development workflows including commits, PRs, releases, and testing.
+Module provides skills and commands for Ansible collection development workflows including commits, PRs, releases, testing, and security scanning.
+
+## Agent Roles
+
+This module defines specialized agent roles for Ansible content development. Each role has specific capabilities, scope, and constraints.
+
+### Module Developer Agent
+
+**Purpose**: Implement and maintain Ansible modules and plugins.
+
+**Scope**: `plugins/modules/`, `plugins/module_utils/`, `plugins/action/`, `plugins/lookup/`, `plugins/filter/`
+
+**Context Files**:
+
+- `CLAUDE.md` or project documentation
+- Module documentation standards
+- Existing modules for patterns
+
+**Capabilities**:
+
+- Write new modules following Ansible conventions
+- Refactor existing module code
+- Implement module_utils shared code
+- Add argument specs and documentation
+
+**Constraints**:
+
+- Must follow architectural invariants (see below)
+- Must include DOCUMENTATION, EXAMPLES, RETURN blocks
+- Must use `module.fail_json()` for errors, never bare `raise`
+- Must set `no_log=True` for sensitive parameters
+
+---
+
+### Test Agent
+
+**Purpose**: Write and run tests using ansible-test.
+
+**Scope**: `tests/unit/`, `tests/integration/`, `tests/sanity/`
+
+**Context Files**:
+
+- ansible-test documentation
+- Existing test patterns in the collection
+- CI workflow configuration
+
+**Capabilities**:
+
+- Write unit tests for module_utils
+- Write integration tests for modules
+- Run sanity, unit, and integration tests
+- Analyze test failures and suggest fixes
+
+**Constraints**:
+
+- Integration tests must be idempotent (run twice, second is `changed=false`)
+- Must include both success and failure test cases
+- Must clean up any resources created during tests
+
+---
+
+### Release Agent
+
+**Purpose**: Handle releases and changelog management.
+
+**Scope**: `changelogs/`, `galaxy.yml`, `CHANGELOG.rst`
+
+**Context Files**:
+
+- Release process documentation
+- antsibull-changelog configuration
+- Previous release patterns
+
+**Capabilities**:
+
+- Create changelog fragments
+- Generate changelogs using antsibull-changelog
+- Update galaxy.yml version
+- Tag releases and create GitHub releases
+
+**Constraints**:
+
+- Must follow SemVer for version numbering
+- Must include changelog fragment for every user-facing change
+- Must verify all tests pass before release
+
+---
+
+### Review Agent
+
+**Purpose**: Review PRs and code quality.
+
+**Scope**: All files (read-only analysis)
+
+**Context Files**:
+
+- Ansible Collection Review Checklist
+- Red Hat CoP automation good practices
+- Project-specific CLAUDE.md
+
+**Capabilities**:
+
+- Review code against best practices
+- Check for security issues
+- Verify documentation completeness
+- Assess test coverage
+
+**Constraints**:
+
+- Read-only analysis, does not modify files
+- Must provide actionable feedback
+- Must distinguish blockers from suggestions
+
+---
+
+### CI/CD Agent
+
+**Purpose**: Maintain CI pipelines and automation.
+
+**Scope**: `.github/workflows/`, `.gitlab-ci.yml`, `tox.ini`
+
+**Context Files**:
+
+- CI/CD best practices
+- ansible-test CI patterns
+- Security scanning requirements
+
+**Capabilities**:
+
+- Create and update CI workflows
+- Configure test matrices
+- Set up security scanning
+- Optimize CI performance
+
+**Constraints**:
+
+- Must pin GitHub Actions to commit SHAs
+- Must not expose secrets in logs
+- Must include all required test types (sanity, unit, integration)
+
+---
+
+## Architectural Invariants
+
+These are non-negotiable rules for Ansible collection development. Violating any will cause issues.
+
+1. **Modules must be idempotent** — Repeated runs with same parameters produce same state with `changed=False`
+
+2. **No shell=True with user input** — Prevents command injection; use `module.run_command()` with list arguments
+
+3. **All parameters documented** — DOCUMENTATION block must include description, type, and required/default for every parameter
+
+4. **Sensitive parameters use no_log=True** — Passwords, tokens, API keys, and secrets must never appear in logs
+
+5. **Errors use module.fail_json()** — No bare `raise`, `sys.exit()`, or unhandled exceptions
+
+6. **Use FQCNs in examples** — `community.general.module_name`, not just `module_name`
+
+7. **Return values documented** — RETURN block must describe all keys returned by the module
+
+8. **Check mode supported where applicable** — Set `supports_check_mode=True` and handle accordingly
+
+9. **No hardcoded credentials** — Use environment variables, Ansible Vault, or credential plugins
+
+10. **Changelog fragments required** — Every user-facing change needs a changelog fragment
+
+---
+
+## Quality Gates
+
+Before completing any task, verify:
+
+- [ ] `ansible-test sanity` passes
+- [ ] `ansible-lint` passes
+- [ ] Unit tests pass (if applicable)
+- [ ] Integration tests pass (if applicable)
+- [ ] Changelog fragment created (for user-facing changes)
+- [ ] Documentation updated
+- [ ] No security issues introduced
+
+---
+
+## Handoff Protocol
+
+When transitioning between agent roles:
+
+**Completing Agent**:
+
+- Document what was done
+- Note any deviations from the plan
+- List open questions for the next agent
+- Verify no architectural invariants were violated
+
+**Receiving Agent**:
+
+- Read CLAUDE.md for project context
+- Read relevant skill documentation
+- Check for notes from previous agent
+- Continue from documented state
+
+---
 
 ## When to Use
 
@@ -51,6 +251,10 @@ Module provides skills and commands for Ansible collection development workflows
 
 - **run-tests skill**: Use the `run-tests` skill to run or write sanity, unit, and integration tests using `ansible-test`. Invoke when asked to run, check, or write tests for a module or utility.
 
+- **security-scan skill**: Use the `security-scan` skill to scan the collection for security vulnerabilities, hardcoded secrets, and compromised dependencies.
+  Checks Python dependencies, GitHub Actions, and code for security issues.
+  Invoke when asked to scan for vulnerabilities, audit security, check for secrets, or before releases.
+
 - **sonarcloud-analysis skill**: Use the `sonarcloud-analysis` skill to fetch and analyse SonarCloud issues and technical debt for Ansible collections.
   Invoke when asked to check, review, or analyse SonarCloud results, code smells, security hotspots, or static analysis findings.
 
@@ -79,6 +283,8 @@ Module provides skills and commands for Ansible collection development workflows
 - `gh` CLI - Used for GitHub/GitLab operations (PRs, releases, upstream detection)
 - `ansible-test` - Used for running sanity, unit, and integration tests
 - `curl` - Used for fetching SonarCloud analysis results
+- `pip-audit` or `safety` - Used for Python dependency security scanning
+- `gitleaks` - Used for secret detection
 
 **Required Context:**
 
@@ -92,3 +298,11 @@ Module provides skills and commands for Ansible collection development workflows
 - The changelog-fragment skill supports two modes: creating new fragments and updating existing fragments with PR URLs
 - The release skill includes human confirmation gates at critical steps
 - The pr-review skill produces structured reports with blockers/warnings/suggestions and a verdict
+- The security-scan skill can be integrated into CI/CD pipelines for automated security checks
+
+## References
+
+- [Ansible Collection Development Guide](https://docs.ansible.com/ansible/latest/dev_guide/developing_collections.html)
+- [Red Hat CoP Automation Good Practices](https://github.com/redhat-cop/automation-good-practices)
+- [Ansible Collection Review Checklist](https://docs.ansible.com/ansible/latest/community/collection_contributors/collection_reviewing.html)
+- Pattern inspired by [ansible/apme](https://github.com/ansible/apme) agent architecture
