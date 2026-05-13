@@ -1,0 +1,21 @@
+name: Ansible Content Marketplace
+description: Curated collection of AI skills related to Ansible content development
+version: 0.0.1
+modules:
+  - name: ansible-collection-sdlc
+    description: >-
+      A module for the full software development lifecycle of Ansible collections including conventional commits, changelog
+      fragments, PR reviews, releases, and testing
+    version: 0.0.1
+    repository: https://github.com/ansible-community/ai-forge.git
+    path: ansible-collection-sdlc/module
+    tags: [ansible, content, collections, workflow]
+
+  - name: ansible-collection-standards
+    description: >-
+      A module for for standards and guidelines compliance, scaffolding, and code review against Red Hat Communities of
+      Practice (CoP) automation good practices
+    version: 0.0.1
+    repository: https://github.com/ansible-community/ai-forge.git
+    path: ansible-collection-standards/module
+    tags: [ansible, content, collections, standards]
