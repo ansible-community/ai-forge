@@ -46,9 +46,9 @@ lola install ansible-role -a claude-code ~
 lola install ansible-collection-sdlc -a claude-code ~
 ```
 
-### Declaritive Module Management
+### Declarative Module Management
 
-To manage the modules recommended for your project delcaritively:
+To manage the modules recommended for your project declaratively:
 
 1. Install `lola` and this repository's marketplace, as described in the quickstart section.
 2. Create a `.lola-req` file in your project. For example:
@@ -105,7 +105,7 @@ Full lifecycle: commits, PRs, releases, tests.
 - `release` - Guided collection release process
 - `remove-deprecations` - Find and remove overdue deprecations
 - `run-tests` - Run and write tests using ansible-test
-- `sonarcloud-analysis` - Analyse SonarCloud issues and technical debt
+- `sonarcloud-analysis` - Analyze SonarCloud issues and technical debt
 - `next-release` - Calculate next patch/minor/major versions for version_added tags
 - `current-release` - Fetch current release version (helper)
 - `get-branch-changes` - Determine merge-base and changed files (helper)
