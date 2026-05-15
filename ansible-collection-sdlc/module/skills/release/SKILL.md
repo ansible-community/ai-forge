@@ -108,7 +108,20 @@ Verify before continuing:
 - Working tree is clean (no uncommitted changes)
 - Changelog fragments exist: `ls changelogs/fragments/`
 
-### Step 4 — Update galaxy.yml version
+### Step 4 — Security scan
+
+Run security scan before release to catch vulnerabilities:
+
+Invoke the `security-scan` skill to check for:
+
+- Vulnerable Python dependencies
+- Compromised GitHub Actions versions
+- Hardcoded secrets in code
+
+**CONFIRM:** Review any security findings. Critical or high severity issues should block the release.
+Resolve all critical issues before proceeding.
+
+### Step 5 — Update galaxy.yml version
 
 If `CURRENT_VERSION` in `galaxy.yml` does not match `VERSION`, update it:
 
@@ -116,13 +129,13 @@ If `CURRENT_VERSION` in `galaxy.yml` does not match `VERSION`, update it:
 sed -i "s/^version: .*/version: VERSION/" galaxy.yml
 ```
 
-### Step 5 — Create release branch
+### Step 6 — Create release branch
 
 ```bash
 git checkout -b release_VERSION
 ```
 
-### Step 6 — Generate changelog
+### Step 7 — Generate changelog
 
 Determine the release type from `VERSION` and suggest a release summary using this template:
 
@@ -154,7 +167,7 @@ antsibull-changelog release --reload-plugins
 
 **CONFIRM:** Show the human the generated `CHANGELOG.rst` diff and ask them to confirm the content is correct before continuing.
 
-### Step 7 — Commit and push release branch
+### Step 8 — Commit and push release branch
 
 ```bash
 git add -A
@@ -162,7 +175,7 @@ git commit -m "Release VERSION"
 git push origin release_VERSION
 ```
 
-### Step 8 — Create pull request
+### Step 9 — Create pull request
 
 ```bash
 gh pr create --repo UPSTREAM_PATH --title "Release VERSION" --body "Release VERSION of NAMESPACE.COLLECTION."
@@ -170,7 +183,7 @@ gh pr create --repo UPSTREAM_PATH --title "Release VERSION" --body "Release VERS
 
 **CONFIRM:** Wait for the human to confirm that CI has passed and the PR has been reviewed and merged before continuing.
 
-### Step 9 — Update local main
+### Step 10 — Update local main
 
 After the PR is merged:
 
@@ -179,7 +192,7 @@ git checkout main
 git pull --rebase upstream main
 ```
 
-### Step 10 — Tag and push
+### Step 11 — Tag and push
 
 **CONFIRM:** Ask the human to confirm before creating and pushing the tag. This action is irreversible.
 
@@ -188,13 +201,13 @@ git tag -a VERSION -m "NAMESPACE.COLLECTION: VERSION"
 git push upstream VERSION
 ```
 
-### Step 11 — Create GitHub release
+### Step 12 — Create GitHub release
 
 ```bash
 gh release create VERSION --repo UPSTREAM_PATH --title "VERSION" --notes "See [CHANGELOG.rst](https://github.com/UPSTREAM_PATH/blob/main/CHANGELOG.rst) for details."
 ```
 
-### Step 12 — Bullhorn release announcement
+### Step 13 — Bullhorn release announcement
 
 Generate and present the following announcement text for the user to post
 in the [Bullhorn newsletter](https://forum.ansible.com/c/news/bullhorn/17)
@@ -217,5 +230,6 @@ Present each step as a numbered section containing:
 ## Integration with Other Skills
 
 - **get-upstream-info**: Used in Step 1 to determine upstream repository path for gh CLI commands (`gh pr create`, `gh release create`)
+- **security-scan**: Used in Step 4 to check for vulnerabilities before release
 - **current-release**: Not currently used; release skill reads galaxy.yml directly to get namespace, name, and version together
 - **next-release**: Not used; release skill has unique logic to scan changelog fragments and determine bump type for actual releases (next-release is for version_added tags)

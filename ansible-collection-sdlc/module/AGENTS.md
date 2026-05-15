@@ -14,7 +14,7 @@ This module defines specialized agent roles for Ansible content development. Eac
 
 **Context Files**:
 
-- `CLAUDE.md` or project documentation
+- `CLAUDE.md`, `AGENTS.md`, or project documentation
 - Module documentation standards
 - Existing modules for patterns
 

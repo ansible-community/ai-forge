@@ -27,6 +27,20 @@ Identify security issues before they reach production:
 - Compromised GitHub Actions versions
 - Supply chain risks in CI/CD pipelines
 
+## Scope
+
+**Primary use case**: Catch secrets before they are pushed to shared branches. Run this scan:
+
+- Before creating a PR
+- In CI pipelines on pull requests
+- Before releases
+
+**Secondary use case**: Identify existing secrets that need remediation. For secrets already in git history:
+
+- The secret is already exposed and should be rotated immediately
+- Use `git filter-repo` or BFG to remove from history
+- This skill identifies what needs rotation, not how to scrub history
+
 ## When to Invoke
 
 TRIGGER when:
@@ -69,7 +83,7 @@ Searches `.github/workflows/*.yml` and `.github/workflows/*.yaml` for:
 
 ### 2. Python Dependencies
 
-Searches `requirements.txt`, `test-requirements.txt`, `pyproject.toml`, `bindep.txt` for:
+Searches `requirements.txt`, `*-requirements.txt`, `pyproject.toml`, `bindep.txt` for:
 
 - Packages with known CVEs (via pip-audit or safety)
 - Yanked package versions
@@ -95,9 +109,15 @@ Searches `plugins/`, `roles/`, `playbooks/` for:
 
 Searches `tests/`, `examples/`, `docs/` for:
 
-- Credentials in test data
-- Real API keys in examples
+- Real API keys or credentials in examples
 - Sensitive data in integration test configs
+
+**Exceptions**: Skip findings where:
+
+- An inline comment marks the credential as intentional (e.g., `# test-credential: intentional`)
+- The file is clearly a test fixture with generated/example data
+
+**Recommendation**: Generate test credentials (keys, certificates) at runtime rather than committing them. This avoids false positives and prevents certificate expiration issues in tests.
 
 ### 5. Git History (Optional)
 
@@ -151,20 +171,19 @@ grep -rE "actions/upload-artifact@v[1-3]" .github/workflows/
 ### Step 4: Scan for secrets
 
 ```bash
-# Using gitleaks (preferred)
-gitleaks detect --source . --no-git
-
-# Manual pattern matching
-grep -rE "(password|secret|token|api_key)\s*[:=]\s*['\"][^'\"]+['\"]" \
-  --include="*.py" --include="*.yml" --include="*.yaml" \
-  plugins/ roles/ tests/ examples/
-
-# Check for private keys
-grep -rl "BEGIN.*PRIVATE KEY" .
-
-# Check for AWS credentials
-grep -rE "AKIA[0-9A-Z]{16}" .
+# Using gitleaks (required for reliable detection)
+if command -v gitleaks &>/dev/null; then
+    gitleaks detect --source . --no-git --report-format json --report-path gitleaks-report.json
+else
+    echo "WARNING: gitleaks not installed. Secret detection skipped."
+    echo "Install: https://github.com/gitleaks/gitleaks#installing"
+fi
 ```
+
+**Why gitleaks**: Manual regex patterns like `BEGIN.*PRIVATE KEY` or `AKIA` have high
+false-positive rates. `AKIA` is just the key ID (like a username), not secret material.
+`BEGIN.*PRIVATE KEY` matches search patterns and validation code. gitleaks uses
+context-aware detection and supports `.gitleaksignore` for marking false positives.
 
 ### Step 5: Generate report
 
