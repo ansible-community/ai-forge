@@ -1,0 +1,233 @@
+# Project-Specific Approved Sources Configuration
+#
+# Copy this file to .claude/approved-sources.yml in your project root
+# to customize validation rules for your organization.
+#
+# This config will override the skill's default approved-sources.yml
+
+# ============================================================================
+# TRUSTED ACTION SOURCES
+# ============================================================================
+
+# Trusted action owners (GitHub organizations/users)
+# These are pre-approved to use any of their actions
+trusted_owners:
+  # Official GitHub Actions (keep these)
+  - actions
+  - github
+
+  # Cloud providers (keep if you use them)
+  - docker
+  - aws-actions
+  - azure
+  - google-github-actions
+
+  # Popular community actions (review and customize)
+  - codecov
+  - coverallsapp
+  - softprops
+  - peter-evans
+
+  # ⚠️ ADD YOUR ORGANIZATION HERE ⚠️
+  - your-org-name  # <-- Replace with your GitHub org
+  - your-second-org  # If you have multiple orgs
+
+# Specific trusted repositories (for granular control)
+# Use this when you trust specific repos but not the whole owner
+trusted_repos:
+  - ansible/ansible-lint-action
+  - rhysd/action-setup-vim
+  - ruby/setup-ruby
+  - shivammathur/setup-php
+
+  # ⚠️ ADD YOUR INTERNAL/TRUSTED ACTIONS HERE ⚠️
+  # - your-org/custom-build-action
+  # - your-org/deploy-action
+  # - trusted-partner/verified-action
+
+# ============================================================================
+# DEPRECATED & PROHIBITED ACTIONS
+# ============================================================================
+
+# Actions that should no longer be used
+# Format: owner/repo@version  # Comment with reason/replacement
+deprecated_repos:
+  # Deprecated versions of official actions
+  - actions/checkout@v1  # Use v4+
+  - actions/checkout@v2  # Use v4+
+  - actions/setup-node@v1  # Use v4+
+  - actions/setup-node@v2  # Use v4+
+  - actions/setup-python@v1  # Use v5+
+  - actions/cache@v1  # Use v4+
+  - actions/cache@v2  # Use v4+
+  - actions/upload-artifact@v1  # Use v4+
+  - actions/upload-artifact@v2  # Use v4+
+  - actions/download-artifact@v1  # Use v4+
+
+  # Archived/unmaintained actions
+  - stefanzweifel/git-auto-commit-action@v4  # Archived, use EndBug/add-and-commit
+
+  # ⚠️ ADD YOUR DEPRECATED ACTIONS HERE ⚠️
+  # - old-org/legacy-action@v1  # Use new-org/replacement@v2
+  # - your-org/deprecated-deploy@v1  # Use your-org/new-deploy@v2
+
+# ============================================================================
+# SECURITY POLICIES
+# ============================================================================
+
+# SHA pinning requirements
+sha_pinning:
+  # Require all actions to be pinned (recommended: true)
+  required: true
+
+  # Allow version tags (v1, v1.2.3) from trusted owners
+  # Set to false to require SHA pins even for trusted sources (most secure)
+  allow_version_tags_from_trusted: true
+
+  # Block mutable references (@main, @master, @develop)
+  forbid_mutable_refs: true
+
+  # Exceptions (regex patterns)
+  exceptions:
+    - "^\\./.*"  # Allow local actions (./path/to/action)
+
+# Permissions policy
+permissions:
+  # Require explicit permissions block in all workflows
+  require_explicit: true
+
+  # Forbid dangerous permissions: write-all
+  forbid_write_all: true
+
+  # Maximum default permission scope (read/write/none)
+  # Workflows requiring higher permissions must specify them explicitly
+  max_default_scope: "read"
+
+  # Jobs allowed to have elevated permissions (by job name)
+  # Other jobs will be flagged if they request write permissions
+  elevated_permission_jobs:
+    - "release"
+    - "publish"
+    - "deploy"
+    - "publish-package"
+
+# ============================================================================
+# PATTERNS TO DETECT
+# ============================================================================
+
+# Secret exposure patterns (regex)
+# These will trigger CRITICAL or ERROR findings
+secret_patterns:
+  # AWS
+  - pattern: "AKIA[0-9A-Z]{16}"
+    severity: critical
+    description: "AWS Access Key ID"
+
+  # GitHub
+  - pattern: "gh[pousr]_[A-Za-z0-9]{36,}"
+    severity: critical
+    description: "GitHub Personal Access Token"
+
+  # Slack
+  - pattern: "xox[baprs]-[0-9]{10,12}-[0-9]{10,12}-[A-Za-z0-9]+"
+    severity: critical
+    description: "Slack Token"
+
+  # Generic secrets
+  - pattern: "[\"']?[a-zA-Z_]*(api|secret|key|token|password)[\"']?\\s*[:=]\\s*[\"'][a-zA-Z0-9_-]{20,}[\"']"
+    severity: error
+    description: "Potential hardcoded credential"
+
+  # SSH keys
+  - pattern: "-----BEGIN (RSA |OPENSSH )?PRIVATE KEY-----"
+    severity: critical
+    description: "SSH Private Key"
+
+  # ⚠️ ADD YOUR CUSTOM SECRET PATTERNS HERE ⚠️
+  # - pattern: "your-company-api-key-pattern"
+  #   severity: critical
+  #   description: "Your Company API Key"
+
+# Dangerous workflow patterns
+dangerous_patterns:
+  # Secret used in shell commands
+  - pattern: "\\$\\{\\{.*secrets\\..*\\}\\}"
+    context: "run:|script:"
+    severity: error
+    description: "Secret used in shell command - may be logged"
+
+  # Secret echoed to logs
+  - pattern: "echo.*\\$\\{\\{.*secrets\\."
+    severity: critical
+    description: "Secret echoed to logs"
+
+  # Secret logged to console
+  - pattern: "console\\.log.*\\$\\{\\{.*secrets\\."
+    severity: critical
+    description: "Secret logged to console"
+
+  # Secret in URL
+  - pattern: "https?://[^/]*\\$\\{\\{.*secrets\\."
+    severity: critical
+    description: "Secret in URL - will be logged by proxies"
+
+# Dangerous trigger combinations
+dangerous_triggers:
+  # pull_request_target with secrets (critical security issue)
+  - trigger: "pull_request_target"
+    with_secrets: true
+    severity: critical
+    description: "pull_request_target with secrets allows untrusted PR code to access secrets"
+
+  # workflow_dispatch with secrets (warning - ensure proper auth)
+  - trigger: "workflow_dispatch"
+    with_secrets: true
+    severity: warning
+    description: "Manual workflows with secrets - ensure proper authorization"
+
+# ============================================================================
+# UNTRUSTED SOURCE PATTERNS
+# ============================================================================
+
+# Patterns for detecting untrusted action sources
+# These apply after checking trusted_owners and trusted_repos
+untrusted_patterns:
+  # Personal repositories (not organization-owned)
+  - pattern: "^[^/]+/[^/]+$"
+    severity: warning
+    description: "Personal repository - verify trustworthiness"
+    # Exceptions for known-good personal repos
+    exceptions:
+      - "softprops/action-gh-release"
+      - "peter-evans/create-pull-request"
+
+  # Bot accounts
+  - pattern: ".*bot.*"
+    severity: info
+    description: "Bot account - verify it's official"
+
+# ============================================================================
+# NOTES
+# ============================================================================
+
+# How to use this configuration:
+#
+# 1. Copy to your project:
+#    cp examples/project-approved-sources.yml .claude/approved-sources.yml
+#
+# 2. Customize trusted sources:
+#    - Add your organization to trusted_owners
+#    - Add internal actions to trusted_repos
+#    - Add deprecated actions your team should avoid
+#
+# 3. Adjust policies:
+#    - Set sha_pinning requirements
+#    - Configure permission policies
+#    - Add custom secret patterns
+#
+# 4. Validate workflows:
+#    /validate-workflows
+#
+# 5. Share across repositories:
+#    - Commit .claude/approved-sources.yml to version control
+#    - Or create a shared config repo and symlink it

@@ -1,0 +1,161 @@
+# Example: INSECURE GitHub Actions Workflow (DO NOT USE)
+#
+# This workflow demonstrates security anti-patterns that the validation skill detects:
+# ❌ Missing permissions block (defaults to write-all)
+# ❌ Deprecated action versions
+# ❌ Mutable action references
+# ❌ Untrusted action sources
+# ❌ Hardcoded secrets
+# ❌ Secrets exposed in logs
+# ❌ Secrets passed to untrusted actions
+# 🚨 pull_request_target with secrets
+
+name: Insecure CI Pipeline (EXAMPLE - DO NOT USE)
+
+on:
+  # 🚨 CRITICAL: pull_request_target allows untrusted PR code to access secrets
+  pull_request_target:
+    branches: [main]
+
+# ❌ MISSING: No permissions block - defaults to write-all access!
+# Should have:
+# permissions:
+#   contents: read
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # ❌ ERROR: Using deprecated v2 (Node.js 12 EOL)
+      # Should use: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # ❌ ERROR: Using deprecated v1
+      # Should use: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '20'
+
+      # ❌ WARNING: Mutable reference (@main can be changed)
+      # Should pin to: @v4 or @<sha>
+      - name: Cache dependencies
+        uses: actions/cache@main
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+
+      # 🚨 CRITICAL: Hardcoded AWS credentials!
+      # Should use GitHub secrets and OIDC
+      - name: Configure AWS
+        run: |
+          aws configure set aws_access_key_id AKIAIOSFODNN7EXAMPLE
+          aws configure set aws_secret_access_key wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ❌ ERROR: Secret echoed to logs (exposed to anyone with read access)
+      - name: Debug token
+        run: echo "Token is ${{ secrets.GITHUB_TOKEN }}"
+
+      # ❌ ERROR: Secret in URL (logged by proxies/load balancers)
+      - name: Call API
+        run: curl https://api.example.com?token=${{ secrets.API_TOKEN }}
+
+      - name: Run tests
+        run: npm test
+
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # ❌ WARNING: Action from unknown/untrusted source
+      # ❌ WARNING: Mutable reference (@master)
+      # Should: Review action code and pin to SHA
+      - name: Deploy with untrusted action
+        uses: random-user/deploy-action@master
+
+      # ❌ WARNING: Personal repo, not organization
+      # ⚠️ Secret passed to non-approved third-party action
+      - name: Send notification
+        uses: some-person/slack-notify@v1
+        with:
+          slack_token: ${{ secrets.SLACK_TOKEN }}
+          message: "Deployment complete"
+
+      # 🚨 CRITICAL: Hardcoded GitHub token pattern
+      - name: Create release
+        run: |
+          TOKEN="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          curl -H "Authorization: token $TOKEN" \
+            https://api.github.com/repos/owner/repo/releases
+
+  audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    # ❌ ERROR: Explicit write-all permissions (forbidden)
+    permissions: write-all
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # ❌ ERROR: Using deprecated/archived action
+      # Repository is archived and no longer maintained
+      - name: Old security scan
+        uses: stefanzweifel/git-auto-commit-action@v4
+
+      # ❌ WARNING: Secret logged to console
+      - name: Debug secrets
+        run: |
+          echo "Database password: ${{ secrets.DB_PASSWORD }}"
+          console.log("API Key:", "${{ secrets.API_KEY }}")
+
+  dangerous-trigger:
+    # 🚨 CRITICAL: Combines pull_request_target with secrets
+    # Allows malicious PRs to exfiltrate secrets!
+    name: Dangerous PR Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      # 🚨 Untrusted PR code can now access secrets
+      - name: Build with secrets
+        run: |
+          echo "Building with key: ${{ secrets.BUILD_KEY }}"
+          npm run build
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+
+# VALIDATION RESULTS IF RUN:
+# 🚨 Critical: 4 issues
+#    - Hardcoded AWS credentials
+#    - Hardcoded GitHub token
+#    - pull_request_target with secrets (2 instances)
+#
+# ❌ Errors: 8 issues
+#    - Missing permissions block
+#    - permissions: write-all usage
+#    - Deprecated actions/checkout@v2 (2 instances)
+#    - Deprecated actions/setup-node@v1
+#    - Secrets echoed/logged (3 instances)
+#
+# ⚠️ Warnings: 5 issues
+#    - Mutable ref actions/cache@main
+#    - Mutable ref random-user/deploy-action@master
+#    - Untrusted action random-user/deploy-action
+#    - Untrusted action some-person/slack-notify
+#    - Secret in URL
+#
+# Verdict: ❌ FAILED - 4 critical, 8 errors, 5 warnings

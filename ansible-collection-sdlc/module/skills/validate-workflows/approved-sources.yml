@@ -1,0 +1,156 @@
+# Approved GitHub Actions Sources Configuration
+#
+# This file defines trusted action sources and deprecated/untrusted repositories
+# Used by /validate-workflows to assess action security
+
+# Trusted action owners (GitHub orgs/users that are pre-approved)
+trusted_owners:
+  # Official GitHub Actions
+  - actions  # actions/checkout, actions/setup-*, etc.
+  - github   # github/codeql-action, etc.
+
+  # Docker official actions
+  - docker   # docker/login-action, docker/build-push-action
+
+  # Cloud provider official actions
+  - aws-actions        # aws-actions/configure-aws-credentials
+  - azure             # azure/login, azure/webapps-deploy
+  - google-github-actions  # google-github-actions/auth
+
+  # Widely trusted third-party
+  - codecov           # codecov/codecov-action
+  - coverallsapp      # coverallsapp/github-action
+  - softprops         # softprops/action-gh-release
+  - peter-evans       # peter-evans/create-pull-request
+  - goreleaser        # goreleaser/goreleaser-action
+  - cycjimmy          # cycjimmy/semantic-release-action
+
+# Specific trusted repositories (for granular control)
+# Format: owner/repo
+trusted_repos:
+  - ansible/ansible-lint-action
+  - rhysd/action-setup-vim
+  - ruby/setup-ruby
+  - shivammathur/setup-php
+
+# Known deprecated/archived repositories
+# These should trigger errors when found
+deprecated_repos:
+  - actions/setup-node@v1  # Use v4+
+  - actions/setup-python@v1  # Use v5+
+  - actions/checkout@v1  # Use v4+
+  - actions/checkout@v2  # Use v4+
+  - actions/cache@v1  # Use v4+
+  - actions/cache@v2  # Use v4+
+  - actions/upload-artifact@v1  # Use v4+
+  - actions/upload-artifact@v2  # Use v4+
+  - actions/download-artifact@v1  # Use v4+
+  - stefanzweifel/git-auto-commit-action@v4  # Archived, use EndBug/add-and-commit
+
+# Untrusted or problematic action patterns
+# These will trigger warnings for security review
+untrusted_patterns:
+  - pattern: "^[^/]+/[^/]+$"
+    severity: warning
+    description: "Personal repository - verify trustworthiness"
+    exceptions:
+      - "softprops/action-gh-release"
+      - "peter-evans/create-pull-request"
+
+  - pattern: ".*bot.*"
+    severity: info
+    description: "Bot account - verify it's official"
+
+  - pattern: "^(?!actions|github|docker|aws-actions|azure|google-github-actions).*"
+    severity: info
+    description: "Third-party action - review code before use"
+
+# SHA pinning policy
+sha_pinning:
+  # Require SHA pinning for all non-local actions
+  required: true
+
+  # Allow version tags (v1, v1.2.3) from trusted owners
+  allow_version_tags_from_trusted: true
+
+  # Forbid mutable references (@main, @master, @develop)
+  forbid_mutable_refs: true
+
+  # Exceptions (local actions, specific repos)
+  exceptions:
+    - "^\\./.*"  # Local actions (./path/to/action)
+
+# Permissions policy
+permissions:
+  # Require explicit permissions block
+  require_explicit: true
+
+  # Forbid write-all
+  forbid_write_all: true
+
+  # Maximum default permission scope (read/write/none)
+  max_default_scope: "read"
+
+  # Jobs that are allowed to have elevated permissions
+  elevated_permission_jobs:
+    - "release"
+    - "publish"
+    - "deploy"
+
+# Secret exposure patterns to detect
+secret_patterns:
+  # Hardcoded AWS credentials
+  - pattern: "AKIA[0-9A-Z]{16}"
+    severity: critical
+    description: "AWS Access Key ID"
+
+  # Hardcoded GitHub tokens
+  - pattern: "gh[pousr]_[A-Za-z0-9]{36,}"
+    severity: critical
+    description: "GitHub Personal Access Token"
+
+  # Slack tokens
+  - pattern: "xox[baprs]-[0-9]{10,12}-[0-9]{10,12}-[A-Za-z0-9]+"
+    severity: critical
+    description: "Slack Token"
+
+  # Generic API keys/secrets
+  - pattern: "[\"']?[a-zA-Z_]*(api|secret|key|token|password)[\"']?\\s*[:=]\\s*[\"'][a-zA-Z0-9_-]{20,}[\"']"
+    severity: error
+    description: "Potential hardcoded credential"
+
+  # SSH private keys
+  - pattern: "-----BEGIN (RSA |OPENSSH )?PRIVATE KEY-----"
+    severity: critical
+    description: "SSH Private Key"
+
+# Dangerous workflow patterns
+dangerous_patterns:
+  - pattern: "\\$\\{\\{.*secrets\\..*\\}\\}"
+    context: "run:|script:"
+    severity: error
+    description: "Secret used in shell command - may be logged"
+
+  - pattern: "echo.*\\$\\{\\{.*secrets\\."
+    severity: critical
+    description: "Secret echoed to logs"
+
+  - pattern: "console\\.log.*\\$\\{\\{.*secrets\\."
+    severity: critical
+    description: "Secret logged to console"
+
+  - pattern: "https?://[^/]*\\$\\{\\{.*secrets\\."
+    severity: critical
+    description: "Secret in URL - will be logged by proxies"
+
+# Special dangerous triggers
+dangerous_triggers:
+  - trigger: "pull_request_target"
+    with_secrets: true
+    severity: critical
+    description: "pull_request_target with secrets allows untrusted PR code to access secrets"
+
+  - trigger: "workflow_dispatch"
+    with_secrets: true
+    severity: warning
+    description: "Manual workflows with secrets - ensure proper authorization"

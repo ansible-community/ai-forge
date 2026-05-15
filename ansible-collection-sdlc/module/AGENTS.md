@@ -218,6 +218,12 @@ When transitioning between agent roles:
   project-local Python virtual environment. Uses the `python-virtual-env` skill.
   Invoke when asked to set up a venv, local Python dev environment, or validate `.venv` before pip installs.
 
+- **/validate-workflows command**: Use the `/validate-workflows` command to validate GitHub Actions workflow files for security issues.
+  Checks action sources against approved lists, detects deprecated/archived repositories, validates SHA pinning, identifies secret exposure,
+  and audits permissions. Supports flags for specific checks (--check-sources, --check-permissions, --check-secrets, --check-actions)
+  and auto-fix mode (--fix). Invoke when asked to validate workflows, check workflow security, review GitHub Actions,
+  or before creating PRs that modify .github/workflows/ files.
+
 ### Skills
 
 - **commit skill**: Use the `commit` skill when you want to create a conventional commit
@@ -291,6 +297,10 @@ When transitioning between agent roles:
   dev, installing Python dependencies with pip, or before non-Docker Python commands.
   Do not use for `ansible-test --docker` workflows unless the user explicitly wants a local venv.
 
+- **validate-workflows skill**: Use the `validate-workflows` skill to validate GitHub Actions workflows for security issues and best practices.
+  Detects deprecated actions, untrusted sources, missing SHA pins, secret exposure, and permission misconfigurations.
+  Invoke when asked to validate workflows, check GitHub Actions security, or review .github/workflows/ files.
+
 ### Utility Skills
 
 - **current-release skill**: Helper skill that fetches the current release version from git tags/branches or galaxy.yml. Used internally by other skills.
@@ -318,6 +328,8 @@ When transitioning between agent roles:
 - `curl` - Used for fetching SonarCloud analysis results
 - `pip-audit` or `safety` - Used for Python dependency security scanning
 - `gitleaks` - Used for secret detection
+- `yq` (v4+) - Used for YAML parsing in workflow validation
+- `jq` - Used for JSON processing in workflow validation
 
 **Required Context:**
 
