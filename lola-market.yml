@@ -34,7 +34,7 @@ modules:
       Contains community-facing skills for cloud provider integrations, infrastructure management, and cloud-native workflows.
     version: 0.0.1
     repository: https://github.com/ansible-community/ai-forge.git
-    path: ansible-collection-standards/module
+    path: cloud_content/module
     tags: [ansible, content, collections, standards]
 
   - name: network_content
@@ -43,5 +43,5 @@ modules:
       Contains community-facing skills for network device management, configuration, and validation.
     version: 0.0.1
     repository: https://github.com/ansible-community/ai-forge.git
-    path: ansible-collection-standards/module
+    path: network_content/module
     tags: [ansible, content, collections, standards]
