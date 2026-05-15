@@ -52,13 +52,14 @@ To manage the modules recommended for your project declaratively:
 
 1. Install `lola` and this repository's marketplace, as described in the quickstart section.
 2. Create a `.lola-req` file in your project. For example:
-```
-# .lola-req - AI context modules for this project
 
-# Modules from https://raw.githubusercontent.com/ansible-community/ai-forge/main/lola-market.yml
-@ansible-content/ai-forge/ansible-collection-sdlc
-@ansible-content/ai-forge/ansible-collection-standards
-```
+    ```
+    # .lola-req - AI context modules for this project
+
+    # Modules from https://raw.githubusercontent.com/ansible-community/ai-forge/main/lola-market.yml
+    @ansible-content/ai-forge/ansible-collection-sdlc
+    @ansible-content/ai-forge/ansible-collection-standards
+    ```
 
 3. Install the modules if needed, `lola sync`
 
