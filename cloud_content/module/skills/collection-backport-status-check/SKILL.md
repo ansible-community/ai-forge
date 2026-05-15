@@ -5,7 +5,7 @@ description: >-
   branches. Detects open backport PRs and patchback failures that must be resolved
   before creating a release prep PR. Complements version analysis skills by focusing
   on process blockers. By default, checks the two most recent stable branches.
-version: "2.0"
+version: "1.0"
 ---
 
 # Skill: collection-backport-status-check
