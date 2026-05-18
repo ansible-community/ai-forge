@@ -26,10 +26,12 @@ Retrieves a GitHub issue, validates it's actionable, extracts key information, a
 ## Prerequisites
 
 **Preferred (GitHub MCP):**
+
 - GitHub MCP server configured (see `GITHUB_MCP_SETUP.md`)
 - Provides richer issue data (comments, timeline, linked PRs)
 
 **Fallback (gh CLI):**
+
 - `gh` CLI installed and authenticated
 - Used when GitHub MCP is not available
 
@@ -61,6 +63,7 @@ Retrieves a GitHub issue, validates it's actionable, extracts key information, a
 When this skill is invoked:
 
 1. **Detect GitHub access method**
+
    ```python
    # Check if GitHub MCP is available
    try:
@@ -77,6 +80,7 @@ When this skill is invoked:
    ```
 
 2. **Parse issue URL or number**
+
    ```bash
    # Check if full GitHub URL was provided
    if [[ "$INPUT" =~ ^https://github.com/([^/]+)/([^/]+)/issues/([0-9]+) ]]; then
@@ -110,8 +114,9 @@ When this skill is invoked:
    ```
 
 3. **Fetch issue details** (batch in ONE message)
-   
+
    **Method A: GitHub MCP (Preferred)**
+
    ```python
    # Use GitHub MCP to get rich issue data
    issue = github_get_issue(
@@ -132,8 +137,9 @@ When this skill is invoked:
    # - issue.created_at
    # - issue.updated_at
    ```
-   
+
    **Method B: gh CLI (Fallback)**
+
    ```bash
    # Get all issue data in one gh call
    gh issue view $ISSUE_NUMBER \
@@ -142,7 +148,7 @@ When this skill is invoked:
    
    # Note: gh CLI provides less data (no timeline, no linked PRs)
    ```
-   
+
    **Why GitHub MCP is better:**
    - ✅ Includes comments (can find reproduction steps in discussion)
    - ✅ Includes timeline events (references, cross-links)
@@ -151,8 +157,9 @@ When this skill is invoked:
    - ✅ Better error handling
 
 4. **Parse and extract key information**
-   
+
    **Method A: GitHub MCP (Preferred)**
+
    ```python
    # MCP returns structured data - no JSON parsing needed
    title = issue.title
@@ -168,8 +175,9 @@ When this skill is invoked:
    timeline = issue.timeline  # Events, references, cross-links
    linked_prs = issue.linked_pull_requests  # Related PRs
    ```
-   
+
    **Method B: gh CLI (Fallback)**
+
    ```python
    # Parse JSON from gh output
    import json
@@ -186,7 +194,7 @@ When this skill is invoked:
    
    # Note: No timeline or linked PRs available
    ```
-   
+
    **Key information to extract:**
    - **Title**: Issue summary
    - **Description**: Full bug report
@@ -200,8 +208,9 @@ When this skill is invoked:
    - **Updated**: Last activity
 
 5. **Validate if issue is actionable**
-   
+
    **Check 1: Is it labeled as a bug?**
+
    ```python
    labels = issue['labels']
    is_bug = any(label['name'].lower() in ['bug', 'defect', 'error'] for label in labels)
@@ -213,6 +222,7 @@ When this skill is invoked:
    ```
 
    **Check 2: Is it open?**
+
    ```python
    if issue['state'] != 'OPEN':
        print(f"ℹ️  Issue is {issue['state']}")
@@ -220,6 +230,7 @@ When this skill is invoked:
    ```
 
    **Check 3: Has enough information?**
+
    ```python
    # Check if description has key sections
    required_info = {
@@ -249,6 +260,7 @@ When this skill is invoked:
    ```
 
    **Check 4: Has error messages/stack traces?**
+
    ```python
    # Check issue body
    has_traceback = 'Traceback' in issue['body'] or '```' in issue['body']
@@ -272,8 +284,9 @@ When this skill is invoked:
    ```
 
 6. **Extract affected components**
-   
+
    Identify what files/modules are likely affected:
+
    ```python
    import re
    
@@ -314,6 +327,7 @@ When this skill is invoked:
    ```
 
 7. **Categorize bug type**
+
    ```python
    bug_categories = {
        'crash': ['crash', 'segfault', 'fatal', 'core dump'],
@@ -346,8 +360,9 @@ When this skill is invoked:
    ```
 
 8. **Generate issue summary**
-   
+
    Create structured summary for planning stage:
+
    ```markdown
    # Issue #123: [Title]
    
@@ -376,7 +391,9 @@ When this skill is invoked:
    
    ## Error Messages
    ```
+
    [Stack trace or error output]
+
    ```
    
    ## Environment
@@ -412,10 +429,11 @@ When this skill is invoked:
    2. Verify reproduction in local environment
    3. Implement fix in affected files
    ```
-   
+
    **Note**: When using GitHub MCP, the summary will include richer context from comments, linked PRs, and timeline events. With gh CLI fallback, it will include only the basic issue information.
 
 9. **Save summary to file**
+
    ```bash
    mkdir -p .bug-fixes
    cat > .bug-fixes/issue-$ISSUE_NUMBER.md <<EOF
@@ -426,6 +444,7 @@ When this skill is invoked:
    ```
 
 10. **Report validation result**
+
     ```
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     Issue Analysis: #123
@@ -457,6 +476,7 @@ When this skill is invoked:
 ## Actionability Scoring
 
 **HIGH** (ready to fix):
+
 - ✅ Labeled as bug
 - ✅ Open issue
 - ✅ Has reproduction steps
@@ -464,11 +484,13 @@ When this skill is invoked:
 - ✅ Affected files identified
 
 **MEDIUM** (needs clarification):
+
 - ✅ Labeled as bug
 - ✅ Open issue
 - ⚠️  Missing some details (repro steps OR error messages)
 
 **LOW** (not ready):
+
 - ❌ Not labeled as bug
 - ❌ Closed issue
 - ❌ Vague description
@@ -480,15 +502,18 @@ When this skill is invoked:
 ## Integration Points
 
 This skill is imported by:
+
 - `/bug-fix` - Bug fix orchestrator
 - Can be used standalone for issue analysis
 
 ## Troubleshooting
 
 ### GitHub MCP Not Available
+
 If GitHub MCP tools are not available, the skill will automatically fall back to gh CLI.
 
 To set up GitHub MCP for richer data:
+
 ```bash
 # See GITHUB_MCP_SETUP.md for complete instructions
 npm install -g @modelcontextprotocol/server-github
@@ -510,13 +535,16 @@ npm install -g @modelcontextprotocol/server-github
 ```
 
 ### "gh CLI not found"
+
 If using fallback mode without MCP:
+
 ```bash
 brew install gh
 gh auth login
 ```
 
 ### "Issue not found"
+
 ```bash
 # With GitHub MCP:
 # Tool will return clear error message
@@ -526,7 +554,9 @@ gh issue view 123 --repo owner/repo
 ```
 
 ### "Missing information"
+
 Ask reporter for more details:
+
 ```bash
 # With GitHub MCP:
 # Use github_add_issue_comment tool
@@ -538,17 +568,20 @@ gh issue comment 123 --body "Could you provide reproduction steps?"
 ## Implementation Notes
 
 **Preferred: GitHub MCP**
+
 - Use `github_get_issue()` for structured data (no JSON parsing)
 - Access comments, timeline, and linked PRs automatically
 - Better error handling and authentication
 - Richer context for actionability analysis
 
 **Fallback: gh CLI**
+
 - Use `gh issue view --json` to get all data in one call (batch operation)
 - Parse JSON to extract structured information
 - Limited to basic issue data (no timeline or linked PRs)
 
 **General**
+
 - Auto-detect available GitHub access method
 - Validate completeness before proceeding (check comments if needed)
 - Save summary for use by issue-plan and issue-implement

@@ -26,6 +26,7 @@ Reads the implementation plan, applies code changes, adds mandatory unit and int
 **ALWAYS ask user for collection path at the start:**
 
 Before beginning implementation, ask user:
+
 ```
 Which directory should I work in?
 Please provide the full path to your collection git repository.
@@ -34,6 +35,7 @@ Example: /Users/username/projects/ansible_collections/amazon/aws
 ```
 
 After receiving path, verify it's valid:
+
 ```bash
 cd <user_provided_path>
 [ -d ".git" ] || echo "❌ Not a git repository"
@@ -45,31 +47,41 @@ cd <user_provided_path>
 ## Critical Requirements
 
 ### 1. Auto-Dependency Management
+
 **NEVER fail because a tool is missing.** Always:
+
 - Create virtual environment if it doesn't exist
 - Install required dependencies automatically
 - Use `.venv/bin/<tool>` instead of global installs
 
 ### 2. Comprehensive Testing (MANDATORY)
+
 **ALWAYS add both unit AND integration tests** for any code change:
+
 - Unit tests: parameter validation, behavior, edge cases
 - Integration tests: follow existing patterns, NO conditionals
 - Read full test role structure before writing tests
 
 ### 3. Version Management
+
 **Check stable branches, not main** to determine version_added:
+
 - Find latest stable: `git branch -r | grep upstream/stable | sort -V | tail -1`
 - Get version from stable: `git show upstream/stable-X:galaxy.yml`
 - Use next minor: 11.2.0 → 11.3.0 (for features)
 
 ### 4. RETURN Block Validation
+
 **Always verify RETURN block** when adding features:
+
 - Check if new feature changes return values
 - Update RETURN documentation if needed
 - Verify examples are still accurate
 
 ### 5. Integration Test Best Practices
+
 **Read full test role structure** before adding tests:
+
 - `tasks/main.yml` - understand orchestration
 - `tasks/common.yml` - understand helper tasks
 - `defaults/main.yml` - understand available variables
@@ -81,6 +93,7 @@ cd <user_provided_path>
 ### [1/13] Verify Collection Path and Load Plan
 
 **Step 1a: Ask user for collection path**
+
 ```
 Which directory should I work in?
 Please provide the full path to your collection git repository.
@@ -89,6 +102,7 @@ Please provide the full path to your collection git repository.
 ```
 
 **Step 1b: Verify path and change directory**
+
 ```bash
 cd <user_provided_path>
 pwd  # Confirm working directory
@@ -97,6 +111,7 @@ pwd  # Confirm working directory
 **Step 1c: Load implementation plan**
 
 Read the implementation plan from `.bug-fixes/plan-N.md`:
+
 - Extract files to modify
 - Extract code changes needed
 - Extract test strategy
@@ -129,6 +144,7 @@ fi
 #### Breaking Change Detection
 
 A change is **BREAKING** if it:
+
 - Removes a parameter or module
 - Changes parameter behavior in an incompatible way
 - Changes return value structure
@@ -138,6 +154,7 @@ A change is **BREAKING** if it:
 **Examples:**
 
 ❌ **BREAKING:**
+
 - Removing a parameter
 - Changing parameter default from `false` to `true`
 - Renaming a parameter without alias
@@ -145,6 +162,7 @@ A change is **BREAKING** if it:
 - Removing deprecated features before announced date
 
 ✅ **NOT BREAKING:**
+
 - Adding a new optional parameter
 - Adding a new module
 - Adding a new return value
@@ -178,11 +196,13 @@ fi
 ```
 
 **Use version_added:**
+
 - **New features (not breaking):** Next minor (11.3.0)
 - **Breaking changes:** Next major (12.0.0)
 - **Bug fixes:** No version_added
 
 **Changelog category:**
+
 - **Breaking changes:** `breaking_changes`
 - **New features:** `minor_changes`
 - **Bug fixes:** `bugfixes`
@@ -204,6 +224,7 @@ TEST_DIR="tests/integration/targets/<module_name>/"
 ```
 
 **Key patterns to look for:**
+
 - How tests use `module_defaults`
 - How tests use `common.yml` helpers (has_new_*, delete_*, etc.)
 - What variables are available in defaults
@@ -224,6 +245,7 @@ edit(file, old_code, new_code_with_version_added)
 ```
 
 **For new parameters:**
+
 ```yaml
 parameter_name:
   description: What this parameter does
@@ -249,6 +271,7 @@ edit(module_file, old_return, new_return)
 ```
 
 **Common cases:**
+
 - New parameter that doesn't affect output → No RETURN changes
 - New return value → Add to RETURN with examples
 - Changed return format → Update RETURN documentation
@@ -277,12 +300,14 @@ test_file = f"{unit_test_dir}/test_{feature_name}.py"
 ```
 
 **Minimum test cases:**
+
 - Happy path (feature works as expected)
 - Parameter validation (required parameters, invalid values)
 - Edge cases (None values, empty strings, etc.)
 - Check mode behavior
 
 **Example structure:**
+
 ```python
 from unittest.mock import MagicMock, patch
 import pytest
@@ -310,6 +335,7 @@ def test_check_mode():
 **Integration tests MUST run in CI without special resources.**
 
 **Step 1: Read existing tests**
+
 ```bash
 # Read the full test structure
 cat tests/integration/targets/<module>/tasks/main.yml
@@ -323,6 +349,7 @@ cat tests/integration/targets/<module>/tasks/<similar_feature>.yml
 **IMPORTANT:** Before creating new tests, check if you can integrate your new parameters into existing tests that already have the required resources set up.
 
 **Prefer integration over duplication:**
+
 ```yaml
 # ✅ BEST - Add parameters to existing test
 - name: Enable DNSSEC for Route53 public zone  # Existing test
@@ -342,6 +369,7 @@ cat tests/integration/targets/<module>/tasks/<similar_feature>.yml
 ```
 
 **Only create new tests if:**
+
 - No existing test covers the same resource/operation
 - Your feature requires a completely different test setup
 - Adding to existing tests would make them overly complex
@@ -349,6 +377,7 @@ cat tests/integration/targets/<module>/tasks/<similar_feature>.yml
 **Step 3: Find creative testing approach (if creating new tests)**
 
 Instead of:
+
 ```yaml
 # ❌ BAD - conditional test that won't run in CI
 - name: Test feature
@@ -360,6 +389,7 @@ Instead of:
 ```
 
 Do this:
+
 ```yaml
 # ✅ GOOD - creative approach that runs in CI
 - name: Create resource for testing
@@ -377,6 +407,7 @@ Do this:
 ```
 
 **Example from ec2_eip:**
+
 ```yaml
 # Instead of requiring BYOIP pool (conditional):
 # 1. Allocate IP from amazon pool (always available)
@@ -390,6 +421,7 @@ Do this:
 Look for related test targets that already set up the resources you need:
 
 **Example: Testing DNSSEC wait functionality**
+
 ```yaml
 # ❌ BAD - Creating duplicate resources
 # In route53_zone tests:
@@ -407,6 +439,7 @@ Look for related test targets that already set up the resources you need:
 ```
 
 **Critical: Always ensure cleanup**
+
 - If you create new resources, add cleanup to the `always` block
 - If you integrate into existing tests, verify cleanup is already handled
 - Cleanup should handle failures gracefully (`ignore_errors: true`)
@@ -414,6 +447,7 @@ Look for related test targets that already set up the resources you need:
 **Step 5: Follow existing patterns**
 
 Use the same structure as existing tests:
+
 - Use `common.yml` helpers (has_new_*, has_no_new_*, delete_*)
 - Use variables from `defaults/main.yml`
 - Follow `check_mode` → actual → idempotence pattern
@@ -486,6 +520,7 @@ git add <changed_files>
 #### Determine Changelog Category
 
 Based on antsibull-changelog categories:
+
 - `breaking_changes` - Backward incompatible changes
 - `major_changes` - Major new features
 - `minor_changes` - Minor new features (most common)
@@ -496,6 +531,7 @@ Based on antsibull-changelog categories:
 - `known_issues` - Known issues
 
 **Common categories:**
+
 - New parameter/feature: `minor_changes`
 - Bug fix: `bugfixes`
 - Breaking change: `breaking_changes`
@@ -508,6 +544,7 @@ Based on antsibull-changelog categories:
 **Example:** `2755-ec2_eip-address-parameter.yml`
 
 **Format:**
+
 ```yaml
 <category>:
   - <module_name> - <description>. (<link_to_issue_or_pr>)
@@ -516,24 +553,28 @@ Based on antsibull-changelog categories:
 **Examples:**
 
 **For new feature (minor_changes):**
+
 ```yaml
 minor_changes:
   - ec2_eip - added ``address`` parameter to allow allocating a specific IP address from a BYOIP pool (https://github.com/ansible-collections/amazon.aws/issues/2755).
 ```
 
 **For bug fix (bugfixes):**
+
 ```yaml
 bugfixes:
   - ec2_instance - fixed KeyError when optional_param is missing (https://github.com/ansible-collections/amazon.aws/issues/123).
 ```
 
 **For breaking change (breaking_changes):**
+
 ```yaml
 breaking_changes:
   - ec2_instance - removed deprecated ``instance_id`` parameter, use ``instance_ids`` instead (https://github.com/ansible-collections/amazon.aws/issues/456).
 ```
 
 **For deprecation (deprecated_features):**
+
 ```yaml
 deprecated_features:
   - ec2_instance - the ``instance_id`` parameter has been deprecated and will be removed in version 13.0.0. Use ``instance_ids`` instead (https://github.com/ansible-collections/amazon.aws/issues/789).
@@ -564,6 +605,7 @@ EOF
 ```
 
 **Fragment content guidelines:**
+
 - Use backticks around parameter names: \`\`address\`\`
 - Be concise but descriptive
 - Include link to issue or PR
@@ -586,6 +628,7 @@ done
 ```
 
 **Checklist before completing:**
+
 - [ ] Breaking change check performed
 - [ ] Code changes applied
 - [ ] version_added set correctly (major for breaking, minor for features)
@@ -606,6 +649,7 @@ done
 Report to the user that the implementation is complete and provide clear instructions for creating a branch and committing. **DO NOT execute git commands automatically** - the user should run them manually.
 
 **Output to user:**
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Ready for Git Operations
@@ -648,11 +692,13 @@ your fork (origin). PR will be from your fork to upstream.
 **Important reminders for the user:**
 
 **Branch Naming Convention:**
+
 - Features: `feature-<issue>-<description>`
-- Bug fixes: `fix-<issue>-<description>` 
+- Bug fixes: `fix-<issue>-<description>`
 - Enhancements: `enhance-<issue>-<description>`
 
 **Git Branching Strategy (CRITICAL):**
+
 - ✅ **Default:** Create ALL branches from `main` (features, bugfixes, enhancements)
 - ❌ **Exception:** Only branch from `stable-X` if user explicitly states:
   - "fix this on stable-11"
@@ -660,6 +706,7 @@ your fork (origin). PR will be from your fork to upstream.
   - Otherwise: **ALWAYS use main**
 
 **Commit Message Format:**
+
 - Features: `feat: <description>`
 - Bug fixes: `fix: <description>`
 - Breaking changes: `feat!:` or `fix!:`
@@ -803,6 +850,7 @@ Next steps (run manually):
 ## Error Handling
 
 ### Dependency Installation Fails
+
 ```
 ❌ Failed to install dependencies
 
@@ -816,6 +864,7 @@ Action required:
 ```
 
 ### No Existing Tests Found
+
 ```
 ⚠️  No existing tests found for module_y
 
@@ -827,6 +876,7 @@ Note: Follow Ansible collection test patterns
 ```
 
 ### Version Detection Fails
+
 ```
 ⚠️  Could not determine version from stable branch
 
@@ -840,6 +890,7 @@ Using fallback:
 ## Common Pitfalls
 
 ### ❌ DON'T
+
 - Skip tests ("I'll add them later")
 - Use conditional integration tests (`when: resource_available`)
 - Use global tool installations (might not exist)
@@ -848,6 +899,7 @@ Using fallback:
 - Only read one test file (miss patterns)
 
 ### ✅ DO
+
 - Always add comprehensive tests (unit + integration)
 - Find creative ways to test without special resources
 - Auto-install dependencies in virtual environment
@@ -858,16 +910,19 @@ Using fallback:
 ## Integration with Other Skills
 
 This skill is used by:
+
 - `/issue-fix` - Complete issue resolution workflow
 - Can be called standalone after `/issue-plan`
 
 This skill uses:
+
 - Implementation plan from `/issue-plan`
 - Repository configuration from `~/.claude/skills/issue-fix.conf`
 
 ## Examples
 
 **Usage:**
+
 ```bash
 # With full GitHub URL (recommended - copy/paste from browser)
 /issue-implement https://github.com/ansible-collections/amazon.aws/issues/2755
@@ -929,11 +984,13 @@ This skill uses:
 ## Testing This Skill
 
 To verify this skill works correctly, test with:
+
 1. A simple parameter addition (like ec2_eip address parameter)
 2. A bug fix (minimal change with regression test)
 3. A complex feature (new functionality with multiple tests)
 
 Expected behavior:
+
 - Dependencies auto-installed
 - Correct version_added detected
 - Both unit and integration tests created

@@ -60,21 +60,25 @@ Generic issue handler that orchestrates the entire resolution process: analyze i
 **CRITICAL**: All feature branches and bugfix branches MUST be created from `main` unless explicitly stated otherwise by the user.
 
 ### Default Behavior
+
 - **Features**: Create branch from `main` (NOT from stable-X branches)
 - **Bugfixes**: Create branch from `main` (NOT from stable-X branches)
 - **Enhancements**: Create branch from `main` (NOT from stable-X branches)
 
 ### Exception Cases (ONLY if user explicitly states)
+
 - User says: "fix this on stable-11" → create branch from stable-11
 - User says: "backport to stable-X" → create branch from stable-X
 - Otherwise: **ALWAYS use main**
 
 ### Why This Matters
+
 - Features go to main first, then backported if needed
 - Bugfixes go to main first, then cherry-picked to stable branches
 - Creating from stable-X by mistake requires force-push to fix
 
 ### Verification Before Creating Branch
+
 ```bash
 # ALWAYS check current branch before creating feature branch
 git branch --show-current
@@ -117,9 +121,11 @@ ELSE:
 ## Workflow Steps
 
 ### [1/7] Pull & Analyze Issue
+
 ```bash
 /issue-analyze --issue 123
 ```
+
 - Fetches issue from GitHub
 - **Auto-detects issue type** from labels, title, body
 - Validates it's actionable
@@ -127,6 +133,7 @@ ELSE:
 - **Output**: Issue summary in `.bug-fixes/issue-123.md`
 
 **Example Output**:
+
 ```
 Issue #2755: Allow ec2_eip to assign specific IP from byoip pool
 Type: FEATURE REQUEST 🆕
@@ -142,9 +149,11 @@ Proceed with implementation? [Y/n]:
 ```
 
 ### [2/7] Create Implementation Plan
+
 ```bash
 /issue-plan
 ```
+
 - Analyzes code to understand current implementation
 - **Checks for breaking changes** (backward compatibility)
 - Determines correct version_added (major for breaking, minor for features)
@@ -154,6 +163,7 @@ Proceed with implementation? [Y/n]:
 - **Output**: Plan in `.bug-fixes/plan-123.md`
 
 **Bug approach**:
+
 ```
 Plan: Fix KeyError by adding .get() with default
 Risk: LOW
@@ -165,6 +175,7 @@ Changelog: bugfixes
 ```
 
 **Feature approach**:
+
 ```
 Plan: Add 'address' parameter to ec2_eip module
 Risk: MEDIUM
@@ -182,9 +193,11 @@ Fragment: 2755-ec2_eip-address-parameter.yml
 ```
 
 ### [3/7] Implement Changes
+
 ```bash
 /issue-implement
 ```
+
 - Auto-installs dependencies (pytest, black, isort, etc.)
 - Detects breaking changes and calculates version_added
 - Applies code changes based on plan
@@ -219,6 +232,7 @@ Testing is **MANDATORY**, not optional. Every implementation MUST include tests:
    - Example reference: Look at existing parameters in the same module
 
 **How to Find Test Patterns**:
+
 ```bash
 # Find existing unit tests for the module
 ls tests/unit/plugins/modules/test_<module>.py
@@ -233,6 +247,7 @@ git show <commit-hash>
 ```
 
 **Output varies by type**:
+
 ```
 BUG FIX (minimum 3 files changed):
 ✅ Fix implemented
@@ -250,6 +265,7 @@ FEATURE (minimum 4 files changed):
 ```
 
 **Verification Checklist Before Committing**:
+
 - [ ] Module code changed
 - [ ] Unit tests added (minimum 3 test cases)
 - [ ] Integration tests added (if applicable)
@@ -259,17 +275,21 @@ FEATURE (minimum 4 files changed):
 - [ ] Lint checks pass
 
 **Note:** Step [3/7] Implement Changes actually runs 11 internal steps:
+
 - Setup deps, check breaking changes, apply code, verify RETURN,
   **add unit tests** (MANDATORY), **add integration tests** (MANDATORY when applicable), format, create changelog, validate
 
 ### [4/7] Auto-Fix Style
+
 ```bash
 /lint-fix
 ```
+
 - Already done in /issue-implement step
 - This step can be skipped as formatting is now automatic
 
 ### [5/7] Quality Checks (Parallel)
+
 ```bash
 # Run in parallel
 /lint &
@@ -312,11 +332,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ```
 
 ### [7/7] Create Pull Request
+
 ```bash
 /pr-create --title "<commit-type> #123: <issue title>"
 ```
 
 **PR title/body adapts**:
+
 - **Bug**: "Fix #123: ..." - emphasizes the fix
 - **Feature**: "Add support for specific IP assignment (#2755)" - describes capability
 - **Enhancement**: "Improve error handling (#456)" - describes improvement
@@ -438,10 +460,12 @@ Total time: 62.4 seconds
 Some issues blur the line between bug and feature:
 
 **Example**: "Module doesn't support AWS API parameter X"
+
 - **Bug perspective**: Incomplete API coverage
 - **Feature perspective**: Missing capability
 
 **How we handle it**:
+
 1. Check labels first
 2. Look for keywords ("should work but doesn't" = bug)
 3. If unclear, ask user or default to feature approach (safer)
@@ -449,12 +473,14 @@ Some issues blur the line between bug and feature:
 ## Error Handling
 
 ### Recoverable Errors
+
 - **Quality checks fail**: Offer retry after manual fix
 - **Tests fail**: Show test output, allow fixing
 - **PR exists**: Update existing PR
 - **Unsure about type**: Ask user to confirm
 
 ### Non-Recoverable Errors
+
 - **Issue not found**: Check issue number
 - **No actionable issue**: Issue needs more info
 - **Merge conflicts**: Resolve manually
@@ -462,6 +488,7 @@ Some issues blur the line between bug and feature:
 ## Integration Points
 
 This orchestrator imports:
+
 - `/issue-analyze` - Fetch and analyze issue (enhanced with type detection)
 - `/issue-plan` - Create implementation plan (adapts to issue type)
 - `/issue-implement` - Apply changes + tests (scales scope based on type)
@@ -473,6 +500,7 @@ This orchestrator imports:
 ## Ansible Detection
 
 Auto-detects if it's an Ansible collection:
+
 ```bash
 if [ -f "galaxy.yml" ]; then
     echo "Ansible collection detected"
@@ -485,6 +513,7 @@ fi
 When adding a new parameter to an Ansible module, follow this complete checklist:
 
 ### 1. Module Code Changes
+
 - [ ] Add parameter to DOCUMENTATION block with:
   - `description:` - what the parameter does
   - `type:` - str, int, bool, list, dict, etc.
@@ -493,51 +522,66 @@ When adding a new parameter to an Ansible module, follow this complete checklist
   - `version_added:` - when parameter was added
   - Use proper Ansible markup: `V()` for values, `O()` for options
 - [ ] Add parameter to argument spec in `main()` function:
+
   ```python
   argument_spec=dict(
       ...
       network_type=dict(type="str", choices=["IPV4", "DUAL"], default="IPV4"),
   )
   ```
+
 - [ ] Verify parameter is passed to boto3/API:
   - Check if automatic (e.g., via `format_rds_client_method_parameters`)
   - Or add manual parameter passing code
 
 ### 2. Unit Tests (MANDATORY)
+
 Add to `tests/unit/plugins/modules/test_<module>.py`:
 
 - [ ] Test 1: Parameter acceptance
+
   ```python
   def test_network_type_parameter():
       """Test network_type parameter is accepted by module"""
   ```
+
 - [ ] Test 2: Parameter conversion
+
   ```python
   def test_network_type_conversion():
       """Test network_type converts to NetworkType for boto3"""
   ```
+
 - [ ] Test 3: Parameter in create call
+
   ```python
   def test_create_with_network_type():
       """Test network_type passed to create_db_instance"""
   ```
+
 - [ ] Test 4: Parameter in modify call (if applicable)
+
   ```python
   def test_modify_with_network_type():
       """Test network_type passed to modify_db_instance"""
   ```
+
 - [ ] Test 5: Default value
+
   ```python
   def test_network_type_default():
       """Test default value when not specified"""
   ```
+
 - [ ] Test 6: All valid choices
+
   ```python
   @pytest.mark.parametrize("network_type", ["IPV4", "DUAL"])
   def test_network_type_choices(network_type):
   ```
 
 ### 3. Integration Tests (when applicable)
+
 Add to `tests/integration/targets/<module>/tasks/main.yml`:
 
 - [ ] Test parameter with valid value
@@ -545,6 +589,7 @@ Add to `tests/integration/targets/<module>/tasks/main.yml`:
 - [ ] Test check mode
 
 ### 4. Changelog Fragment (MANDATORY)
+
 Create `changelogs/fragments/<issue>-<module>-<parameter>.yml`:
 
 ```yaml
@@ -553,6 +598,7 @@ minor_changes:
 ```
 
 ### 5. Verification Before Commit
+
 ```bash
 # Run unit tests
 pytest tests/unit/plugins/modules/test_<module>.py -v
@@ -568,6 +614,7 @@ git status
 ```
 
 **Expected file count**:
+
 - Bug fix: 3 files (module, unit test, changelog)
 - Feature: 4+ files (module, unit test, integration test, changelog)
 

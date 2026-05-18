@@ -26,11 +26,13 @@ Reads relevant code, identifies root cause, proposes a minimal and self-containe
 ## Prerequisites
 
 **Required:**
+
 - Issue summary from `/issue-analyze` (in `.bug-fixes/issue-N.md`)
 - Access to codebase (local clone)
 - Git repository
 
 **Optional (Enhanced Features):**
+
 - **GitHub MCP server** (see `GITHUB_MCP_SETUP.md`)
   - Access code from GitHub for comparison
   - Check commit history for context
@@ -60,6 +62,7 @@ Reads relevant code, identifies root cause, proposes a minimal and self-containe
 When this skill is invoked:
 
 1. **Load issue summary**
+
    ```bash
    # Find latest issue summary
    LATEST_ISSUE=$(ls -t .bug-fixes/issue-*.md 2>/dev/null | head -1)
@@ -75,6 +78,7 @@ When this skill is invoked:
    ```
 
 2. **Read issue summary** (batch file operations)
+
    ```bash
    # Read the issue summary created by bug-pull
    ISSUE_SUMMARY=$(cat ".bug-fixes/issue-$ISSUE_NUMBER.md")
@@ -84,13 +88,14 @@ When this skill is invoked:
    ```
 
 3. **Identify and read relevant code** (batch in ONE message)
-   
+
    **CRITICAL**: Read all relevant files in parallel to minimize prompts:
+
    ```bash
    # Find affected files mentioned in issue
    # Read them ALL in one message with multiple Read tool calls
    ```
-   
+
    Example files to read:
    - Primary affected file (from issue)
    - Related test files
@@ -98,8 +103,9 @@ When this skill is invoked:
    - Related documentation
 
 4. **Analyze root cause**
-   
+
    Based on error message and code:
+
    ```python
    # Example: KeyError analysis
    
@@ -120,10 +126,11 @@ When this skill is invoked:
    - Identify assumptions in code that are violated
 
 5. **Check for similar fixes** (optional, GitHub MCP only)
-   
+
    If GitHub MCP is available, search for similar issues/fixes:
-   
+
    **Method A: GitHub MCP (Enhanced)**
+
    ```python
    # Search for similar issues
    similar_issues = github_search_issues(
@@ -152,8 +159,9 @@ When this skill is invoked:
    # - Learn from past solutions
    # - Identify patterns in fixes
    ```
-   
+
    **Method B: Local git (Fallback)**
+
    ```bash
    # Check recent changes to affected file
    git log --oneline -10 -- plugins/modules/xyz.py
@@ -161,15 +169,16 @@ When this skill is invoked:
    # Search for similar fix keywords
    git log --grep="KeyError" --grep="optional" --all
    ```
-   
+
    **Use findings to inform approach:**
    - If similar fix exists: Follow established pattern
    - If related PR merged: Check if it partially addresses this
    - If pattern emerges: Apply consistent solution
 
 6. **Propose minimal fix**
-   
+
    **Principle**: Self-contained, minimal changes
+
    ```python
    # ❌ BAD: Over-engineering
    def my_function(params):
@@ -194,27 +203,27 @@ When this skill is invoked:
    - Adds defensive checks if needed
 
 7. **Check for breaking changes and determine version_added**
-   
+
    **CRITICAL: Determine if the change is backward compatible**
-   
+
    **Breaking change detection:**
-   
+
    A change is **BREAKING** if it:
    - ❌ Removes a parameter or module
    - ❌ Changes parameter behavior in an incompatible way
    - ❌ Changes return value structure
    - ❌ Changes default values that break existing playbooks
    - ❌ Removes deprecated features
-   
+
    A change is **NOT BREAKING** if it:
    - ✅ Adds a new optional parameter
    - ✅ Adds a new module
    - ✅ Adds a new return value
    - ✅ Fixes a bug
    - ✅ Adds deprecation warning
-   
+
    **Version calculation:**
-   
+
    ```bash
    # Find latest stable branch
    STABLE=$(git branch -r | grep "upstream/stable-" | grep -v patchback | sort -V | tail -1)
@@ -230,20 +239,21 @@ When this skill is invoked:
    # If bug fix:
    #   No version_added
    ```
-   
+
    **Changelog category:**
    - Breaking change: `breaking_changes`
    - New feature: `minor_changes`
    - Bug fix: `bugfixes`
    - Deprecation: `deprecated_features`
-   
+
    **Include in plan:**
    - Breaking change check: YES/NO
    - version_added: "11.3.0" (or 12.0.0 if breaking)
    - Changelog category: minor_changes (or breaking_changes)
    - Changelog fragment: `<issue>-<module>-<feature>.yml`
-   
+
 8. **Identify files to modify**
+
    ```markdown
    Files to modify:
    1. plugins/modules/xyz.py (primary fix)
@@ -271,10 +281,11 @@ When this skill is invoked:
    ```
 
 9. **Plan test strategy** (MANDATORY - both unit AND integration)
-   
+
    **CRITICAL**: Every code change MUST include both unit and integration tests.
-   
+
    **Unit tests** (always required):
+
    ```python
    # Minimum 3 test cases:
    # 1. Test the bug scenario / happy path
@@ -303,27 +314,28 @@ When this skill is invoked:
        """Test that check_mode doesn't make changes"""
        pass
    ```
-   
+
    **Test file location:**
    - Check `tests/unit/plugins/modules/<module>/` first
    - Follow existing test structure
    - Create `test_<feature>.py` in appropriate location
 
    **Integration tests** (MANDATORY - must run in CI):
-   
+
    **CRITICAL**: Integration tests MUST NOT use conditionals (`when:` statements).
    Find creative ways to test without requiring special resources.
-   
+
    **Before writing integration tests:**
    1. Read full test role structure:
       - `tests/integration/targets/<module>/tasks/main.yml`
       - `tests/integration/targets/<module>/tasks/common.yml`
       - `tests/integration/targets/<module>/defaults/main.yml`
       - Read one similar test file for patterns
-   
+
    2. Identify creative testing approach:
-   
+
    **❌ BAD - Conditional test (won't run in CI):**
+
    ```yaml
    - name: Test with BYOIP pool
      when: byoip_pool_available  # Won't run in CI!
@@ -331,8 +343,9 @@ When this skill is invoked:
        public_ipv4_pool: "{{ byoip_pool }}"
        address: "{{ specific_ip }}"
    ```
-   
+
    **✅ GOOD - Creative approach (runs in CI):**
+
    ```yaml
    # Use resource that's always available
    - name: Allocate from amazon pool
@@ -359,8 +372,9 @@ When this skill is invoked:
        that:
          - specific_result.public_ip == test_ip
    ```
-   
+
    **Integration test pattern:**
+
    ```yaml
    # Follow this structure:
    - name: <feature> - check_mode
@@ -400,7 +414,7 @@ When this skill is invoked:
    - assert:
        that: result is not changed
    ```
-   
+
    **Plan must specify:**
    - Where integration test goes (which tasks file)
    - How to test without special resources
@@ -408,8 +422,9 @@ When this skill is invoked:
    - What variables from defaults/main.yml to use
 
 10. **Match code style**
-   
+
    Analyze existing code style:
+
    ```python
    # Observed patterns in codebase:
    # - Type hints: Yes, using typing module
@@ -421,9 +436,10 @@ When this skill is invoked:
    # Plan must match these conventions
    ```
 
-11. **Generate implementation plan**
-   
+1. **Generate implementation plan**
+
    Create step-by-step plan:
+
    ```markdown
    # Bug Fix Plan: Issue #123
    
@@ -436,12 +452,13 @@ When this skill is invoked:
    ```python
    value = params['optional_param']  # Crashes if key missing
    ```
-   
-   ## Proposed Fix
-   
-   ### Minimal Changes (2 lines)
-   
+
+## Proposed Fix
+
+### Minimal Changes (2 lines)
+
    **File: plugins/modules/xyz.py**
+
    ```python
    # Line 45 (before)
    value = params['optional_param']
@@ -453,21 +470,24 @@ When this skill is invoked:
    if value is not None:
        # existing logic
    ```
-   
-   ### Why this fix works
-   - Uses .get() with default value (Python best practice)
-   - Preserves existing behavior when param is provided
-   - Gracefully handles missing param case
-   - Minimal, self-contained change
-   
-   ## Code Style Requirements
-   - Type hints: Add `Optional[str]` for value
-   - Docstring: Update to document optional_param behavior
-   - Match existing: Double quotes, 100 char lines
-   
-   ## Test Plan
-   
-   ### Unit Tests (new file: tests/unit/test_xyz_missing_param.py)
+
+### Why this fix works
+
+- Uses .get() with default value (Python best practice)
+- Preserves existing behavior when param is provided
+- Gracefully handles missing param case
+- Minimal, self-contained change
+
+## Code Style Requirements
+
+- Type hints: Add `Optional[str]` for value
+- Docstring: Update to document optional_param behavior
+- Match existing: Double quotes, 100 char lines
+
+## Test Plan
+
+### Unit Tests (new file: tests/unit/test_xyz_missing_param.py)
+
    ```python
    def test_missing_optional_param():
        """Ensure module works without optional_param"""
@@ -481,48 +501,52 @@ When this skill is invoked:
        """Ensure original behavior preserved"""
        # Test code here
    ```
-   
-   ### Integration Tests (if applicable)
-   - Add test case in tests/integration/targets/xyz/tasks/main.yml
-   - Test real scenario without optional_param
-   
-   ## Implementation Steps
-   
+
+### Integration Tests (if applicable)
+
+- Add test case in tests/integration/targets/xyz/tasks/main.yml
+- Test real scenario without optional_param
+
+## Implementation Steps
+
    1. **Read code** (batch operation)
       - plugins/modules/xyz.py
       - plugins/module_utils/common.py (dependencies)
       - tests/unit/test_xyz.py (existing tests)
-   
+
    2. **Implement fix**
       - Modify plugins/modules/xyz.py (2 lines)
       - Add type hint: `Optional[str]`
       - Update docstring
-   
+
    3. **Add tests**
       - Create tests/unit/test_xyz_missing_param.py
       - Add 3 unit test cases
       - Add integration test if needed
-   
+
    4. **Verify**
       - Run: pytest tests/unit/test_xyz_missing_param.py
       - Run: /lint-fix && /lint
       - Run: /sanity --mode=smart
-   
+
    5. **Commit**
       - Message: "fix: handle missing optional_param in xyz module"
       - Reference: "Fixes #123"
-   
-   ## Risk Assessment
-   - **Low risk**: Minimal change, backward compatible
-   - **No API changes**: Existing behavior preserved
-   - **Test coverage**: Unit + integration tests added
-   
-   ## Success Criteria
-   - ✅ Module doesn't crash when optional_param missing
-   - ✅ Original behavior preserved when param provided
-   - ✅ All existing tests still pass
-   - ✅ New tests cover edge cases
-   - ✅ Lint and sanity checks pass
+
+## Risk Assessment
+
+- **Low risk**: Minimal change, backward compatible
+- **No API changes**: Existing behavior preserved
+- **Test coverage**: Unit + integration tests added
+
+## Success Criteria
+
+- ✅ Module doesn't crash when optional_param missing
+- ✅ Original behavior preserved when param provided
+- ✅ All existing tests still pass
+- ✅ New tests cover edge cases
+- ✅ Lint and sanity checks pass
+
    ```
 
 12. **Save plan**
@@ -603,6 +627,7 @@ This skill is imported by:
 ```
 
 ### "Can't identify root cause"
+
 ```bash
 # With GitHub MCP (check similar issues/PRs first):
 similar = github_search_issues(repo=REPO, query="is:closed similar error")
@@ -620,6 +645,7 @@ gh issue comment 123 --body "Need more details on reproduction"
 ```
 
 ### "Fix too complex"
+
 ```bash
 # With GitHub MCP:
 github_create_issue(
@@ -636,6 +662,7 @@ gh issue create --title "Subtask 1: ..." --body "Part of #123"
 ## Implementation Notes
 
 **Core Workflow:**
+
 - Load issue summary from `.bug-fixes/issue-N.md`
 - Read all relevant files in batch (one message, multiple Read calls)
 - Analyze code to find root cause
@@ -649,6 +676,7 @@ gh issue create --title "Subtask 1: ..." --body "Part of #123"
 - Works with any codebase/language
 
 **GitHub MCP Enhancements (Optional):**
+
 - Search for similar closed issues/PRs before planning
 - Check commit history for affected files
 - Compare branches to find existing partial fixes
@@ -656,6 +684,7 @@ gh issue create --title "Subtask 1: ..." --body "Part of #123"
 - Falls back to local git if MCP not available
 
 **Integration:**
+
 - Used by `/issue-fix` and `/bug-fix` orchestrators
 - Produces plan consumed by `/issue-implement`
 - Works standalone for planning without implementation
