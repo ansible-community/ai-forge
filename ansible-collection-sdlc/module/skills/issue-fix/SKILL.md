@@ -20,7 +20,8 @@ Complete end-to-end issue resolution workflow from GitHub issue to pull request.
 
 ## Purpose
 
-Generic issue handler that orchestrates the entire resolution process: analyze issue, plan implementation, code with tests, ensure quality, and create PR. Automatically adapts workflow based on whether it's a bug fix, feature request, or enhancement.
+- When you launch multiple agents for independent work, send them in a single message
+with multiple tool uses so they run concurrently
 
 ## When to Use
 
@@ -434,7 +435,7 @@ Total time: 62.4 seconds
 ## Flags & Options
 
 | Flag | Description |
-|------|-------------|
+| ------ | ------------- |
 | `--issue N` or URL | GitHub issue number or full URL (required) |
 | `--type bug\|feature\|enhance` | Force specific approach (overrides auto-detect) |
 | `--analyze-only` | Stop after analysis |
@@ -447,7 +448,7 @@ Total time: 62.4 seconds
 ## Issue Type Comparison
 
 | Aspect | Bug Fix | Feature | Enhancement |
-|--------|---------|---------|-------------|
+ | -------- | --------- | --------- | ------------- |
 | **Scope** | Minimal | New functionality | Improve existing |
 | **Testing** | Regression test | Comprehensive | Enhanced coverage |
 | **Docs** | Usually none | Required | Update existing |

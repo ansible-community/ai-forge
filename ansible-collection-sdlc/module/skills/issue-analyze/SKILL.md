@@ -497,7 +497,8 @@ When this skill is invoked:
 - ❌ No reproduction steps
 - ❌ No error information
 
-**GitHub MCP Advantage**: Issues that would be scored MEDIUM with gh CLI (missing info in description) may be scored HIGH with GitHub MCP if the missing information is found in comments, timeline, or linked PRs.
+GitHub MCP Advantage: Issues that would be scored MEDIUM with gh CLI (missing info in
+description) may be scored HIGH with GitHub MCP if the missing information is found in comments, timeline, or linked PRs.
 
 ## Integration Points
 
@@ -567,20 +568,20 @@ gh issue comment 123 --body "Could you provide reproduction steps?"
 
 ## Implementation Notes
 
-**Preferred: GitHub MCP**
+### Preferred: GitHub MCP
 
 - Use `github_get_issue()` for structured data (no JSON parsing)
 - Access comments, timeline, and linked PRs automatically
 - Better error handling and authentication
 - Richer context for actionability analysis
 
-**Fallback: gh CLI**
+### Fallback: gh CLI
 
 - Use `gh issue view --json` to get all data in one call (batch operation)
 - Parse JSON to extract structured information
 - Limited to basic issue data (no timeline or linked PRs)
 
-**General**
+### General
 
 - Auto-detect available GitHub access method
 - Validate completeness before proceeding (check comments if needed)

@@ -38,7 +38,7 @@ After receiving path, verify it's valid:
 
 ```bash
 cd <user_provided_path>
-[ -d ".git" ] || echo "❌ Not a git repository"
+[ -d ".git" ]  | | echo "❌ Not a git repository"
 [ -f "galaxy.yml" ] && echo "✓ Ansible collection found"
 ```
 
@@ -92,7 +92,7 @@ cd <user_provided_path>
 
 ### [1/13] Verify Collection Path and Load Plan
 
-**Step 1a: Ask user for collection path**
+#### Step 1a: Ask user for collection path**
 
 ```
 Which directory should I work in?
@@ -101,14 +101,14 @@ Please provide the full path to your collection git repository.
 (This is the directory containing galaxy.yml and .git/)
 ```
 
-**Step 1b: Verify path and change directory**
+#### Step 1b: Verify path and change directory**
 
 ```bash
 cd <user_provided_path>
 pwd  # Confirm working directory
 ```
 
-**Step 1c: Load implementation plan**
+#### Step 1c: Load implementation plan**
 
 Read the implementation plan from `.bug-fixes/plan-N.md`:
 
@@ -139,7 +139,7 @@ fi
 
 ### [3/13] Determine version_added and check for breaking changes
 
-**CRITICAL: Check if the change is backward compatible**
+#### CRITICAL: Check if the change is backward compatible**
 
 #### Breaking Change Detection
 
@@ -334,7 +334,7 @@ def test_check_mode():
 
 **Integration tests MUST run in CI without special resources.**
 
-**Step 1: Read existing tests**
+#### Step 1: Read existing tests**
 
 ```bash
 # Read the full test structure
@@ -344,7 +344,7 @@ cat tests/integration/targets/<module>/defaults/main.yml
 cat tests/integration/targets/<module>/tasks/<similar_feature>.yml
 ```
 
-**Step 2: Check if you can integrate into existing tests**
+#### Step 2: Check if you can integrate into existing tests**
 
 **IMPORTANT:** Before creating new tests, check if you can integrate your new parameters into existing tests that already have the required resources set up.
 
@@ -374,7 +374,7 @@ cat tests/integration/targets/<module>/tasks/<similar_feature>.yml
 - Your feature requires a completely different test setup
 - Adding to existing tests would make them overly complex
 
-**Step 3: Find creative testing approach (if creating new tests)**
+#### Step 3: Find creative testing approach (if creating new tests)**
 
 Instead of:
 
@@ -416,11 +416,11 @@ Do this:
 # 4. Verify it's the same IP
 ```
 
-**Step 4: Reuse existing resources when possible**
+#### Step 4: Reuse existing resources when possible**
 
 Look for related test targets that already set up the resources you need:
 
-**Example: Testing DNSSEC wait functionality**
+#### Example: Testing DNSSEC wait functionality**
 
 ```yaml
 # ❌ BAD - Creating duplicate resources
@@ -438,13 +438,13 @@ Look for related test targets that already set up the resources you need:
     wait_timeout: 600
 ```
 
-**Critical: Always ensure cleanup**
+#### Critical: Always ensure cleanup**
 
 - If you create new resources, add cleanup to the `always` block
 - If you integrate into existing tests, verify cleanup is already handled
 - Cleanup should handle failures gracefully (`ignore_errors: true`)
 
-**Step 5: Follow existing patterns**
+#### Step 5: Follow existing patterns**
 
 Use the same structure as existing tests:
 
@@ -453,7 +453,7 @@ Use the same structure as existing tests:
 - Follow `check_mode` → actual → idempotence pattern
 - Include cleanup in `always` block
 
-**Step 6: Write integration test (if creating new tests)**
+#### Step 6: Write integration test (if creating new tests)**
 
 ```yaml
 - name: Test new feature - check_mode
@@ -644,7 +644,7 @@ done
 
 ### [12/13] Report Ready for Git Operations
 
-**Implementation is complete - now ready for manual git operations**
+#### Implementation is complete - now ready for manual git operations**
 
 Report to the user that the implementation is complete and provide clear instructions for creating a branch and committing. **DO NOT execute git commands automatically** - the user should run them manually.
 

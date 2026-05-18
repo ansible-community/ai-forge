@@ -457,7 +457,7 @@ When this skill is invoked:
 
 ### Minimal Changes (2 lines)
 
-   **File: plugins/modules/xyz.py**
+#### File: plugins/modules/xyz.py
 
    ```python
    # Line 45 (before)
@@ -549,7 +549,8 @@ When this skill is invoked:
 
    ```
 
-12. **Save plan**
+1. **Save plan**
+
     ```bash
     cat > .bug-fixes/plan-$ISSUE_NUMBER.md <<EOF
     [Generated plan]
@@ -558,8 +559,10 @@ When this skill is invoked:
     echo "✅ Implementation plan saved: .bug-fixes/plan-$ISSUE_NUMBER.md"
     ```
 
-13. **Report and confirm**
+2. **Report and confirm**
+
     ```
+
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     Implementation Plan: Issue #123
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -588,18 +591,21 @@ When this skill is invoked:
 ## Planning Principles
 
 ### Minimal Changes
+
 - Change only what's necessary
 - Avoid refactoring existing code
 - Preserve API compatibility
 - One logical change per fix
 
 ### Self-Contained
+
 - Fix should work within existing architecture
 - No framework additions
 - No new dependencies
 - Use existing patterns
 
 ### Code Style Match
+
 - Observe existing conventions
 - Match type hint usage
 - Match docstring style
@@ -607,6 +613,7 @@ When this skill is invoked:
 - Use same quote style
 
 ### Test Coverage
+
 - Unit tests: Always required
 - Integration tests: When applicable
 - Test the bug scenario
@@ -616,12 +623,14 @@ When this skill is invoked:
 ## Integration Points
 
 This skill is imported by:
+
 - `/bug-fix` - Bug fix orchestrator
 - Can be used standalone for planning
 
 ## Troubleshooting
 
 ### "No issue summary found"
+
 ```bash
 /bug-pull --issue 123  # Create summary first
 ```
