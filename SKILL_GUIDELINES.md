@@ -91,6 +91,50 @@ Choose the appropriate module for your skill:
 | `network_content` | Network automation specific skills |
 | `cloud_content` | Cloud automation specific skills |
 
+## Commit Message Guidelines
+
+### Format
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```
+type(scope): description
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Valid types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+
+**Examples**:
+
+```
+feat(commit): add FQCN scope detection for Ansible modules
+fix(pr-review): handle PRs with more than 100 changed files
+docs(skills): add AGENTS.md documentation requirements
+```
+
+### AI Attribution
+
+If AI tools assisted with your contribution, add an attribution trailer:
+
+```
+feat(release): add changelog generation step
+
+Assisted-by: Claude Sonnet 4.5
+```
+
+Or using git's Co-Authored-By format:
+
+```
+feat(release): add changelog generation step
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+```
+
+See [Ansible AI Policy](https://docs.ansible.com/ansible/latest/community/ai_policy.html) for more details.
+
 ## Contribution Process
 
 1. **Propose**: Open an issue describing the skill and its use case
@@ -98,6 +142,43 @@ Choose the appropriate module for your skill:
 3. **Implement**: Create the skill following this guide
 4. **Test**: Verify the skill works as expected
 5. **Submit**: Open a PR with your skill
+
+## AGENTS.md Requirements
+
+Each module has an `AGENTS.md` file that documents available skills, commands, and agents. When adding or modifying skills, update the corresponding `AGENTS.md`.
+
+### AGENTS.md Format
+
+```markdown
+---
+name: module-name
+description: One-line description of the module
+---
+
+# Module Name
+
+Module description and overview.
+
+## When to Use
+
+Describe when to use each skill/command in this module:
+
+- **skill-name skill**: Use when... Invoke with `/skill-name`.
+- **command-name command**: Use when... Invoke with `/command-name`.
+
+## Configuration
+
+Optional dependencies and configuration notes.
+
+## Notes
+
+Additional context about the module.
+```
+
+### Required Fields
+
+- **Frontmatter**: `name` and `description` fields
+- **Body**: Must include a `## When to Use` section
 
 ## Testing Your Skill
 

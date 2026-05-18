@@ -195,6 +195,12 @@ jobs:
               if 'description' not in fm:
                   errors.append(f"{skill_file}: Missing 'description' field")
 
+              # triggers is required per SKILL_GUIDELINES.md
+              if 'triggers' not in fm:
+                  errors.append(f"{skill_file}: Missing 'triggers' field (required per SKILL_GUIDELINES.md)")
+              elif not isinstance(fm.get('triggers'), list) or len(fm.get('triggers', [])) == 0:
+                  errors.append(f"{skill_file}: 'triggers' must be a non-empty list")
+
           if errors:
               print("❌ Frontmatter validation errors:")
               for error in errors:

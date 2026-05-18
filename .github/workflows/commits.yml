@@ -15,7 +15,11 @@ jobs:
 
       - name: Check for AI attribution in commits
         run: |
-          echo "Checking commits in this PR for AI co-authorship attribution..."
+          # Check for AI attribution in commits
+          # Accepts either format:
+          #   - "Assisted-by:" (Ansible AI Policy)
+          #   - "Co-Authored-By:" (Git standard)
+          echo "Checking commits for AI attribution..."
 
           # Get commits in this PR
           commits=$(git log --format="%H" origin/main..HEAD)
@@ -33,9 +37,9 @@ jobs:
             subject=$(git log -1 --format="%s" "$sha")
 
             # Check if commit mentions AI assistance
-            if echo "$message" | grep -qiE "(claude|ai|copilot|gpt|llm|chatgpt|gemini)"; then
-              # If AI is mentioned, check for proper Co-Authored-By
-              if ! echo "$message" | grep -qiE "Co-Authored-By:.*(@anthropic|@openai|@github|@google|claude|copilot|gpt|gemini)"; then
+            if echo "$message" | grep -qiE "(claude|copilot|gpt|llm|chatgpt|gemini)"; then
+              # Check for either Assisted-by (Ansible policy) or Co-Authored-By (git standard)
+              if ! echo "$message" | grep -qiE "(Assisted-by:|Co-Authored-By:)"; then
                 missing_attribution+=("$short_sha: $subject")
               fi
             fi
@@ -43,13 +47,16 @@ jobs:
 
           if [ ${#missing_attribution[@]} -gt 0 ]; then
             echo ""
-            echo "⚠️  The following commits mention AI tools but lack proper Co-Authored-By attribution:"
+            echo "⚠️  The following commits mention AI tools but lack attribution:"
             for commit in "${missing_attribution[@]}"; do
               echo "  - $commit"
             done
             echo ""
-            echo "Please add a trailer like:"
-            echo "  Co-Authored-By: Claude <noreply@anthropic.com>"
+            echo "Please add one of these trailers to your commit message:"
+            echo "  Assisted-by: Claude Sonnet 4.5"
+            echo "  Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+            echo ""
+            echo "See: https://docs.ansible.com/ansible/latest/community/ai_policy.html"
             echo ""
             echo "This is a warning only - not blocking the PR."
           else
