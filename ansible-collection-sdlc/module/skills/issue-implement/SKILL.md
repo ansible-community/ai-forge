@@ -318,7 +318,35 @@ cat tests/integration/targets/<module>/defaults/main.yml
 cat tests/integration/targets/<module>/tasks/<similar_feature>.yml
 ```
 
-**Step 2: Find creative testing approach**
+**Step 2: Check if you can integrate into existing tests**
+
+**IMPORTANT:** Before creating new tests, check if you can integrate your new parameters into existing tests that already have the required resources set up.
+
+**Prefer integration over duplication:**
+```yaml
+# ✅ BEST - Add parameters to existing test
+- name: Enable DNSSEC for Route53 public zone  # Existing test
+  amazon.aws.route53_zone:
+    zone: "{{ resource_prefix }}.public"
+    state: present
+    dnssec: true
+    wait: true              # ← NEW parameter added
+    wait_timeout: 600       # ← NEW parameter added
+  register: _hosted_zone_dnssec
+
+# ✅ Resources already created by this test target:
+# - KMS key
+# - Key Signing Key
+# - Route53 hosted zone
+# ✅ Cleanup already handled in always block
+```
+
+**Only create new tests if:**
+- No existing test covers the same resource/operation
+- Your feature requires a completely different test setup
+- Adding to existing tests would make them overly complex
+
+**Step 3: Find creative testing approach (if creating new tests)**
 
 Instead of:
 ```yaml
@@ -357,7 +385,33 @@ Do this:
 # 4. Verify it's the same IP
 ```
 
-**Step 3: Follow existing patterns**
+**Step 4: Reuse existing resources when possible**
+
+Look for related test targets that already set up the resources you need:
+
+**Example: Testing DNSSEC wait functionality**
+```yaml
+# ❌ BAD - Creating duplicate resources
+# In route53_zone tests:
+- name: Create KMS key
+- name: Create Key Signing Key
+- name: Activate KSK
+- name: Test DNSSEC with wait
+
+# ✅ GOOD - Reuse existing resources
+# In route53_key_signing_key tests (already creates KMS + KSK):
+- name: Enable DNSSEC with wait  # Just add wait params to existing test
+  amazon.aws.route53_zone:
+    wait: true
+    wait_timeout: 600
+```
+
+**Critical: Always ensure cleanup**
+- If you create new resources, add cleanup to the `always` block
+- If you integrate into existing tests, verify cleanup is already handled
+- Cleanup should handle failures gracefully (`ignore_errors: true`)
+
+**Step 5: Follow existing patterns**
 
 Use the same structure as existing tests:
 - Use `common.yml` helpers (has_new_*, has_no_new_*, delete_*)
@@ -365,7 +419,7 @@ Use the same structure as existing tests:
 - Follow `check_mode` → actual → idempotence pattern
 - Include cleanup in `always` block
 
-**Step 4: Write integration test**
+**Step 6: Write integration test (if creating new tests)**
 
 ```yaml
 - name: Test new feature - check_mode
