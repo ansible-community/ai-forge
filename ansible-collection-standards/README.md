@@ -31,7 +31,7 @@ lola install ansible-collection-standards -a opencode
 
 ### Skills
 
-- **ansible-zen** - Display the Zen of Ansible principles and review code for simplicity, readability, and clarity. Provides philosophical guidance complementary to strict CoP rule compliance.
+See **[SKILLS.md](../SKILLS.md#ansible-collection-standards)** for skills in this module.
 
 ### Commands
 

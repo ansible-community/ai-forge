@@ -67,54 +67,25 @@ To manage the modules recommended for your project declaratively:
 
 ### ansible-collection-standards
 
-Standards and guidelines compliance, scaffolding.
-
-**Skills:**
-
-- `ansible-zen` - Zen of Ansible principles and philosophical code review
-
-**Commands:**
-
-- `/ansible-cop-review` - Review code against Red Hat CoP practices
-- `/ansible-scaffold-collection` - Create new collections
-- `/ansible-collection-standards-inclusion-review` - Review collections for community inclusion
+Standards and guidelines compliance, scaffolding. Includes the `ansible-zen` skill and commands for CoP review, collection scaffolding, and inclusion review.
 
 [Full documentation](./ansible-collection-standards/README.md)
 
 ### ansible-role
 
-Role scaffolding tools.
-
-**Commands:**
-
-- `/ansible-scaffold-role` - Create new roles with interactive builder
+Role scaffolding tools with interactive builders for creating CoP-compliant roles.
 
 [Full documentation](./ansible-role/README.md)
 
 ### ansible-collection-sdlc
 
-Full lifecycle: commits, PRs, releases, tests.
-
-**Skills:**
-
-- `changelog-fragment` - Create and update changelog fragments
-- `commit` - Conventional commits with FQCN scopes
-- `create-branch` - Create feature branches following conventions
-- `create-pr` - Create draft PRs with pre-flight checks and validation
-- `implement-sonarcloud-fixes` - Implement fixes for SonarCloud issues
-- `pr-review` - PR review against Ansible collection standards
-- `release` - Guided collection release process
-- `remove-deprecations` - Find and remove overdue deprecations
-- `run-tests` - Run and write tests using ansible-test
-- `sonarcloud-analysis` - Analyze SonarCloud issues and technical debt
-- `next-release` - Calculate next patch/minor/major versions for version_added tags
-- `current-release` - Fetch current release version (helper)
-- `get-branch-changes` - Determine merge-base and changed files (helper)
-- `get-pr-action-results` - Get GitHub Actions/GitLab CI results and analyze failures (helper)
-- `get-pr-number` - Find PR number for branch (helper)
-- `get-upstream-info` - Determine upstream repository info (helper)
+Full lifecycle: commits, PRs, releases, tests. Includes skills for changelog fragments, conventional commits, PR reviews, releases, testing, and SonarCloud integration.
 
 [Full documentation](./ansible-collection-sdlc/README.md)
+
+### All Skills
+
+See **[SKILLS.md](./SKILLS.md)** for the complete auto-generated index of all available skills.
 
 ## What is Lola?
 

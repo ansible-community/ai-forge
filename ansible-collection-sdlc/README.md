@@ -57,40 +57,9 @@ See `ansible-release.conf.template` for all options and documentation.
 
 ### Skills
 
-- **changelog-fragment** - Create or update changelog fragments for documenting changes with automatic change analysis
-- **commit** - Create conventional commits with FQCN scopes for Ansible collection content
-- **configure-sonarcloud-collection** - Add SonarCloud configuration: `sonar-project.properties`, CI
-  workflow, coverage.xml, contributor docs, and assistant-safe fork/secret guidance (see skill Security
-  section)
-- **configure-sonarcloud-coverage** - Second-phase SonarCloud coverage: XML reports in CI,
-  `workflow_run`/artifacts, aggregator gates, README badges (see companion to configure-sonarcloud-collection)
-- **sonarcloud-workflow-templates** - Canonical `sonar-project.properties` and Sonar workflow YAML under
-  `module/skills/sonarcloud-workflow-templates/` for **ansible-collections** org parity (see that folder’s
-  `README.md` for `workflow_run` vs reusable `workflow_call` and artifact naming)
-- **create-branch** - Create feature branches following project conventions with proper fork workflow setup
-- **create-pr** - Create draft pull requests with pre-flight checks, changelog validation, and automated formatting
-- **docs-generate** - Generate module documentation and update README using collection_prep
-- **implement-sonarcloud-fixes** - Implement fixes for SonarCloud issues with testing and PR creation
-- **next-release** - Calculate next patch/minor/major release versions for version_added tags following SemVer
-- **pr-review** - Review PRs against project standards and the Ansible Collection Review Checklist
-- **release** - Guide collection releases with automatic version detection from changelog fragments
-- **remove-deprecations** - Find and remediate overdue deprecation warnings with guided removal workflow
-- **run-tests** - Run and write sanity, unit, and integration tests using ansible-test
-- **sanity** - Run Ansible sanity tests with smart change detection (fast, targeted testing)
-- **sonarcloud-analysis** - Fetch and analyse SonarCloud issues for projects or pull requests
-- **stable-release** - Guide releases from stable-X branches with SemVer calculation from changelog fragments
-- **stable-release-analyze** - Analyze stable branches for pending releases and calculate versions
-- **stable-release-prep** - Prepare release branch with changelog generation and version updates
-- **tox-lint** - Run all configured tox linters (black, isort, flake8, pylint, ansible-lint, ruff)
+See **[SKILLS.md](../SKILLS.md#ansible-collection-sdlc)** for the complete list of skills in this module.
 
-#### Helper Skills
-
-- **current-release** - Fetch current release version from git tags/branches or galaxy.yml (used by other skills)
-- **get-branch-changes** - Determine merge-base and changed files for current branch, avoiding unrelated changes when behind target (used by other skills)
-- **get-pr-action-results** - Get GitHub Actions/GitLab CI results for PRs and branches, analyze failures, and suggest fixes (used by other skills)
-- **get-pr-number** - Determine pull request number for a branch (used by other skills)
-- **get-pr-zuul-results** - Get Zuul CI build status and log URLs for PRs in ansible-collections repositories (used by other skills)
-- **get-upstream-info** - Determine upstream repository information and service identifiers (used by other skills)
+Key skills include: changelog-fragment, commit, create-branch, create-pr, pr-review, release, run-tests, and SonarCloud integration (configure-sonarcloud-collection, configure-sonarcloud-coverage, sonarcloud-analysis).
 
 ### Commands
 
