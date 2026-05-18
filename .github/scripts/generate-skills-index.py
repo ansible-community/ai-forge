@@ -83,7 +83,7 @@ def generate_skills_index(repo_root: Path) -> str:
 
     total = sum(len(s) for s in skills_by_module.values())
     lines.append('---')
-    lines.append(f'**Total skills: {total}**')
+    lines.append(f'Total skills: {total}')
     lines.append('')
 
     return '\n'.join(lines)
