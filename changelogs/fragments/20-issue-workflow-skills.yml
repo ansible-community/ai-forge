@@ -1,0 +1,6 @@
+---
+major_changes:
+  - issue-analyze - Fetches and analyzes GitHub issues (bug/feature/enhancement), validates actionability, and prepares for implementation.
+  - issue-plan - Creates detailed implementation plans with breaking change detection, version calculation, and comprehensive test strategy.
+  - issue-implement - Executes implementation with mandatory unit/integration tests, auto-formatting, sanity checks, and changelog generation.
+  - issue-fix - End-to-end orchestrator that auto-detects issue type and coordinates analysis, planning, implementation, and PR creation.

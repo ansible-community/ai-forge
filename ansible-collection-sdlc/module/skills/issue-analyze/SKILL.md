@@ -1,6 +1,11 @@
 ---
 name: issue-analyze
 description: Fetch and analyze any GitHub issue (bug/feature/enhancement). Extracts issue details, detects type, validates actionability, and prepares for implementation. Use when starting work on an issue, or when asked to "analyze issue", "check issue #123", or "pull issue".
+triggers:
+  - "analyze issue"
+  - "check issue"
+  - "pull issue"
+  - "fetch issue"
 ---
 
 # Issue Analyze Skill

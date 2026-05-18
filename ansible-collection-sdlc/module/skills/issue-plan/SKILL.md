@@ -1,6 +1,11 @@
 ---
 name: issue-plan
 description: Create a detailed implementation plan for any issue (bug/feature/enhancement). Analyzes code, identifies approach, proposes changes, and outlines test strategy. Use after /issue-analyze, when asked to "plan implementation", "create plan", or before implementing changes.
+triggers:
+  - "plan implementation"
+  - "create plan"
+  - "plan the fix"
+  - "how to implement"
 ---
 
 # Issue Plan Skill

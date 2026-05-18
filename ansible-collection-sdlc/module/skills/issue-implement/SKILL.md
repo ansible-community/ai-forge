@@ -1,6 +1,11 @@
 ---
 name: issue-implement
 description: Execute the implementation plan for any issue (bug/feature/enhancement). Applies code changes, adds comprehensive tests (unit + integration), ensures style consistency, validates RETURN blocks, and auto-installs dependencies. Use after /issue-plan, when ready to implement, or when asked to "implement", "apply fix", or "write the code".
+triggers:
+  - "implement"
+  - "apply fix"
+  - "write the code"
+  - "execute plan"
 ---
 
 # Issue Implement Skill
@@ -685,7 +690,7 @@ python3.12 -m venv .venv_sanity
 **Common sanity/pylint issues and fixes:**
 
 | Issue | Fix |
-|-------|-----|
+| ------- | ----- |
 | `unused-import` | Remove unused imports |
 | `consider-using-from-import` | Use `from X import Y` instead of `import X as Y` |
 | `unnecessary-lambda` | Use `dict.get` instead of `lambda key: dict.get(key)` |
