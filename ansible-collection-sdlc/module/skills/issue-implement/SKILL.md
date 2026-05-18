@@ -330,6 +330,40 @@ def test_check_mode():
     pass
 ```
 
+**Common pylint issues to avoid:**
+
+❌ **Don't:**
+
+```python
+from unittest.mock import call  # Don't import if unused
+import pytest  # Don't import if unused
+
+# Don't use 'import X as Y' style
+import ansible_collections.amazon.aws.plugins.modules.route53_zone as route53_zone
+
+# Don't use unnecessary lambda
+mock_obj.params.get.side_effect = lambda key: {"wait": True, "timeout": 300}.get(key)
+```
+
+✅ **Do:**
+
+```python
+# Only import what you actually use
+from unittest.mock import MagicMock, patch
+
+# Use 'from X import Y' style (pylint: consider-using-from-import)
+from ansible_collections.amazon.aws.plugins.modules import route53_zone
+
+# dict.get is already callable, no lambda needed (pylint: unnecessary-lambda)
+mock_obj.params.get.side_effect = {"wait": True, "timeout": 300}.get
+```
+
+**Why this matters:**
+
+- `ansible-test sanity` runs pylint checks on all test files
+- These issues will cause CI failures
+- Following the patterns above prevents common pylint errors
+
 ### [8/13] Add Integration Tests (MANDATORY, NO CONDITIONALS)
 
 **Integration tests MUST run in CI without special resources.**
@@ -627,6 +661,56 @@ done
 # Note: Integration tests run in CI after PR creation
 ```
 
+**Run sanity tests (Ansible collections):**
+
+```bash
+# IMPORTANT: ansible-test requires Python 3.10, 3.11, or 3.12 (NOT 3.13+)
+
+# Check current Python version
+python3 --version
+
+# Option 1: Use tox (recommended - handles Python version automatically)
+tox -e ansible-sanity
+
+# Option 2: Use ansible-test directly (requires compatible Python)
+# If using Python 3.13+, create venv with compatible version:
+python3.12 -m venv .venv_sanity
+.venv_sanity/bin/pip install ansible-core
+.venv_sanity/bin/ansible-test sanity --docker
+
+# Or if you have compatible Python in current venv:
+.venv/bin/ansible-test sanity --docker
+```
+
+**Common sanity/pylint issues and fixes:**
+
+| Issue | Fix |
+|-------|-----|
+| `unused-import` | Remove unused imports |
+| `consider-using-from-import` | Use `from X import Y` instead of `import X as Y` |
+| `unnecessary-lambda` | Use `dict.get` instead of `lambda key: dict.get(key)` |
+
+**Example fixes:**
+
+```bash
+# Before
+from unittest.mock import call  # unused
+import ansible_collections.x.y.z as module
+mock.side_effect = lambda k: {"x": 1}.get(k)
+
+# After
+# Remove unused import
+from ansible_collections.x.y.z import module
+mock.side_effect = {"x": 1}.get
+```
+
+**If sanity tests fail:**
+
+1. Read the error message carefully (shows file, line, issue type)
+2. Fix the issues in the code
+3. Re-run sanity tests
+4. Amend your commit if needed: `git commit --amend --no-edit`
+
 **Checklist before completing:**
 
 - [ ] Breaking change check performed
@@ -640,7 +724,9 @@ done
 - [ ] Code formatted (black, isort)
 - [ ] Changelog fragment created (MANDATORY)
 - [ ] Syntax validation passed
-- [ ] Unit tests run locally
+- [ ] Unit tests pass locally
+- [ ] **Sanity tests pass (ansible-test sanity)**
+- [ ] **No pylint errors in test files**
 
 ### [12/13] Report Ready for Git Operations
 
