@@ -50,6 +50,7 @@ lola install ansible-collection-sdlc -a opencode
 - **get-branch-changes** - Determine merge-base and changed files for current branch, avoiding unrelated changes when behind target (used by other skills)
 - **get-pr-action-results** - Get GitHub Actions/GitLab CI results for PRs and branches, analyze failures, and suggest fixes (used by other skills)
 - **get-pr-number** - Determine pull request number for a branch (used by other skills)
+- **get-pr-zuul-results** - Get Zuul CI build status and log URLs for PRs in ansible-collections repositories (used by other skills)
 - **get-upstream-info** - Determine upstream repository information and service identifiers (used by other skills)
 
 ### Commands
