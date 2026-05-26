@@ -15,6 +15,8 @@ Use the `python-virtual-env` skill to:
 6. Optionally install packages or requirements files with `<managed-env>/bin/pip` when the user specifies them
 7. Report path, Python version, validation result, activation instructions, and any packages installed
 
-Optional arguments: environment name or path; requested Python version (for example `3.11` or `3.11.8`); package names or paths to requirements files (for example `requirements.txt`). If the user asks to remove the environment, delete only the managed path and do not re-create.
+Optional arguments: environment name or path; requested Python version (for example `3.11` or `3.11.8`);
+package names or paths to requirements files (for example `requirements.txt`).
+If the user asks to remove the environment, delete only the managed path and do not re-create.
 
 The skill will present a structured report so you and the agent can reuse the same environment for subsequent Python commands in this project.

@@ -35,7 +35,9 @@ When performing this skill:
 - NEVER install packages to the host system (yum, dnf, apt, etc.) nor the system Python environment without asking the user and getting explicit permission.
 - NEVER remove or uninstall versions of Python or packages from the host system.
 - NEVER delete, modify, or re-create virtual environments at paths other than the **managed environment** (the name or path from Inputs).
-- MAY create, delete, and re-create **only** the managed environment at its configured path—for example when creating it for the first time, when re-creating it for a different Python version or tool, or when the user asks to remove that environment.
+- MAY create, delete, and re-create **only** the managed environment at its configured path—for example
+  when creating it for the first time, when re-creating for a different Python version or tool, or when
+  the user asks to remove that environment.
 - For package installation in this skill, **always** use `<managed-env>/bin/pip`—never `pip`, `pip3`, or another environment's pip.
 
 ## Inputs and Setup
@@ -82,7 +84,9 @@ Tell the user both options in the report.
 
 If the user asked to **remove** the managed environment only (no re-create), go to Step 2 (delete only), then Step 6.
 
-Otherwise, determine whether the managed environment path exists and whether its Python version matches the requested version (if any). When the path exists, run `<managed-env>/bin/python --version` and apply **Version matching** rules.
+Otherwise, determine whether the managed environment path exists and whether its Python version matches
+the requested version (if any). When the path exists, run `<managed-env>/bin/python --version` and apply
+**Version matching** rules.
 
 | State | Action |
 | --- | --- |
@@ -103,16 +107,28 @@ Do not use or alter any other virtual environment directory on the system.
 **Create or re-create**:
 
 - If the managed environment does not exist, create it at the configured path.
-- If it exists but must change (wrong Python version, different tool explicitly requested by the user, or user asked to refresh it), **re-create** it: delete **only** the managed environment path, then create it again. Do not change Python inside an existing `venv` in place.
+- If it exists but must change (wrong Python version, different tool explicitly requested by the user,
+  or user asked to refresh it), **re-create** it: delete **only** the managed environment path, then
+  create it again. Do not change Python inside an existing `venv` in place.
 - Re-create for a different tool **only** when the user explicitly requests that tool—not by inferring the tool from an existing directory.
 
 When choosing the Python interpreter or tool:
 
 - Some virtual environment tools may install a Python version that is not on the host. If the selected tool supports that, use it.
-- If the tool does not support installing Python versions, search for other tools such as `uv`, `pyenv`, or `conda`. If one is available, ask the user before switching tools. For example:
-  `I attempted to create a virtual environment with the 'venv' module, but I was unable to find Python version X on the host system. However, I found that 'uv' is available. Would you like me to create the virtual environment with 'uv' instead, or look for other options to install Python version X for the 'venv' module?`
-- If the user wants other options for the `venv` module, list Python versions found on the host. For example:
-  `I was unable to find the version of Python you specified on the host system. I found versions X, Y and Z. Would you like me to install the missing version on your host system, or would you like to use one of the existing versions?`
+- If the tool does not support installing Python versions, search for other tools such as `uv`, `pyenv`,
+  or `conda`. If one is available, ask the user before switching tools. For example:
+
+  `I attempted to create a virtual environment with the 'venv' module, but I was unable to find Python
+  version X on the host system. However, I found that 'uv' is available. Would you like me to create the
+  virtual environment with 'uv' instead, or look for other options to install Python version X for the
+  'venv' module?`
+
+- If the user wants other options for the `venv` module, list Python versions found on the host. For
+  example:
+
+  `I was unable to find the version of Python you specified on the host system. I found versions X, Y
+  and Z. Would you like me to install the missing version on your host system, or would you like to use
+  one of the existing versions?`
 
 After create or re-create, go to Step 3.
 
@@ -136,7 +152,9 @@ Then go to Step 4.
   - If `.gitignore` exists, **append** the ignore entry only when it is missing. Do not remove or replace other entries.
   - If `.gitignore` does not exist and the repository has no ignore file, create `.gitignore` containing only that ignore entry.
 
-- If the project has a `galaxy.yml`, ensure `build_ignore` includes the managed environment directory name (for example `.venv`). If it does not, add it under the existing `build_ignore` list. Do not create `galaxy.yml` if it does not exist.
+- If the project has a `galaxy.yml`, ensure `build_ignore` includes the managed environment directory
+  name (for example `.venv`). If it does not, add it under the existing `build_ignore` list. Do not
+  create `galaxy.yml` if it does not exist.
 
   Example addition when using the default path:
 
