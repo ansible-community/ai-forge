@@ -65,6 +65,7 @@ Key skills include: changelog-fragment, commit, create-branch, create-pr, pr-rev
 
 - **/check-pr-actions** - Check GitHub Actions/GitLab CI status and analyze failures
 - **/check-pr-sonarcloud** - Check SonarCloud analysis results for the current pull request
+- **/setup-python-venv** - Set up or validate a project-local Python virtual environment
 
 ### Agents
 

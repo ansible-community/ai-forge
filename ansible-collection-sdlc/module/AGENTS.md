@@ -214,6 +214,10 @@ When transitioning between agent roles:
   Uses get-pr-number to detect the PR and sonarcloud-analysis to fetch and analyze PR-specific issues.
   Invoke when asked to check SonarCloud for the PR, review static analysis results, or see what code quality issues affect the current PR.
 
+- **/setup-python-venv command**: Use the `/setup-python-venv` command to create, validate, or remove a
+  project-local Python virtual environment. Uses the `python-virtual-env` skill.
+  Invoke when asked to set up a venv, local Python dev environment, or validate `.venv` before pip installs.
+
 ### Skills
 
 - **commit skill**: Use the `commit` skill when you want to create a conventional commit
@@ -282,6 +286,12 @@ When transitioning between agent roles:
 
 - **next-release skill**: Use the `next-release` skill to calculate next patch/minor/major release versions following SemVer.
   Invoke when asked what version to use for version_added tags or about next release versions.
+
+- **python-virtual-env skill**: Use the `python-virtual-env` skill to create or validate a project-local
+  Python virtual environment for isolated pip installs and local tooling.
+  Typically invoked by the `/setup-python-venv` command; also use directly when setting up local Python
+  dev, installing Python dependencies with pip, or before non-Docker Python commands.
+  Do not use for `ansible-test --docker` workflows unless the user explicitly wants a local venv.
 
 ### Utility Skills
 

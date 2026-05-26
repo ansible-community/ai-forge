@@ -81,6 +81,30 @@ Role scaffolding tools with interactive builders for creating CoP-compliant role
 
 Full lifecycle: commits, PRs, releases, tests. Includes skills for changelog fragments, conventional commits, PR reviews, releases, testing, and SonarCloud integration.
 
+**Skills:**
+
+- `changelog-fragment` - Create and update changelog fragments
+- `commit` - Conventional commits with FQCN scopes
+- `create-branch` - Create feature branches following conventions
+- `create-pr` - Create draft PRs with pre-flight checks and validation
+- `implement-sonarcloud-fixes` - Implement fixes for SonarCloud issues
+- `pr-review` - PR review against Ansible collection standards
+- `release` - Guided collection release process
+- `remove-deprecations` - Find and remove overdue deprecations
+- `run-tests` - Run and write tests using ansible-test
+- `python-virtual-env` - Create or validate a project-local Python virtual environment for local pip installs and tooling
+- `sonarcloud-analysis` - Analyze SonarCloud issues and technical debt
+- `next-release` - Calculate next patch/minor/major versions for version_added tags
+- `current-release` - Fetch current release version (helper)
+- `get-branch-changes` - Determine merge-base and changed files (helper)
+- `get-pr-action-results` - Get GitHub Actions/GitLab CI results and analyze failures (helper)
+- `get-pr-number` - Find PR number for branch (helper)
+- `get-upstream-info` - Determine upstream repository info (helper)
+
+**Commands:**
+
+- `/setup-python-venv` - Set up or validate a project-local Python virtual environment
+
 [Full documentation](./ansible-collection-sdlc/README.md)
 
 ### All Skills
