@@ -36,7 +36,7 @@ lola install cloud_content -a opencode
 | `aws-terminator-analyze` | Analyze Ansible AWS collection PRs to determine required aws-terminator changes |
 | `aws-terminator-implement` | Implement terminator classes and IAM permissions in aws-terminator repository |
 | `aws-terminator-workflow` | End-to-end orchestrator: analyze → implement → test → PR creation |
-| **`collection-release-readiness-check`** | Checks whether an Ansible collection Git repo needs a minor or patch release and whether it is ready for a release prep PR (default: two most recent `stable-*` branches). Requires `collection_git_url` or a local clone path. Does not run the release; for major releases, use the handbook and **`release`** skill. |
+| `collection-backport-status-check` | Check backport and patchback workflow blockers for Ansible collection stable branches. Detect open backport PRs and patchback failures that must be resolved before creating a release prep PR. Complements version analysis skills by focusing on process blockers. By default, checks the two most recent stable branches. |
 
 Skills live under [`module/skills/`](module/skills/).
 
