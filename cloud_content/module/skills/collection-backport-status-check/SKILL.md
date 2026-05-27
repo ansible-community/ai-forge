@@ -1,11 +1,15 @@
 ---
 name: collection-backport-status-check
 description: >-
-  Checks backport and patchback workflow blockers for Ansible collection stable
-  branches. Detects open backport PRs and patchback failures that must be resolved
+  Check backport and patchback workflow blockers for Ansible collection stable
+  branches. Detect open backport PRs and patchback failures that must be resolved
   before creating a release prep PR. Complements version analysis skills by focusing
   on process blockers. By default, checks the two most recent stable branches.
-version: "1.0"
+triggers:
+  - check backport status
+  - backport blockers
+  - ready for prep PR
+  - patchback failures
 ---
 
 # Skill: collection-backport-status-check
@@ -14,9 +18,9 @@ version: "1.0"
 
 Check if a collection's stable branch is **ready for a prep PR** from a workflow perspective:
 
-- ✅ Are all backport PRs merged?
-- ✅ Are all patchback failures resolved?
-- ✅ Can I safely create a release prep PR now?
+- Are all backport PRs merged?
+- Are all patchback failures resolved?
+- Can I safely create a release prep PR now?
 
 This skill focuses on **process blockers**, not version calculation. Use **`stable-release-analyze`** to determine if a release is needed and what version to use.
 
@@ -26,7 +30,7 @@ This skill focuses on **process blockers**, not version calculation. Use **`stab
 
 - "Are there any backport blockers for `stable-X`?"
 - "Can I create a prep PR for `stable-X`?" (after version is already determined)
-- "Check backport status before release prep"
+- "Check backport status before stable-release-prep"
 - "Are there any patchback failures to resolve?"
 
 **Note:** For "do I need a release?" or "what version?" questions, use **`stable-release-analyze`** instead.
@@ -225,7 +229,7 @@ When checking multiple branches (default behavior), repeat the above structure f
 
 1. **`stable-release-analyze`** — Determine if a release is needed and calculate the version
 2. **`collection-backport-status-check`** (this skill) — Check for backport/patchback blockers
-3. **`release-prep`** — Create the prep PR (once blockers are cleared)
+3. **`stable-release-prep`** — Create the prep PR (once blockers are cleared)
 4. **`release`** — Execute the full release after prep PR is merged
 
 **Dependencies:**
