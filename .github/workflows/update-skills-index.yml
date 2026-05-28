@@ -2,7 +2,7 @@
 name: Update Skills Index
 
 on:
-  push:
+  pull_request:
     branches: [main]
     paths:
       - '*/module/skills/*/SKILL.md'
@@ -13,40 +13,63 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
 
-      - name: Check for new skills
+      - name: Check for new skills not in index
         id: check-new
         run: |
-          # Check if any SKILL.md files were added in this push
-          NEW_SKILLS=$(git diff --name-status --diff-filter=A HEAD~1 HEAD -- '*/module/skills/*/SKILL.md' | wc -l)
-          echo "new_skills=$NEW_SKILLS" >> "$GITHUB_OUTPUT"
-          if [ "$NEW_SKILLS" -gt 0 ]; then
-            echo "Found $NEW_SKILLS new skill(s)"
-            git diff --name-status --diff-filter=A HEAD~1 HEAD -- '*/module/skills/*/SKILL.md'
-          else
+          # Get newly added SKILL.md files in this PR
+          NEW_SKILL_PATHS=$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }}...HEAD -- '*/module/skills/*/SKILL.md')
+
+          if [ -z "$NEW_SKILL_PATHS" ]; then
             echo "No new skills added"
+            echo "needs_update=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Check if each new skill is already in SKILLS.md
+          MISSING_SKILLS=""
+          for skill_path in $NEW_SKILL_PATHS; do
+            # Extract skill name from path (e.g., ansible-collection/module/skills/commit/SKILL.md -> commit)
+            skill_name="${skill_path%/SKILL.md}"
+            skill_name="${skill_name##*/}"
+            if ! grep -q "| \[$skill_name\](" SKILLS.md 2>/dev/null; then
+              MISSING_SKILLS="$MISSING_SKILLS $skill_name"
+              echo "Skill '$skill_name' not found in SKILLS.md"
+            else
+              echo "Skill '$skill_name' already in SKILLS.md"
+            fi
+          done
+
+          if [ -z "$MISSING_SKILLS" ]; then
+            echo "All new skills already in index"
+            echo "needs_update=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Skills missing from index:$MISSING_SKILLS"
+            echo "needs_update=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Set up Python
-        if: steps.check-new.outputs.new_skills != '0'
+        if: steps.check-new.outputs.needs_update == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install dependencies
-        if: steps.check-new.outputs.new_skills != '0'
+        if: steps.check-new.outputs.needs_update == 'true'
         run: pip install pyyaml
 
       - name: Generate SKILLS.md
-        if: steps.check-new.outputs.new_skills != '0'
+        if: steps.check-new.outputs.needs_update == 'true'
         run: python3 .github/scripts/generate-skills-index.py
 
-      - name: Commit and push
-        if: steps.check-new.outputs.new_skills != '0'
+      - name: Commit and push to PR
+        if: steps.check-new.outputs.needs_update == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -54,6 +77,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "docs: update SKILLS.md index [skip ci]"
+            git commit -m "docs: update SKILLS.md index"
             git push
           fi
