@@ -5,6 +5,7 @@ description: >-
   branches. Detect open backport PRs and patchback failures that must be resolved
   before creating a release prep PR. Complements version analysis skills by focusing
   on process blockers. By default, checks the two most recent stable branches.
+allowed-tools: Read, Bash(command:git *), Bash(command:gh *), Bash(command:jq *), Bash(command:md5sum *), Bash(command:sed *), Bash(command:awk *), Bash(command:grep *), Bash(command:sort *), Bash(command:xargs *), Bash(command:cut *)
 triggers:
   - check backport status
   - backport blockers
