@@ -78,7 +78,7 @@ git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/orig
 
 ### Step 2 — Resolve upstream remote and repo
 
-Use **`get-upstream-info`** (`ansible-collection-sdlc/module/skills/get-upstream-info/SKILL.md`) to determine:
+Use **`get-upstream-info`** ([`ansible-collection-sdlc/module/skills/get-upstream-info/SKILL.md`](ansible-collection-sdlc/module/skills/get-upstream-info/SKILL.md)) to determine:
 
 - `UPSTREAM_REMOTE` — canonical remote name (`upstream` in fork workflows, `origin` in direct clones)
 - `UPSTREAM_PATH` — `org/repo` for `gh` commands (e.g. `ansible-collections/amazon.aws`)
