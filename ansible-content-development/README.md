@@ -1,0 +1,74 @@
+# Ansible Content Development Module
+
+A Lola module for developing and testing Ansible content following official best practices.
+Provides skills to write and review Python modules (write-module), YAML-based content (write-content),
+and tests for both — module unit/integration tests (write-module-tests) and Molecule functional tests (write-content-tests).
+
+## Installation
+
+```bash
+# Install Lola package manager
+pip install lola-cli
+
+# Register the module from GitHub
+lola mod add https://github.com/ansible-community/ai-forge/ansible-content-development
+
+# Or clone and register locally
+git clone https://github.com/ansible-community/ai-forge.git
+lola mod add ./ai-forge/ansible-content-development
+
+# Install to Claude Code
+lola install ansible-content-development -a claude-code
+
+# Install to Cursor
+lola install ansible-content-development -a cursor
+
+# Install to other assistants
+lola install ansible-content-development -a gemini-cli
+lola install ansible-content-development -a opencode
+```
+
+## Components
+
+### Skills
+
+See **[SKILLS.md](../SKILLS.md#ansible-content-development)** for skills in this module.
+
+### Commands
+
+None currently defined.
+
+### Agents
+
+None currently defined.
+
+### MCP Servers
+
+None currently defined.
+
+## Development
+
+This module follows the Lola module structure:
+
+```
+ansible-content-development/
+├── README.md           # This file
+└── module/             # Lola-importable content
+    ├── AGENTS.md       # Module-level instructions
+    ├── skills/         # Skill folders with SKILL.md
+    ├── commands/       # Slash command .md files
+    ├── agents/         # Subagent .md files
+    └── mcps.json       # MCP server configuration
+```
+
+## Dependencies
+
+- **ansible-test** (optional) - Used to validate modules and run unit/integration tests
+- **ansible-lint** (optional) - Used to validate generated Ansible content
+- **ansible-creator** (optional) - Used for scaffolding project structures (collections, roles, playbooks)
+- **molecule** (optional) - Used for functional testing of roles and playbooks
+- **podman** or **docker** (optional) - Container backend for Molecule and ansible-test
+
+## License
+
+GPL-3.0-or-later
