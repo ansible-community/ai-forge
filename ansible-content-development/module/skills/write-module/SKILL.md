@@ -43,13 +43,21 @@ DO NOT TRIGGER when:
 - Always explain WHY a practice matters, not just WHAT to do. Users learn better when they understand the rationale.
 - When reviewing, highlight what is done well — not every review needs to find problems. If the module is already well-written, say so.
 - For scaffolding, always confirm what the module manages and its operational mode (state-based vs info/facts) before generating code.
+- Before scaffolding a module, decide whether the problem is really a better fit for an
+  action plugin. For controller-local orchestration, cloud/API-heavy workflows, or logic
+  that always runs on the control node, prefer an action plugin over a remote module.
+- Prefer existing Ansible content before creating a custom module. Selection order:
+  `ansible.builtin` -> vendor-supported content -> content from verified authors -> general Galaxy content -> custom modules/plugins/roles only as a last resort.
+- Avoid wrapping `ansible.builtin.shell`, `ansible.builtin.raw`, or ad hoc bash in a custom
+  module unless there is a clear, explicit justification that no safer module or plugin approach
+  will work.
 - All guidance is sourced from the official Ansible documentation at docs.ansible.com. For the full set of rules and examples, see [reference.md](reference.md).
 
 ## Modes
 
 Determine the mode based on the user's invocation and `$ARGUMENTS`:
 
-- If `$ARGUMENTS` is a path to an existing Python file → **Mode 2: Review**
+- If `$ARGUMENTS` is a path to an existing Python file or an existing `plugins/modules/` directory → **Mode 2: Review**
 - If `$ARGUMENTS` is a module name (no path separator, no `.py`) → **Mode 1: Scaffold**
 - If `$ARGUMENTS` is empty → ask the user whether they want to scaffold or review
 - If ambiguous → ask the user to clarify
@@ -60,7 +68,20 @@ Determine the mode based on the user's invocation and `$ARGUMENTS`:
 
 Generate a complete, best-practice-compliant Ansible module from scratch.
 
-#### Step 1 — Gather Inputs
+#### Step 1 — Confirm a New Module Is Necessary
+
+Before scaffolding, check whether a new custom module is justified:
+
+- First, check whether `ansible.builtin` already solves the problem
+- If builtin content is not sufficient, prefer vendor-supported content, then content from verified authors, then general Galaxy content
+- Only scaffold a custom module when no suitable existing content meets the need safely, idempotently, or maintainably
+- Decide whether the use case should be a module or an action plugin:
+  - Prefer a module when work must run on the managed host or return managed-host facts/state
+  - Prefer an action plugin when the work always runs on the controller, primarily orchestrates APIs/cloud services, or would just proxy local logic before calling other modules
+- If the user's request can be solved by combining existing modules/plugins cleanly, recommend that approach instead of generating a new module
+- If a custom module is still needed, capture the gap it fills so the rationale is explicit in the generated guidance
+
+#### Step 2 — Gather Inputs
 
 Collect the following from the user (ask if not provided):
 
@@ -74,13 +95,13 @@ If a `galaxy.yml` exists in the project, read it to determine the collection nam
 
 If the `next-release` skill is available, use it to determine `version_added`. Otherwise, read `version` from `galaxy.yml`.
 
-#### Step 2 — Validate Naming
+#### Step 3 — Validate Naming
 
 - Module name MUST use underscores only (not hyphens or spaces)
 - `_info` and `_facts` module names must use a singular noun before the suffix
 - Reject reserved option names: `action`, `command`, `message`, `syslog_facility`
 
-#### Step 3 — Derive Argument Spec
+#### Step 4 — Derive Argument Spec
 
 From the user's description, build the `argument_spec` dictionary:
 
@@ -92,11 +113,11 @@ From the user's description, build the `argument_spec` dictionary:
 - Define `mutually_exclusive`, `required_together`, `required_one_of`, `required_if`, `required_by` where applicable
 - Use `fallback=(env_fallback, ['ENV_VAR'])` for connection parameters
 
-#### Step 4 — Generate the Module File
+#### Step 5 — Generate the Module File
 
 Use the template in the **Module Template** section below. Place the file at `plugins/modules/<module_name>.py`.
 
-#### Step 5 — Generate Documentation Blocks
+#### Step 6 — Generate Documentation Blocks
 
 Follow these formatting rules precisely:
 
@@ -123,7 +144,7 @@ Follow these formatting rules precisely:
 - Add `elements` if `type: list`
 - If no return values: `RETURN = r''' # '''`
 
-#### Step 6 — Post-Scaffold
+#### Step 7 — Post-Scaffold
 
 After generating the module:
 
@@ -301,6 +322,7 @@ When the module has no third-party dependencies, omit the `HAS_LIB` pattern, `tr
 
 | Category | What to Check |
 |----------|---------------|
+| Reuse Strategy | Custom module is justified only when higher-trust existing content (`ansible.builtin` -> vendor-supported -> content from verified authors -> general Galaxy) does not already solve the problem; action plugins are considered for controller-local/API-heavy logic; wrappers around `shell`/`raw` are explicitly justified |
 | File Structure | `#!/usr/bin/python` shebang (not `#!/usr/bin/env`), `# -*- coding: utf-8 -*-`, copyright header, `__future__` imports, sections in order: DOCUMENTATION → EXAMPLES → RETURN → imports → code |
 | Naming | Underscores only (no hyphens), singular `_info`/`_facts` suffix, no reserved names (`action`, `command`, `message`, `syslog_facility`) |
 | DOCUMENTATION | `module` matches filename, `short_description` (no trailing period), `description` (full sentences with periods), `version_added` (quoted string, collection version), `options` with `description`/`type`/`required` or `default`, `author` |
@@ -362,6 +384,7 @@ After generating the module file, output:
 ### Checklist Status
 | Category | Status | Notes |
 |----------|--------|-------|
+| Reuse Strategy | PASS / FAIL / N/A | ... |
 | File Structure | PASS / FAIL / N/A | ... |
 | Naming | PASS / FAIL / N/A | ... |
 | DOCUMENTATION | PASS / FAIL / N/A | ... |

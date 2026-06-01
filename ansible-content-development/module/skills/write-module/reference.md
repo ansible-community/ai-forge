@@ -61,6 +61,30 @@ Each module must be self-contained in a single file. Ansible auto-transfers modu
 Follow the UNIX philosophy — one module should do one thing well. Do not build a lightweight wrapper around a complex API that forces users to write
 logic in playbooks. Instead, create multiple smaller modules addressing distinct API pieces.
 
+### Module vs action plugin
+
+Choose the execution model before writing code:
+
+- Prefer a **module** when the logic must execute on the managed host, manipulate remote state directly, or gather host-local facts
+- Prefer an **action plugin** when the logic always runs on the controller, primarily orchestrates APIs or cloud services, or mostly prepares local work before delegating to existing modules
+- Do not create a module just to bounce controller-local API calls through remote execution when an action plugin would be simpler and cheaper
+
+**Why:** Modules pay the cost of packaging and remote execution. Action plugins avoid that overhead for controller-local logic and usually model cloud/API orchestration more naturally.
+
+### Prefer existing content before a new module
+
+Before authoring a custom module, use the highest-trust existing content that fits:
+
+1. `ansible.builtin`
+2. vendor-supported collections, modules, plugins, and roles
+3. content from verified authors
+4. general Galaxy content
+5. custom modules, plugins, and roles only as a last resort
+
+Do not write a new module just to lightly wrap behavior already available elsewhere, especially when the result would mostly proxy `command`, `shell`, or `raw` execution.
+
+A new custom module is justified when existing content cannot provide a safe, idempotent, maintainable interface for the use case. When that happens, document the gap the module is filling.
+
 ### Separate info and facts modules
 
 Do not add `get`, `list`, or `info` state options to an existing module. Create separate `_info` or `_facts` modules.
@@ -896,6 +920,22 @@ rc, stdout, stderr = module.run_command(['ls', path])
 ```
 
 **Why:** `module.run_command` respects Ansible's `become` settings, handles `check_mode`, and provides consistent error handling.
+
+### Writing a custom module for an existing solution
+
+**Wrong:** Creating a new module for behavior already handled by `ansible.builtin` or other higher-trust existing content.
+
+**Right:** Reuse the highest-trust existing content first, and only author a custom module when existing options cannot solve the problem safely or maintainably.
+
+**Why:** Duplicating existing automation increases maintenance cost, support burden, and security risk without improving the user experience.
+
+### Using a module when an action plugin is the better fit
+
+**Wrong:** Writing a remote module for controller-local API orchestration that never needs managed-host execution.
+
+**Right:** Use an action plugin when the logic always runs locally on the controller and mainly coordinates APIs, cloud services, or other local-side work.
+
+**Why:** Running a remote module for controller-local behavior adds unnecessary packaging and transport overhead while obscuring the real execution model.
 
 ### Using `print()` for output
 

@@ -4,6 +4,13 @@ A Lola module for developing and testing Ansible content following official best
 Provides skills to write and review Python modules (write-module), YAML-based content (write-content),
 and tests for both — module unit/integration tests (write-module-tests) and Molecule functional tests (write-content-tests).
 
+## Authoring Principles
+
+- Prefer existing Ansible content before creating custom automation.
+- Selection order: `ansible.builtin` -> vendor-supported content -> content from verified authors -> general Galaxy content -> custom content only as a last resort.
+- Avoid `ansible.builtin.shell`, `ansible.builtin.raw`, and ad hoc bash unless there is a clear, explicit justification that no safer module or plugin approach will work.
+- Prefer purpose-built modules first, then `ansible.builtin.command` when shell features are not required.
+
 ## Installation
 
 ```bash

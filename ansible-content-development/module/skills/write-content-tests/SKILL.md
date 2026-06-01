@@ -50,8 +50,8 @@ DO NOT TRIGGER when:
 
 Determine the mode based on the user's invocation and `$ARGUMENTS`:
 
-- If `$ARGUMENTS` is a path to an existing Molecule scenario or test file → **Mode 2: Improve**
-- If `$ARGUMENTS` is a role path or text description → **Mode 1: Write**
+- If `$ARGUMENTS` is a path to an existing Molecule scenario, `molecule/` directory, `extensions/molecule/` directory, or test file such as `verify.yml`/`converge.yml` → **Mode 2: Improve**
+- If `$ARGUMENTS` is a role path, playbook path, or text description → **Mode 1: Write**
 - If `$ARGUMENTS` is empty → ask the user what they want to test
 - If ambiguous → ask the user to clarify
 

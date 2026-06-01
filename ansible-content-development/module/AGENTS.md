@@ -18,6 +18,19 @@ Module provides skills for developing and testing Ansible content following offi
   Emphasizes functional verification (does the automation achieve its goal?) over structural verification (did it create the file?).
   Invoke with `/write-content-tests` or when discussing Molecule, role testing, or writing verify playbooks.
 
+## Authoring Priorities
+
+- Prefer existing Ansible content before creating custom automation.
+- Selection order:
+  1. `ansible.builtin`
+  2. vendor-supported collections, modules, plugins, and roles
+  3. content from verified authors
+  4. general Galaxy content
+  5. custom collections, modules, plugins, and roles only as a last resort
+- Avoid `ansible.builtin.shell`, `ansible.builtin.raw`, and ad hoc bash unless there is a clear, explicit justification that no safer module or plugin approach will work.
+- Prefer purpose-built modules first, then `ansible.builtin.command` when shell features are not required.
+- When using anything below `ansible.builtin` or creating custom content, explain why higher-trust options were not suitable.
+
 ## Configuration
 
 **Optional Dependencies:**
@@ -40,3 +53,4 @@ Module provides skills for developing and testing Ansible content following offi
 - The write-module skill focuses on Python module files under `plugins/modules/`. The write-module-tests skill generates unit (pytest) and integration (ansible-test) tests for those modules.
 - The write-content skill focuses on YAML-based Ansible content. The write-content-tests skill generates Molecule scenarios with functional verification for roles and playbooks.
 - The testing skills emphasize functional testing: verify that automation achieves its intended outcome, not that built-in modules created files correctly.
+- The authoring priority order above applies across every skill in this module, including scaffolding, review, and testing guidance.

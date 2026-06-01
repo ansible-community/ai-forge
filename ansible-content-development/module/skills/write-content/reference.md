@@ -174,6 +174,20 @@ Always use Fully Qualified Collection Names. See section 12 for a complete refer
 
 **Why:** Avoids ambiguity when multiple collections provide modules with the same short name.
 
+### Choose the highest-trust existing content first
+
+Before adding a new role, task, plugin, or module to solve a problem, use the highest-trust existing content that fits:
+
+1. `ansible.builtin`
+2. vendor-supported collections, modules, plugins, and roles
+3. content from verified authors
+4. general Galaxy content
+5. custom collections, modules, plugins, and roles only as a last resort
+
+When using anything below `ansible.builtin` or creating custom content, explain why higher-trust options were not suitable.
+
+**Why:** Reusing higher-trust content reduces maintenance burden, security risk, and support ambiguity while avoiding reinvention of already-solved automation problems.
+
 ### Explicit state
 
 Always specify `state` explicitly — different modules have different defaults.
@@ -218,13 +232,14 @@ Or when individual iteration is needed:
 
 **Why:** `with_*` constructs are deprecated. `loop:` is the modern replacement. Many modules also accept lists directly.
 
-### Prefer modules over command/shell
+### Prefer modules over command/shell/raw
 
-1. First choice: a dedicated module (e.g., `ansible.builtin.dnf`, `ansible.builtin.service`)
+1. First choice: a purpose-built module or plugin from the highest-trust source available
 2. Second choice: `ansible.builtin.command` (no shell features)
-3. Last resort: `ansible.builtin.shell` (when piping or shell features are required)
+3. Last resort: `ansible.builtin.shell` (when shell features are required)
+4. `ansible.builtin.raw` only for bootstrapping or environments where normal module execution cannot work yet
 
-When using `command` or `shell`, add a comment explaining why no module exists, and always set `changed_when:`:
+When using `command`, `shell`, or `raw`, add a comment explaining why no safer module or plugin exists. Always set `changed_when:` on `command` and `shell` tasks:
 
 ```yaml
 - name: Check if application is running
@@ -943,6 +958,14 @@ __webserver_config_path: /etc/nginx/nginx.conf
 ```
 
 **Why:** `shell` invokes a full shell interpreter and is vulnerable to injection. `command` runs the command directly without shell processing.
+
+### Creating custom content before exhausting existing options
+
+**Wrong:** Writing a custom module, plugin, or role before checking whether `ansible.builtin`, vendor-supported content, content from verified authors, or general Galaxy content already solves the problem.
+
+**Right:** Reuse the highest-trust existing content first, and create custom content only when there is a clear gap that existing options do not cover safely or maintainably.
+
+**Why:** Reinventing existing automation increases maintenance cost and risk without improving the user experience.
 
 ### Using .yaml extension
 

@@ -46,8 +46,9 @@ DO NOT TRIGGER when:
 
 Determine the mode based on the user's invocation and `$ARGUMENTS`:
 
-- If `$ARGUMENTS` is a path to an existing test file → **Mode 2: Improve**
-- If `$ARGUMENTS` is a path to a module file or a module name → **Mode 1: Write**
+- If `$ARGUMENTS` is a path to an existing unit/integration test file or test directory → **Mode 2: Improve**
+- If `$ARGUMENTS` is a module path or module name and the user asks to improve/review tests, locate the existing tests for that module and use **Mode 2: Improve**
+- If `$ARGUMENTS` is a path to a module file or a module name and the user wants new tests → **Mode 1: Write**
 - If `$ARGUMENTS` is empty → ask the user what they want to test
 - If ambiguous → ask the user to clarify
 

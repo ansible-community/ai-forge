@@ -1,7 +1,7 @@
 # Skills Index
 
 > Auto-generated from SKILL.md files. Do not edit manually.
-> Last updated: 2026-05-29 16:41 UTC
+> Last updated: 2026-06-01 16:39 UTC
 
 ## ansible-collection-sdlc
 
@@ -41,6 +41,15 @@
 |-------|-------------|
 | [ansible-zen](ansible-collection-standards/module/skills/ansible-zen/SKILL.md) | Display the Zen of Ansible principles and review Ansible code against them. Use when the user wants to see the Zen of Ansible, get philosophical guidance on their automation approach, or review code for simplicity, readability, and clarity. Use when user says "zen of ansible", "simplify my playbook", "is this too complex", or "clean code review". Do NOT use for strict rule compliance (use ansible-cop-review instead). |
 
+## ansible-content-development
+
+| Skill | Description |
+|-------|-------------|
+| [write-content](ansible-content-development/module/skills/write-content/SKILL.md) | Write or improve Ansible content (playbooks, tasks, handlers, templates, variables, inventories, argument specs) following Red Hat CoP automation good practices. Use when writing new Ansible YAML content from a description, or improving existing content against best practices. Do NOT use for Python module development (use write-module), role/collection scaffolding (use ansible-scaffold-role / ansible-scaffold-collection), compliance auditing (use ansible-cop-review), or style review (use ansible-zen). |
+| [write-content-tests](ansible-content-development/module/skills/write-content-tests/SKILL.md) | Write functional tests for Ansible content (roles, playbooks) using Molecule. Focuses on verifying intended outcomes — does the automation achieve its goal? — not retesting built-in modules. Use when writing new Molecule scenarios, verify playbooks, or improving existing tests. Do NOT use for Python module unit/integration tests (use write-module-tests). |
+| [write-module](ansible-content-development/module/skills/write-module/SKILL.md) | Scaffold new Ansible modules or review existing ones against official best practices from docs.ansible.com. Use when writing a new module from scratch, reviewing module code for compliance, or asking how to structure an Ansible module. Do NOT use for role scaffolding, playbook review, or PR-level review. |
+| [write-module-tests](ansible-content-development/module/skills/write-module-tests/SKILL.md) | Write unit and integration tests for Ansible modules using ansible-test and pytest. Covers test structure, mocking AnsibleModule, argument validation, and integration test patterns. Do NOT use for Ansible content tests (use write-content-tests for Molecule). |
+
 ## cloud_content
 
 | Skill | Description |
@@ -56,4 +65,4 @@
 | [network-collection-triage](network_content/module/skills/network-collection-triage/SKILL.md) | Triage bug reports, CI failures, and GitHub issues across Ansible network collections (cisco.ios, cisco.iosxr, cisco.nxos, arista.eos, junos, ansible.netcommon, ansible.utils). Two modes: scan mode for bulk weekly triage across all repos, and direct mode for deep triage of a single issue. Network-specific: uses cross-collection cascade detection for shared dependencies (netcommon, utils) and known network CI failure patterns. Outputs structured JSON and markdown. Use when asked to triage network issues, scan network issues, weekly triage, triage CI failure, or triage collection issue. Do not use for non-network collections or general Ansible questions. |
 
 ---
-Total skills: 32
+Total skills: 36
