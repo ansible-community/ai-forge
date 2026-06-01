@@ -293,7 +293,18 @@ Use `check_mode: true` and `failed_when: false` for checks that should not modif
 
 ## 6. Converge Patterns
 
-### For roles
+### For standalone roles
+
+```yaml
+---
+- name: Converge
+  hosts: all
+  become: true
+  roles:
+    - role: role_name
+```
+
+### For collection roles
 
 ```yaml
 ---

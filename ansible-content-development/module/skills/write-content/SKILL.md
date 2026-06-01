@@ -5,9 +5,10 @@ description: >-
   variables, inventories, argument specs) following Red Hat CoP automation
   good practices. Use when writing new Ansible YAML content from a description,
   or improving existing content against best practices. Do NOT use for Python
-  module development (use write-module), role/collection scaffolding (use
-  ansible-scaffold-role / ansible-scaffold-collection), compliance auditing
-  (use ansible-cop-review), or style review (use ansible-zen).
+  module development (use write-module), role/collection scaffolding (use the
+  /ansible-scaffold-role or /ansible-scaffold-collection commands),
+  compliance auditing (use the /ansible-cop-review command), or style review
+  (use ansible-zen).
 argument-hint: "[content-file-path or content-description]"
 user-invocable: true
 metadata:
@@ -36,9 +37,9 @@ TRIGGER when:
 DO NOT TRIGGER when:
 
 - Writing Python modules (use `write-module` instead)
-- Scaffolding an entire role (use `ansible-scaffold-role` instead)
-- Scaffolding an entire collection (use `ansible-scaffold-collection` instead)
-- Auditing code against CoP compliance rules (use `ansible-cop-review` instead)
+- Scaffolding an entire role (use the `/ansible-scaffold-role` command instead)
+- Scaffolding an entire collection (use the `/ansible-scaffold-collection` command instead)
+- Auditing code against CoP compliance rules (use the `/ansible-cop-review` command instead)
 - Reviewing code for Zen/philosophy alignment (use `ansible-zen` instead)
 - Reviewing a PR (use `pr-review` instead)
 - Running tests (use `run-tests` instead)
@@ -48,7 +49,9 @@ DO NOT TRIGGER when:
 - This skill focuses on YAML-based Ansible content, not Python files under `plugins/modules/`. If the user needs help with a Python module, redirect to the `write-module` skill.
 - Always explain WHY a practice matters, not just WHAT to do. Users learn better when they understand the rationale.
 - When improving, highlight what is already done well — not every review needs to find problems.
-- For full project/role scaffolding, suggest `ansible-scaffold-collection` or `ansible-scaffold-role` and point the user there. This skill writes individual content pieces, not entire directory structures.
+- For full project or role scaffolding, suggest the `/ansible-scaffold-collection` or
+  `/ansible-scaffold-role` command from the companion modules. This skill writes
+  individual content pieces, not entire directory structures.
 - When generating content that belongs inside a role, always prefix variables with the role name.
 - Prefer existing Ansible content before creating custom automation. Selection order:
   `ansible.builtin` -> vendor-supported content -> content from verified authors -> general Galaxy content -> custom collections/modules/plugins/roles only as a last resort.
@@ -128,8 +131,8 @@ After generating content:
 2. Suggest running `ansible-playbook --syntax-check <playbook>` for playbooks
 3. Suggest using the `write-content-tests` skill to generate Molecule functional tests
 4. If the content is part of a role and no `meta/argument_specs.yml` exists, suggest creating one
-5. If the user needs a full role, suggest `ansible-scaffold-role` instead
-6. If the user needs a full collection, suggest `ansible-scaffold-collection` instead
+5. If the user needs a full role, suggest the `/ansible-scaffold-role` command instead
+6. If the user needs a full collection, suggest the `/ansible-scaffold-collection` command instead
 
 ---
 
@@ -140,8 +143,11 @@ Audit existing Ansible YAML content against best practices and suggest improveme
 #### Step 1 — Discover Scope
 
 - If `$ARGUMENTS` is a file path, improve that file
-- If `$ARGUMENTS` is a directory, find all `.yml`, `.yaml`, and `.j2` files
-- If no arguments, improve all Ansible content files in the current project
+- If `$ARGUMENTS` is a directory, focus on Ansible content roots such as `tasks/`, `handlers/`,
+  `templates/`, `defaults/`, `vars/`, `meta/`, `playbooks/`, and inventory directories instead of
+  every YAML or Jinja2 file in the repository
+- If no arguments, ask which role, playbook, or content path the user wants reviewed instead of
+  scanning the entire project by default
 
 #### Step 2 — Read the Content
 
@@ -187,7 +193,7 @@ List the 3 most impactful changes that would improve compliance. Focus on change
 ### Handler
 
 ```yaml
-- name: Restart nginx
+- name: webserver | Restart nginx
   ansible.builtin.systemd_service:
     name: "{{ webserver_service_name }}"
     state: restarted
@@ -326,54 +332,47 @@ argument_specs:
 
 ## Style Rules
 
-All generated and improved content must follow these rules. Each rule references the corresponding section in [reference.md](reference.md) for full detail.
+Keep the highest-signal authoring rules inline here. Use [reference.md](reference.md) for the
+full rule set, rationale, and edge cases.
 
 1. Two-space indentation
 2. `.yml` extension (not `.yaml`)
 3. YAML style for module arguments (not `key=value` inline)
-4. `true`/`false` (not `yes`/`no` or `True`/`False`)
-5. FQCN for all modules (e.g., `ansible.builtin.copy`, not `copy`)
-6. Name ALL tasks, plays, and blocks in imperative mood
-7. Always specify `state` explicitly — never rely on module defaults
-8. Double quotes for YAML strings, single quotes only inside Jinja2
-9. Use `>-` for folded scalars (not `>`) — prevents trailing newline bugs
-10. Break long `when:` conditions into lists — Ansible auto-ANDs list elements
-11. Use `loop:` not deprecated `with_*` constructs
-12. Prefer highest-trust existing content: `ansible.builtin` -> vendor-supported -> content from verified authors -> general Galaxy -> custom last resort
-13. Prefer modules over `command`/`shell`/`raw`; prefer `command` over `shell`
-14. Use `failed_when:` with specific conditions, not `ignore_errors: true`
-15. Use `delegate_to: localhost` not `local_action`
-16. Set `verbosity:` on `ansible.builtin.debug` tasks
-17. Use `block:` for error handling (`rescue`/`always`)
-18. Prefix task names in sub-task files: `install | Install packages`
-19. Role variable prefix: `<role_name>_variable`
-20. Internal variable double-underscore prefix: `__<role_name>_variable`
-21. `{{ ansible_managed | comment }}` at the top of all templates
-22. `backup: true` on template/copy tasks that overwrite config files
-23. `snake_case` for all file names, variable names, and role names
-24. Line length under 120 characters (ansible-lint default)
-25. Use `ansible_facts['os_family']` bracket notation (not `ansible_os_family`)
+4. `true`/`false` booleans
+5. FQCN for all modules
+6. Name all tasks, plays, and blocks in imperative mood
+7. Always specify `state` explicitly when the module supports it
+8. Use `loop:` rather than deprecated `with_*`
+9. Prefer highest-trust existing content and prefer modules over `command`/`shell`/`raw`
+10. Use `failed_when:` with specific conditions, not `ignore_errors: true`
+11. Prefix sub-task names and role variables consistently (`<role_name>_...`, `__<role_name>_...`)
+12. Put `{{ ansible_managed | comment }}` at the top of generated templates
+13. Use `snake_case` for file names, variable names, and role names
+14. Use `ansible_facts['...']` bracket notation, not legacy top-level fact variables
 
 ---
 
 ## Improvement Checklist
 
+Use these categories as report headings. The detailed checks and examples for each category live in
+[reference.md](reference.md).
+
 | Category | What to Check |
 |----------|---------------|
-| YAML Style | 2-space indent, `true`/`false` booleans, `.yml` extension, line length under 120, `>-` for folded scalars, double quotes for YAML strings |
-| Naming | `snake_case` everywhere, imperative task/play/block names, sub-task file prefixes (`install \| ...`), role-prefixed variables, `__` prefix for internal vars |
-| Module Usage | FQCN for all modules, highest-trust content order (`ansible.builtin` -> vendor-supported -> content from verified authors -> general Galaxy -> custom last resort), `loop:` not `with_*`, YAML-style args not `key=value`, explicit `state`, prefer modules over `command`/`shell`/`raw` |
-| Task Structure | All tasks/plays/blocks named, `become` scoped correctly (play-level vs task-level), `notify:` wired to handlers, meaningful `tags:` present |
-| Handlers | Role-prefixed names, uses `listen:` for decoupling, only for change-triggered actions, service handlers for restart/reload |
-| Templates | `{{ ansible_managed \| comment }}` header present, `backup: true` on the task, no dynamic timestamps, proper Jinja2 quoting |
-| Variables | Defaults in `defaults/main.yml`, constants in `vars/main.yml`, role-name prefix on all vars, `__` prefix for internals, dangerous defaults commented out |
-| Playbook Structure | No mixed `roles:` + `tasks:` sections, logic in roles not playbooks, `gather_subset` specified when full facts not needed, `become` at correct level |
-| Inventory | Structured directory layout, no variable definitions in hosts file, vault layering (`vars.yml` + `vault.yml`), groups named by function |
-| Error Handling | `block`/`rescue`/`always` for error handling, `failed_when:` not `ignore_errors:`, `changed_when:` on `command`/`shell` tasks, explicit justification for any `raw` usage |
-| Idempotency | `changed_when:` on `command`/`shell`, modules used where available, `state` explicit, no unnecessary changes on re-run |
-| Argument Specs | `meta/argument_specs.yml` exists, matches `defaults/main.yml`, types and descriptions present, choices for constrained values |
-| Tags | Named after roles or meaningful operations, no standalone destructive tags, documented in README |
-| Platform Support | `include_vars` with `lookup('first_found')`, platform-specific var files (`RedHat.yml`, `Debian.yml`), `ansible_facts['...']` bracket notation |
+| YAML Style | Indentation, booleans, `.yml`, quoting, folding, line length |
+| Naming | `snake_case`, imperative names, task prefixes, variable prefixes |
+| Module Usage | FQCN, trust order, explicit `state`, `loop`, modules over `command`/`shell`/`raw` |
+| Task Structure | Names, `become` scope, handlers, meaningful `tags` |
+| Handlers | Role-prefixed names, `listen:` aliases, change-triggered actions |
+| Templates | `ansible_managed` header, deterministic rendering, safe overwrite behavior |
+| Variables | Defaults vs vars, safe defaults, role/internal prefixes |
+| Playbook Structure | Role-centric logic, clean play structure, fact scoping |
+| Inventory | Structured layout, var layering, functional group naming |
+| Error Handling | `block`/`rescue`, `failed_when`, `changed_when`, justified `raw` use |
+| Idempotency | No spurious changes on re-run |
+| Argument Specs | `meta/argument_specs.yml` coverage and alignment with defaults |
+| Tags | Meaningful, documented tags |
+| Platform Support | `first_found`, platform var files, bracket fact notation |
 
 ---
 
@@ -450,13 +449,15 @@ After generating content, output:
 
 ## Integration with Other Skills
 
-| When | Skill |
-|------|-------|
+Some integrations below come from companion Lola modules rather than this module alone.
+
+| When | Tool |
+|------|------|
 | Write functional tests (Molecule) for the content | `write-content-tests` |
 | Writing a Python module, not YAML content | `write-module` |
-| Scaffolding an entire role structure | `ansible-scaffold-role` |
-| Scaffolding an entire collection | `ansible-scaffold-collection` |
-| Full CoP compliance audit across a project | `ansible-cop-review` |
+| Scaffolding an entire role structure | `/ansible-scaffold-role` |
+| Scaffolding an entire collection | `/ansible-scaffold-collection` |
+| Full CoP compliance audit across a project | `/ansible-cop-review` |
 | Philosophical/style review | `ansible-zen` |
 | Running tests after writing content | `run-tests` |
 | Determining version for argument specs | `next-release` |

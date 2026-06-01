@@ -53,6 +53,21 @@ None currently defined.
 
 None currently defined.
 
+## Companion Modules
+
+This module ships skills only. Some skill recommendations intentionally point to companion tools in
+other Lola modules when the user needs scaffolding, compliance review, release/version guidance, or
+broader test workflows.
+
+- **`ansible-collection-sdlc`** - companion skills such as `run-tests`, `next-release`,
+  `changelog-fragment`, `pr-review`, and `sanity`
+- **`ansible-role`** - the `/ansible-scaffold-role` command
+- **`ansible-collection-standards`** - the `/ansible-scaffold-collection` and
+  `/ansible-cop-review` commands plus the `ansible-zen` skill
+
+If those modules are not installed, the skills in this module should fall back to the direct CLI
+commands they already mention, such as `ansible-test sanity`, `ansible-lint`, or `molecule test`.
+
 ## Development
 
 This module follows the Lola module structure:

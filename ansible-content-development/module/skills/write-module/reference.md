@@ -194,7 +194,7 @@ Must be valid YAML assigned to a module-level `DOCUMENTATION` variable. All fiel
 | `short_description` | Concise summary, NO trailing period |
 | `description` | List of full sentences, each capitalized and ending with a period. Do not mention the module name. |
 | `version_added` | Quoted string. In collections, use the collection version (not ansible-core version). |
-| `options` | Dict of options, each with `description`, `type`, and `required` or `default` |
+| `options` | Dict of options, each with `description` and `type`, plus `required: true` or `default` when they apply |
 | `author` | `First Last (@GitHubID)` format. Use a list for multiple authors. |
 
 ### Option documentation
@@ -287,7 +287,7 @@ Rules:
 
 - Always use `module.run_command()` — never `subprocess`, `Popen`, or `os.system`
 - Avoid the shell unless absolutely necessary
-- When shell is required: set `use_unsafe_shell=True` and wrap user input with `pipes.quote(x)`
+- When shell is required: set `use_unsafe_shell=True` and wrap user input with `shlex.quote(x)`
 - Always check return codes
 
 ### HTTP requests
@@ -404,10 +404,12 @@ Without this declaration, the module skips in check mode with a warning.
 
 ### Implementation
 
-Guard any state-changing code:
+Guard each state-changing branch and report what *would* change:
 
 ```python
-if module.check_mode:
+if existing is None and module.check_mode:
+    result["changed"] = True
+    result["msg"] = "Resource would be created"
     module.exit_json(**result)
 
 # Proceed with actual changes below

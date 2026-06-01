@@ -349,7 +349,7 @@ Use `block`/`rescue`/`always` for structured error handling:
 Prefix handler names with the role name for clarity:
 
 ```yaml
-- name: Restart nginx
+- name: webserver | Restart nginx
   ansible.builtin.systemd_service:
     name: "{{ webserver_service_name }}"
     state: restarted
@@ -364,14 +364,14 @@ Use `listen:` so multiple handlers can respond to the same trigger, and tasks no
 
 ```yaml
 # handlers/main.yml
-- name: Restart nginx service
+- name: webserver | Restart nginx service
   ansible.builtin.systemd_service:
     name: nginx
     state: restarted
   listen:
     - Restart web stack
 
-- name: Clear nginx cache
+- name: webserver | Clear nginx cache
   ansible.builtin.file:
     path: /var/cache/nginx
     state: absent
@@ -391,7 +391,7 @@ When restarting a service after config changes, validate the config first:
   listen:
     - Restart nginx
 
-- name: Restart nginx
+- name: webserver | Restart nginx
   ansible.builtin.systemd_service:
     name: nginx
     state: restarted

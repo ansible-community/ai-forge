@@ -31,8 +31,8 @@ TRIGGER when:
 DO NOT TRIGGER when:
 
 - Reviewing a full PR (use `pr-review` instead)
-- Scaffolding a role (use `ansible-scaffold-role` instead)
-- Reviewing playbooks or roles for CoP compliance (use `ansible-cop-review` instead)
+- Scaffolding a role (use the `/ansible-scaffold-role` command instead)
+- Reviewing playbooks or roles for CoP compliance (use the `/ansible-cop-review` command instead)
 - Reviewing code philosophy/style (use `ansible-zen` instead)
 - Running tests (use `run-tests` instead)
 - General Ansible usage questions unrelated to module development
@@ -51,7 +51,9 @@ DO NOT TRIGGER when:
 - Avoid wrapping `ansible.builtin.shell`, `ansible.builtin.raw`, or ad hoc bash in a custom
   module unless there is a clear, explicit justification that no safer module or plugin approach
   will work.
-- All guidance is sourced from the official Ansible documentation at docs.ansible.com. For the full set of rules and examples, see [reference.md](reference.md).
+- All guidance is sourced from the official Ansible documentation at docs.ansible.com. Keep the
+  execution flow in this file, and use [reference.md](reference.md) for fuller scaffold variants,
+  exact check-mode patterns, and the detailed review rules behind the checklist.
 
 ## Modes
 
@@ -91,9 +93,13 @@ Collect the following from the user (ask if not provided):
 - **Parameters**: What inputs does the module accept? Which are required? Which are sensitive?
 - **Dependencies**: Does the module need third-party Python libraries?
 
-If a `galaxy.yml` exists in the project, read it to determine the collection namespace, name, and current version for `version_added`.
+If a `galaxy.yml` exists in the project, read it to determine the collection namespace and name for
+FQCN examples.
 
-If the `next-release` skill is available, use it to determine `version_added`. Otherwise, read `version` from `galaxy.yml`.
+If the companion `next-release` skill is available from the `ansible-collection-sdlc` module, use
+it to determine the next unreleased collection version for `version_added`. Otherwise, ask the user
+which release this module is targeting. Only fall back to the current `galaxy.yml` version when it
+clearly represents the next unreleased collection version.
 
 #### Step 3 — Validate Naming
 
@@ -127,7 +133,8 @@ Follow these formatting rules precisely:
 - `short_description:` — concise, NO trailing period
 - `description:` — full sentences, each starting with capital letter and ending with period
 - `version_added:` — string, quoted, collection version (not ansible-core version)
-- `options:` — each option has `description` (full sentences, periods), `type`, and either `required: true` or `default`
+- `options:` — each option has `description` (full sentences, periods) and `type`; add
+  `required: true` for required params and `default` only when the code sets a real default
 - `author:` — `First Last (@GitHubID)` format
 
 **EXAMPLES:**
@@ -150,7 +157,7 @@ After generating the module:
 
 1. Suggest running `ansible-test sanity --test validate-modules plugins/modules/<name>.py` to verify documentation and argument spec
 2. Suggest using the `write-module-tests` skill to generate unit and integration tests
-3. Suggest creating a changelog fragment
+3. Suggest creating a changelog fragment manually or with the companion `changelog-fragment` skill if the `ansible-collection-sdlc` module is installed
 
 #### Info/Facts Module Variant
 
@@ -264,8 +271,10 @@ resource:
 import traceback
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.common.text.converters import to_native
 
 # Third-party imports with graceful degradation
+some_library = None
 LIB_IMP_ERR = None
 try:
     import some_library
@@ -274,6 +283,26 @@ try:
 except ImportError:
     HAS_LIB = False
     LIB_IMP_ERR = traceback.format_exc()
+
+
+def get_client():
+    """Build the client used to talk to the backing service."""
+    return some_library.Client()
+
+
+def get_resource(client, name):
+    """Return the existing resource or None."""
+    raise NotImplementedError()
+
+
+def create_resource(module, client):
+    """Create the resource and return serialized data."""
+    raise NotImplementedError()
+
+
+def delete_resource(client, name):
+    """Delete the resource."""
+    raise NotImplementedError()
 
 
 def run_module():
@@ -297,11 +326,40 @@ def run_module():
         changed=False,
     )
 
-    if module.check_mode:
-        module.exit_json(**result)
+    name = module.params["name"]
+    state = module.params["state"]
 
-    # Module logic here
-    # Set result['changed'] = True when a change is actually made
+    try:
+        client = get_client()
+        existing = get_resource(client, name)
+
+        if state == "present":
+            if existing is None:
+                if module.check_mode:
+                    result["changed"] = True
+                    result["msg"] = "Resource would be created"
+                    module.exit_json(**result)
+
+                result["resource"] = create_resource(module, client)
+                result["changed"] = True
+                result["msg"] = "Resource created successfully"
+            else:
+                result["resource"] = existing
+                result["msg"] = "Resource already exists"
+        else:
+            if existing is not None:
+                if module.check_mode:
+                    result["changed"] = True
+                    result["msg"] = "Resource would be deleted"
+                    module.exit_json(**result)
+
+                delete_resource(client, name)
+                result["changed"] = True
+                result["msg"] = "Resource deleted successfully"
+            else:
+                result["msg"] = "Resource does not exist"
+    except Exception as exc:
+        module.fail_json(msg=to_native(exc), **result)
 
     module.exit_json(**result)
 
@@ -315,6 +373,9 @@ if __name__ == "__main__":
 ```
 
 When the module has no third-party dependencies, omit the `HAS_LIB` pattern, `traceback` import, and the `if not HAS_LIB` check.
+This minimal scaffold keeps explicit helper seams so the default unit-test pattern can patch
+resource lookup and mutation cleanly. For fuller variants such as nested argument specs, update
+paths, and `_info`/`_facts` modules, use [reference.md](reference.md).
 
 ---
 
@@ -325,14 +386,14 @@ When the module has no third-party dependencies, omit the `HAS_LIB` pattern, `tr
 | Reuse Strategy | Custom module is justified only when higher-trust existing content (`ansible.builtin` -> vendor-supported -> content from verified authors -> general Galaxy) does not already solve the problem; action plugins are considered for controller-local/API-heavy logic; wrappers around `shell`/`raw` are explicitly justified |
 | File Structure | `#!/usr/bin/python` shebang (not `#!/usr/bin/env`), `# -*- coding: utf-8 -*-`, copyright header, `__future__` imports, sections in order: DOCUMENTATION → EXAMPLES → RETURN → imports → code |
 | Naming | Underscores only (no hyphens), singular `_info`/`_facts` suffix, no reserved names (`action`, `command`, `message`, `syslog_facility`) |
-| DOCUMENTATION | `module` matches filename, `short_description` (no trailing period), `description` (full sentences with periods), `version_added` (quoted string, collection version), `options` with `description`/`type`/`required` or `default`, `author` |
+| DOCUMENTATION | `module` matches filename, `short_description` (no trailing period), `description` (full sentences with periods), `version_added` (quoted string, collection version), `options` with `description` and `type`, `required: true` on required params, `default` only when code sets one, `author` |
 | EXAMPLES | Valid YAML, each example has `name:` (capitalized, no trailing dot), uses FQCN, `true`/`false` booleans, covers primary use case |
 | RETURN | Present (even if empty: `r''' # '''`), `description` (capitalized, trailing dot), `returned`, `type`, `sample`, `elements` if `type: list` |
 | Argument Spec | `type` on every param, `no_log=True` for secrets, no `required=True` + `default` together, inter-option dependencies declared, `choices` types match param `type` |
 | Error Handling | `module.fail_json(msg=...)` for errors (not `sys.exit()` or bare `raise`), `module.run_command()` for external commands (not `subprocess`), `fetch_url`/`open_url` for HTTP (not `urllib2`), clear error messages |
 | Idempotency | `changed` is `False` when no real change occurs, repeated runs with same args produce same outcome |
 | Check Mode | `supports_check_mode=True` declared in AnsibleModule constructor, `module.check_mode` checked before making changes, mandatory for `_info`/`_facts` modules |
-| Security | `no_log=True` on passwords/tokens/secrets, no user input passed to shell unescaped, `pipes.quote()` used with `use_unsafe_shell=True`, example secrets start with `EXAMPLE` |
+| Security | `no_log=True` on passwords/tokens/secrets, no user input passed to shell unescaped, `shlex.quote()` used with `use_unsafe_shell=True`, example secrets start with `EXAMPLE` |
 | Code Structure | `main()` function with `if __name__ == '__main__': main()` guard, no wildcard imports, `HAS_LIB` + `missing_required_lib()` pattern for optional deps, result dict seeded at start |
 | Output | No `print()` calls, no output to stderr, top-level return is a dict, return values are JSON-serializable basic types, always returns useful data even when unchanged |
 
@@ -357,8 +418,8 @@ After generating the module file, output:
 
 ### Next Steps
 1. Run `ansible-test sanity --test validate-modules plugins/modules/<module_name>.py`
-2. Implement the module logic in the `run_module()` function
-3. Write integration tests under `tests/integration/targets/<module_name>/`
+2. Replace the placeholder helper functions with the real client and resource operations
+3. Use `write-module-tests` to generate unit and integration tests
 4. Create a changelog fragment
 ```
 
@@ -411,8 +472,10 @@ After generating the module file, output:
 
 ## Integration with Other Skills
 
-| When | Skill |
-|------|-------|
+Some integrations below come from companion Lola modules rather than this module alone.
+
+| When | Tool |
+|------|------|
 | Write unit and integration tests for the module | `write-module-tests` |
 | Determine `version_added` for scaffolded module | `next-release` |
 | Run sanity checks after scaffold or review | `run-tests` |

@@ -31,7 +31,7 @@ DO NOT TRIGGER when:
 
 - Writing Molecule tests for roles or playbooks (use `write-content-tests` instead)
 - Running existing tests (use `run-tests` instead)
-- Running sanity checks (use the `sanity` skill instead)
+- Running sanity checks directly (use `ansible-test sanity`, or the companion `sanity` skill if the `ansible-collection-sdlc` module is installed)
 - Writing the module itself (use `write-module` instead)
 
 ## Important
@@ -40,7 +40,14 @@ DO NOT TRIGGER when:
 - Integration tests use **ansible-test** and run in Docker/Podman containers.
 - Test descriptive names that explain WHAT is tested and WHAT is expected: `test_state_present_creates_resource_when_missing`, not `test_create`.
 - Tests must not make real external calls. Mock all API interactions, command executions, and network requests.
-- All guidance is sourced from docs.ansible.com. For the full set of patterns, see [reference.md](reference.md).
+- The unit-test template below assumes the module follows the helper-based scaffold from
+  `write-module` (`get_client`, `get_resource`, `create_resource`, `delete_resource`). If the
+  module keeps logic inline, keep the same assertions but patch the narrowest boundary instead.
+  Alternate patterns live in [reference.md](reference.md).
+- Imports such as `from ansible_collections.<namespace>.<collection>...` assume the collection is
+  available in a standard `ansible_collections/<namespace>/<name>/` layout so `ansible-test` can
+  resolve it correctly.
+- All guidance is sourced from docs.ansible.com. Use [reference.md](reference.md) for alternate mocking patterns, missing-dependency cases, and more complete ansible-test examples.
 
 ## Modes
 
@@ -81,7 +88,7 @@ Read the module file to understand:
 
 #### Step 3 — Generate Tests
 
-**Unit tests**: Place at `tests/unit/plugins/modules/test_<module_name>.py`. Use the template in the **Unit Test Template** section.
+**Unit tests**: Place at `tests/unit/plugins/modules/test_<module_name>.py`. Use the template in the **Unit Test Template** section when the module follows the default helper-based scaffold from `write-module`.
 
 **Integration tests**: Place at `tests/integration/targets/<module_name>/tasks/main.yml`. Use the template in the **Integration Test Template** section.
 
@@ -177,6 +184,14 @@ def patch_module(monkeypatch):
 from ansible_collections.namespace.collection.plugins.modules import module_name
 
 
+@pytest.fixture
+def mock_client():
+    """Patch optional dependency checks and client creation."""
+    with patch.object(module_name, "HAS_LIB", True):
+        with patch.object(module_name, "get_client", return_value=MagicMock()) as mock_get_client:
+            yield mock_get_client.return_value
+
+
 class TestModuleName:
     """Tests for module_name module."""
 
@@ -187,7 +202,7 @@ class TestModuleName:
             module_name.main()
         assert "missing required arguments" in str(exc.value.args[0]["msg"]).lower()
 
-    def test_state_present_creates_resource(self):
+    def test_state_present_creates_resource(self, mock_client):
         """Module creates resource when state=present and resource is missing."""
         set_module_args({
             "name": "test_resource",
@@ -201,7 +216,7 @@ class TestModuleName:
                 assert result["changed"] is True
                 mock_create.assert_called_once()
 
-    def test_state_present_no_change_when_exists(self):
+    def test_state_present_no_change_when_exists(self, mock_client):
         """Module reports no change when resource already exists."""
         set_module_args({
             "name": "test_resource",
@@ -213,7 +228,7 @@ class TestModuleName:
             result = exc.value.args[0]
             assert result["changed"] is False
 
-    def test_state_absent_removes_resource(self):
+    def test_state_absent_removes_resource(self, mock_client):
         """Module removes resource when state=absent and resource exists."""
         set_module_args({
             "name": "test_resource",
@@ -227,7 +242,7 @@ class TestModuleName:
                 assert result["changed"] is True
                 mock_delete.assert_called_once()
 
-    def test_check_mode_does_not_modify(self):
+    def test_check_mode_does_not_modify(self, mock_client):
         """Module does not make changes in check mode."""
         set_module_args({
             "name": "test_resource",
@@ -242,7 +257,7 @@ class TestModuleName:
                 assert result["changed"] is True
                 mock_create.assert_not_called()
 
-    def test_api_error_fails_gracefully(self):
+    def test_api_error_fails_gracefully(self, mock_client):
         """Module fails with descriptive message on API error."""
         set_module_args({
             "name": "test_resource",
@@ -254,7 +269,11 @@ class TestModuleName:
             assert "Connection refused" in exc.value.args[0]["msg"]
 ```
 
-Adapt the template based on the actual module structure: replace `get_resource`, `create_resource`, `delete_resource` with the module's real functions.
+Adapt the template based on the actual module structure. If the module follows the default
+`write-module` scaffold, patch `get_client`, `get_resource`, `create_resource`, and
+`delete_resource` directly. If the module is structured differently, keep the same coverage goals
+but patch the narrowest boundary (API client, `module.run_command`, or `module_utils` helper)
+instead; [reference.md](reference.md) has fuller variants.
 
 ---
 
@@ -436,10 +455,12 @@ dependencies: []
 
 ## Integration with Other Skills
 
-| When | Skill |
-|------|-------|
+Some integrations below come from companion Lola modules rather than this module alone.
+
+| When | Tool |
+|------|------|
 | Writing the module to be tested | `write-module` |
 | Writing Molecule tests for roles/playbooks | `write-content-tests` |
 | Running existing tests | `run-tests` |
-| Running sanity checks | `sanity` |
+| Running sanity checks | `ansible-test sanity` directly, or `sanity` if the SDLC module is installed |
 | Reviewing a PR that includes tests | `pr-review` |

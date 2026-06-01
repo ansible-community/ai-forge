@@ -34,7 +34,7 @@ DO NOT TRIGGER when:
 
 - Writing unit or integration tests for Python modules (use `write-module-tests` instead)
 - Running existing tests (use `run-tests` instead)
-- Running sanity checks (use the `sanity` skill instead)
+- Running sanity checks directly (use `ansible-test sanity`, or the companion `sanity` skill if the `ansible-collection-sdlc` module is installed)
 - Reviewing a PR (use `pr-review` instead)
 
 ## Important
@@ -44,7 +44,11 @@ DO NOT TRIGGER when:
   *intended outcome* — does the system behave correctly?
 - Trust built-in modules. If your role uses `ansible.builtin.template` to deploy a sudoers file, don't test that the file exists. Test that the user has the correct sudo permissions.
 - When improving existing tests, actively identify structural tests that should be replaced with functional tests. This is the highest-impact improvement you can suggest.
-- All guidance follows Molecule's testing philosophy from docs.ansible.com. For the full set of patterns and examples, see [reference.md](reference.md).
+- Keep this file to one minimal standalone scenario pattern. For collection shared-state layouts,
+  custom lifecycle playbooks, and multi-platform inventory design, use [reference.md](reference.md)
+  sections 3, 8, and 9.
+- All guidance follows Molecule's testing philosophy from docs.ansible.com. For the full set of
+  patterns and examples, see [reference.md](reference.md).
 
 ## Modes
 
@@ -92,8 +96,11 @@ For each function the role/playbook performs, determine the functional outcome t
 
 Create the scenario directory structure using the templates in the **Scenario Templates** section below.
 
-For a **standalone role**, create under `molecule/<scenario_name>/`.
-For a **collection role**, create under `extensions/molecule/<role_name>/`.
+For a **standalone role**, create under `molecule/<scenario_name>/` using the minimal runnable
+pattern below.
+For a **collection role**, create under `extensions/molecule/<role_name>/`, but do not reuse the
+standalone template verbatim. Use the shared-state layout in [reference.md](reference.md) sections
+3 and 8 so `config.yml`, `inventory.yml`, and the lifecycle scenario are present.
 
 #### Step 4 — Generate verify.yml
 
@@ -102,9 +109,9 @@ Write functional assertions based on Step 2. Use the patterns from the **Functio
 #### Step 5 — Post-Write Guidance
 
 1. Suggest running `molecule test --scenario-name <name>` to validate
-2. Suggest `pip install molecule` if not installed
+2. Suggest `pip install molecule containers.podman` if container-based testing is not installed
 3. Suggest ensuring Podman or Docker is available
-4. If testing a collection, suggest `shared_state: true` in config.yml
+4. If testing a collection role, point the user to the shared-state layout in [reference.md](reference.md) instead of trying to infer it from the standalone template
 
 ---
 
@@ -141,6 +148,20 @@ List the 3 most impactful changes. Prioritize converting structural tests to fun
 
 ## Scenario Templates
 
+Keep the inline templates in this file limited to one minimal standalone scenario. For collection
+roles with `shared_state: true`, custom `create.yml` / `destroy.yml`, or multi-platform test
+inventories, use [reference.md](reference.md) sections 3, 8, and 9.
+
+### Directory Structure (Standalone Role)
+
+```text
+molecule/
+└── default/
+    ├── molecule.yml
+    ├── converge.yml
+    └── verify.yml
+```
+
 ### molecule.yml (Standalone Role)
 
 ```yaml
@@ -148,88 +169,38 @@ List the 3 most impactful changes. Prioritize converting structural tests to fun
 dependency:
   name: galaxy
 
-ansible:
-  cfg:
-    defaults:
-      remote_tmp: /tmp/.ansible/tmp
+driver:
+  name: podman
+
+platforms:
+  - name: instance
+    image: quay.io/centos/centos:stream9
+    pre_build_image: true
+    command: /sbin/init
+    privileged: true
+
+provisioner:
+  name: ansible
 
 scenario:
   test_sequence:
     - dependency
     - create
-    - prepare
     - converge
     - idempotence
     - verify
-    - cleanup
     - destroy
 ```
 
-### molecule.yml (Collection — config.yml)
-
-```yaml
----
-ansible:
-  executor:
-    args:
-      ansible_playbook:
-        - --inventory=${MOLECULE_SCENARIO_DIRECTORY}/../inventory.yml
-
-scenario:
-  test_sequence:
-    - prepare
-    - converge
-    - verify
-    - idempotence
-    - verify
-    - cleanup
-
-shared_state: true
-```
-
-### create.yml (Podman)
-
-```yaml
----
-- name: Create test containers
-  hosts: localhost
-  gather_facts: false
-  tasks:
-    - name: Create Podman network
-      containers.podman.podman_network:
-        name: molecule-{{ lookup('env', 'MOLECULE_SCENARIO_NAME') }}
-        state: present
-
-    - name: Create test container
-      containers.podman.podman_container:
-        name: "{{ item.name }}"
-        image: "{{ item.image | default('quay.io/centos/centos:stream9') }}"
-        command: /sbin/init
-        privileged: true
-        state: started
-        systemd: true
-        networks:
-          - molecule-{{ lookup('env', 'MOLECULE_SCENARIO_NAME') }}
-      loop: "{{ molecule_platforms }}"
-
-    - name: Wait for containers
-      ansible.builtin.wait_for_connection:
-        timeout: 120
-      delegate_to: "{{ item.name }}"
-      loop: "{{ molecule_platforms }}"
-```
-
-### converge.yml (Role)
+### converge.yml (Standalone Role)
 
 ```yaml
 ---
 - name: Converge
   hosts: all
   become: true
-  tasks:
-    - name: Include role under test
-      ansible.builtin.include_role:
-        name: namespace.collection.role_name
+  roles:
+    - role: role_name
 ```
 
 ### converge.yml (Playbook)
@@ -260,28 +231,6 @@ shared_state: true
         that:
           - service_check.status == 200
         fail_msg: "Service is not responding on port {{ service_port }}"
-```
-
-### destroy.yml
-
-```yaml
----
-- name: Destroy test containers
-  hosts: localhost
-  gather_facts: false
-  tasks:
-    - name: Remove test containers
-      containers.podman.podman_container:
-        name: "{{ item.name }}"
-        state: absent
-      loop: "{{ molecule_platforms }}"
-      failed_when: false
-
-    - name: Remove Podman network
-      containers.podman.podman_network:
-        name: molecule-{{ lookup('env', 'MOLECULE_SCENARIO_NAME') }}
-        state: absent
-      failed_when: false
 ```
 
 ---
@@ -385,10 +334,12 @@ Even in these cases, prefer a functional test when one is feasible. A structural
 
 ## Integration with Other Skills
 
-| When | Skill |
-|------|-------|
+Some integrations below come from companion Lola modules rather than this module alone.
+
+| When | Tool |
+|------|------|
 | Writing the Ansible content to be tested | `write-content` |
 | Writing Python module tests, not content tests | `write-module-tests` |
 | Running existing ansible-test (sanity/unit/integration) | `run-tests` |
 | Reviewing the content for best practices before testing | `write-content` (improve mode) |
-| Scaffolding a full role before writing tests | `ansible-scaffold-role` |
+| Scaffolding a full role before writing tests | `/ansible-scaffold-role` |

@@ -48,9 +48,19 @@ Module provides skills for developing and testing Ansible content following offi
   - `write-content` / `write-content-tests`: sourced from Red Hat CoP automation good practices and docs.ansible.com
 - Collection identity (namespace, name, version) is read from `galaxy.yml` when available
 
+**Companion Modules (optional but commonly referenced):**
+
+- `ansible-collection-sdlc` - provides companion skills such as `run-tests`, `next-release`,
+  `changelog-fragment`, `pr-review`, and `sanity`
+- `ansible-role` - provides the `/ansible-scaffold-role` command
+- `ansible-collection-standards` - provides the `/ansible-scaffold-collection` and
+  `/ansible-cop-review` commands plus the `ansible-zen` skill
+
 ## Notes
 
 - The write-module skill focuses on Python module files under `plugins/modules/`. The write-module-tests skill generates unit (pytest) and integration (ansible-test) tests for those modules.
 - The write-content skill focuses on YAML-based Ansible content. The write-content-tests skill generates Molecule scenarios with functional verification for roles and playbooks.
 - The testing skills emphasize functional testing: verify that automation achieves its intended outcome, not that built-in modules created files correctly.
 - The authoring priority order above applies across every skill in this module, including scaffolding, review, and testing guidance.
+- This module defines skills only. When a skill redirects to another tool, preserve whether that
+  tool is a companion skill or a slash command from another module.
