@@ -87,13 +87,12 @@ Full lifecycle: commits, PRs, releases, tests. Includes skills for changelog fra
 - `commit` - Conventional commits with FQCN scopes
 - `create-branch` - Create feature branches following conventions
 - `create-pr` - Create draft PRs with pre-flight checks and validation
-- `implement-sonarcloud-fixes` - Implement fixes for SonarCloud issues
 - `pr-review` - PR review against Ansible collection standards
 - `release` - Guided collection release process
 - `remove-deprecations` - Find and remove overdue deprecations
 - `run-tests` - Run and write tests using ansible-test
 - `python-virtual-env` - Create or validate a project-local Python virtual environment for local pip installs and tooling
-- `sonarcloud-analysis` - Analyze SonarCloud issues and technical debt
+- `sonarcloud-remediation` - Fetch, analyze, and fix SonarCloud issues with end-to-end automation
 - `next-release` - Calculate next patch/minor/major versions for version_added tags
 - `current-release` - Fetch current release version (helper)
 - `get-branch-changes` - Determine merge-base and changed files (helper)

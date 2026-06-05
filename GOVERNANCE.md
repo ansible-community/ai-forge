@@ -31,7 +31,7 @@ Maintainers review and merge contributions, maintain skill quality, and particip
 
 **Current maintainers:**
 
-- Additional maintainers to be added as the community grows
+See [CODEOWNERS](.github/CODEOWNERS) for the current list of maintainers.
 
 Maintainers are responsible for:
 

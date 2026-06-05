@@ -14,7 +14,7 @@ Module provides skills and commands for Ansible collection development workflows
   Invoke when asked to check PR status, CI status, "why is the PR failing?", or to troubleshoot GitHub Actions/GitLab CI failures.
 
 - **/check-pr-sonarcloud command**: Use the `/check-pr-sonarcloud` command to check SonarCloud static analysis results for the current pull request.
-  Uses get-pr-number to detect the PR and sonarcloud-analysis to fetch and analyze PR-specific issues.
+  Uses get-pr-number to detect the PR and sonarcloud-remediation to fetch and analyze PR-specific issues.
   Invoke when asked to check SonarCloud for the PR, review static analysis results, or see what code quality issues affect the current PR.
 
 ### Skills
@@ -35,10 +35,6 @@ Module provides skills and commands for Ansible collection development workflows
   Performs branch validation, checks for changelog fragments, optionally runs tests, analyzes changes to suggest PR details, and updates fragments with PR number.
   Invoke when asked to "create a PR", "make a pull request", or "open a PR".
 
-- **implement-sonarcloud-fixes skill**: Use the `implement-sonarcloud-fixes` skill to implement fixes for SonarCloud issues.
-  Takes analysis results from sonarcloud-analysis skill and implements suggested fixes with testing and PR creation.
-  Invoke when asked to fix, implement, or address SonarCloud issues after analysis has been done.
-
 - **pr-review skill**: Use the `pr-review` skill to review pull requests and code changes
   against project standards and the Ansible Collection Review Checklist.
   Invoke when asked to review a PR, patch, diff, or set of code changes.
@@ -54,8 +50,10 @@ Module provides skills and commands for Ansible collection development workflows
 
 - **run-tests skill**: Use the `run-tests` skill to run or write sanity, unit, and integration tests using `ansible-test`. Invoke when asked to run, check, or write tests for a module or utility.
 
-- **sonarcloud-analysis skill**: Use the `sonarcloud-analysis` skill to fetch and analyse SonarCloud issues and technical debt for Ansible collections.
-  Invoke when asked to check, review, or analyse SonarCloud results, code smells, security hotspots, or static analysis findings.
+- **sonarcloud-remediation skill**: Use the `sonarcloud-remediation` skill to fetch, analyze, and fix SonarCloud issues with end-to-end automation.
+  Supports both project-wide debt reduction and PR-specific quality gates. Phase A analyzes and groups issues by rule and module with priority sorting.
+  Phase B applies fixes with validation gates, batching, and strategic approval checkpoints.
+  Invoke when asked to check, review, analyze, or fix SonarCloud results, code smells, security hotspots, or static analysis findings.
 
 - **next-release skill**: Use the `next-release` skill to calculate next patch/minor/major release versions following SemVer.
   Invoke when asked what version to use for version_added tags or about next release versions.

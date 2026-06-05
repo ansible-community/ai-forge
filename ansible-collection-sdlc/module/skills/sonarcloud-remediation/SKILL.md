@@ -44,7 +44,7 @@ Invoked via `/sonarcloud-analyze`. Fetches all open issues and presents a priori
 
 Before fetching data, detect the hosting platform and collect required variables.
 
-**Step 0a: Detect hosting platform**
+####Step 0a: Detect hosting platform
 
 Read the git remote URL to determine whether this is a GitHub or GitLab repository:
 
@@ -58,7 +58,7 @@ git remote get-url origin
 
 Store the detected platform for use in Phase B.
 
-**Step 0b: Collect SonarCloud variables**
+####Step 0b: Collect SonarCloud variables
 
 Check whether the required variables are available as environment variables. For any that are missing, prompt the engineer interactively using AskUserQuestion.
 
@@ -95,7 +95,7 @@ If the engineer provides Phase B values at this point (`SONAR_DEFAULT_BRANCH`, `
 
 Use the collected values for the remainder of the session.
 
-**Step 0c: Determine analysis mode**
+####Step 0c: Determine analysis mode
 
 **Auto-detect mode from context:**
 
@@ -170,11 +170,28 @@ Parse the JSON output. Use the `categories` object as the starting point for Ste
 
 Within each category, group issues by **SonarCloud rule key** and **module** (workspace, package, or top-level directory depending on the repo structure).
 
+**Special handling for Security Hotspots:**
+
+Security hotspots should be grouped by **securityCategory** and module (not by rule key), as the category provides more actionable context than individual rules. The fetch script provides a `securityCategory` field for each hotspot. Use these standardized category names:
+
+- `weak-cryptography` - Cryptographic issues (often `random` module usage, weak hashing algorithms)
+- `encrypt-data` - Data encryption issues (HTTP vs HTTPS, unencrypted storage)
+- `dos` - Denial of Service vulnerabilities (regex backtracking, resource exhaustion)
+- `permission` - Permission and access control issues
+- `injection` - Injection vulnerabilities (SQL, command, XSS)
+- `auth` - Authentication issues
+- `insecure-conf` - Insecure configuration
+- `others` - Uncategorized security issues
+
+Group identifier format for hotspots: `<securityCategory> — <module>` (e.g., `weak-cryptography — plugins/module_utils`, `encrypt-data — frontend/awx`).
+
+For all other issue types (Reliability, Maintainability, Security), use the standard grouping: `<rule key> — <module>`.
+
 #### Detecting Modules
 
 Determine the repo's module structure **once at the start of analysis**, then apply it consistently to all issues.
 
-**Step 2a: Check for monorepo workspace definitions**
+####Step 2a: Check for monorepo workspace definitions
 
 Look for workspace/package definitions in this order:
 
@@ -190,7 +207,7 @@ Example: if `package.json` has `"workspaces": ["frontend/*", "framework"]`, then
 - `framework/PageTable.tsx` → module `framework`
 - `scripts/build.js` → module `root`
 
-**Step 2b: No workspace definitions found (non-monorepo)**
+####Step 2b: No workspace definitions found (non-monorepo)
 
 Group issues by their **top-level directory** from the `component` field (the first path segment after the project key). Files in the repo root go into a `root` group.
 
@@ -200,7 +217,7 @@ Example:
 - `tests/unit/foo.test.ts` → module `tests`
 - `README.md` → module `root`
 
-**Step 2c: Ansible collection module detection**
+####Step 2c: Ansible collection module detection
 
 For Ansible collections (detected by presence of `galaxy.yml` or `plugins/` directory), use Ansible-specific module grouping:
 
@@ -394,7 +411,7 @@ Invoked via `/sonarcloud-fix`. The engineer selects groups from the analyze outp
 
 **Before doing any work**, check all required Phase B configuration. If any variables are missing and were not already provided during Phase A Step 0, prompt the engineer interactively using AskUserQuestion.
 
-**Step 0a: Collect missing Phase B variables**
+####Step 0a: Collect missing Phase B variables
 
 If `SONAR_DEFAULT_BRANCH` is not set (env var or earlier prompt), ask:
 > "What is the base branch for fix PRs? (e.g. `main`, `devel`)"
@@ -407,7 +424,7 @@ If `SONAR_PR_COMMENT` is not set (env var or earlier prompt), ask:
 
 Use the values provided for the remainder of the session.
 
-**Step 0b: Display configuration summary**
+####Step 0b: Display configuration summary
 
 Display all non-sensitive configuration values so the engineer can verify them:
 
@@ -504,12 +521,47 @@ Apply all approved fixes using the Edit tool.
 - Each batch becomes its own branch
 - Inform the engineer: "This group will produce N branches of ~X LOC each."
 
+**Add Unit Tests for Refactoring Changes:**
+
+When extracting complex logic into helper functions (especially for cognitive complexity fixes):
+
+1. **Identify extraction opportunities** - New helper functions extracted from complex code
+2. **Write unit tests** for the extracted functions:
+   - Test happy path with typical inputs
+   - Test edge cases and boundary conditions
+   - Test error handling if applicable
+3. **Place tests appropriately**:
+   - For Ansible collections: `tests/unit/plugins/module_utils/` or `tests/unit/plugins/modules/`
+   - For other projects: Follow the project's test directory structure
+4. **Document expected behavior** - Unit tests serve as documentation for future maintainers
+
+**Why unit tests for extractions:**
+
+- Extracted functions are smaller and more focused than the original code
+- They're ideal candidates for unit testing
+- Tests prevent regression when code is modified later
+- Tests document the intended behavior
+
 **Validation — Hard Gate:**
 
-After applying fixes, run the validation commands using the value from the environment variable or the value provided interactively in Step 0.
+After applying fixes (and adding any necessary unit tests), run the validation commands using the value from the environment variable or the value provided interactively in Step 0.
 
 ```bash
 eval "$SONAR_VALIDATE_COMMANDS"
+```
+
+**For Ansible collections**, if validation commands are not set, run:
+
+```bash
+# Run sanity tests on changed files
+ansible-test sanity --changed
+
+# Run unit tests (including newly added tests)
+ansible-test units --coverage
+
+# Run integration tests if behavior changed
+# (optional, ask engineer first as integration tests can be time-consuming)
+ansible-test integration <target>
 ```
 
 If validation fails:
@@ -523,11 +575,35 @@ If validation fails:
 
 **Branch** off the configured default branch, using the value from the environment variable or the value provided interactively in Step 0.
 
+**Branch naming strategy:**
+
+**For Ansible collections** - Use type-specific naming to align with collection development conventions:
+
+```bash
+# Security issues
+git checkout -b "security/<category>" "origin/$SONAR_DEFAULT_BRANCH"
+# Examples: security/weak-cryptography, security/encrypt-data
+
+# Reliability issues
+git checkout -b "reliability/<category>" "origin/$SONAR_DEFAULT_BRANCH"
+# Examples: reliability/duplicate-branches, reliability/cognitive-complexity
+
+# Maintainability issues
+git checkout -b "maintainability/<module-name>" "origin/$SONAR_DEFAULT_BRANCH"
+# Examples: maintainability/ec2_instance, maintainability/botocore
+
+# Mixed types
+git checkout -b "sonarcloud/<description>" "origin/$SONAR_DEFAULT_BRANCH"
+# Examples: sonarcloud/critical-issues, sonarcloud/pr-blockers
+```
+
+**For other projects** - Use rule-specific naming:
+
 ```bash
 git checkout -b "sonar/<rule-key>-<module-slug>" "origin/$SONAR_DEFAULT_BRANCH"
 ```
 
-Branch naming: `sonar/<rule-key>-<module-slug>` where `<module-slug>` is the module name with `/` replaced by `-` (e.g., `sonar/S1854-frontend-awx`, `sonar/S1128-framework`, `sonar/S1481-src`)
+Where `<module-slug>` is the module name with `/` replaced by `-` (e.g., `sonar/S1854-frontend-awx`, `sonar/S1128-framework`, `sonar/S1481-src`)
 
 **Commit** with a descriptive message:
 ```
@@ -753,6 +829,276 @@ When extracting complex logic into helper functions, write unit tests for the ne
 
 - Refactor to eliminate duplication
 - Verify whether different conditions should have different logic
+
+---
+
+## When Not to Fix
+
+Don't fix issues that are:
+
+- **False positives** - Legitimate patterns flagged incorrectly by static analysis
+- **Required by external constraints** - Example: HTTP calls to AWS metadata endpoint `http://169.254.169.254`
+- **Intentional technical debt** - Documented and accepted trade-offs
+
+### Identifying False Positives
+
+Use domain knowledge to distinguish between real issues and false positives:
+
+- **AWS metadata endpoint** - HTTP to `169.254.169.254` is required, not a security issue
+- **UUID generation** - Using `random` for UUIDs is not cryptographically sensitive
+- **Test fixtures** - Deliberately simplified code in tests may trigger complexity warnings
+- **Framework requirements** - Some patterns are dictated by the framework (unused parameters in callback signatures)
+
+### Handling False Positives
+
+For false positives identified during Phase A or B:
+
+1. **Document the rationale** - Add a code comment explaining why this is safe
+2. **Mark in SonarCloud UI** - Use the web interface to mark as "Won't Fix" or "False Positive"
+3. **Skip the fix** - Exclude from the approved fixes list
+
+Example code comment:
+
+```python
+# SonarCloud S2245: Random is used for non-cryptographic UUID generation
+import random
+uuid = random.randint(100000, 999999)
+```
+
+---
+
+## False Positives Section
+
+Static analysis tools like SonarCloud may flag legitimate code patterns as issues. Understanding how to identify and handle these is critical for efficient remediation.
+
+### Common False Positive Patterns
+
+| Pattern | Why Flagged | When It's Actually Safe |
+|---------|-------------|------------------------|
+| HTTP URLs | encrypt-data category flags all HTTP | AWS metadata (`169.254.169.254`), local dev servers, internal non-sensitive APIs |
+| `random` module | weak-cryptography flags all uses | UUID generation, test data, non-cryptographic hashing with `usedforsecurity=False` |
+| Unused parameters | Dead code detection | Framework callbacks, interface implementations, future extensibility points |
+| Cognitive complexity | Function is too complex | Intentional state machines, parser logic, configuration builders |
+| Duplicate strings | String literals repeated | Short literals (":", "/"), protocol constants, format strings |
+
+### False Positive Decision Tree
+
+When reviewing an issue:
+
+1. **Read the surrounding context** - Is this code part of a larger pattern?
+2. **Check external requirements** - Does a framework, API, or spec mandate this pattern?
+3. **Assess the risk** - If this were actually a bug/vulnerability, what would be the impact?
+4. **Look for documentation** - Is there a comment explaining why this pattern is necessary?
+
+If the answer to any of these suggests "false positive," document and skip the fix.
+
+### Documenting False Positives
+
+For issues you determine are false positives:
+
+**In code comments:**
+
+```python
+# SonarCloud false positive - HTTP to AWS metadata endpoint is required
+response = requests.get("http://169.254.169.254/latest/meta-data/")
+```
+
+**In SonarCloud UI:**
+
+1. Navigate to the issue in SonarCloud
+2. Click "Resolve" → "Won't Fix" or "False Positive"
+3. Add justification: "AWS metadata endpoint requires HTTP"
+
+**In PR descriptions:**
+
+When creating fix PRs, note any issues that were intentionally skipped:
+
+```
+## Issues Skipped (False Positives)
+
+- AZxx3: HTTP call to AWS metadata endpoint (required by AWS SDK)
+- AZxx7: random.randint for UUID generation (not cryptographic use)
+```
+
+---
+
+## Rate Limiting and API Notes
+
+### SonarCloud API Rate Limits
+
+- **Public projects** - No authentication required, subject to public rate limits
+- **Private projects** - Require `SONARCLOUD_TOKEN`, higher rate limits
+- **Unauthenticated limit** - ~20-40 requests per minute per IP
+- **Authenticated limit** - Higher, but not publicly documented
+
+### Pagination
+
+The fetch script handles pagination automatically:
+
+- Default page size: 500 issues per request
+- Maximum results: 10,000 issues per query type
+- If a project has >10,000 issues, filter by severity or type
+
+### sonar-project.properties
+
+This skill reads SonarCloud data but doesn't modify `sonar-project.properties`. For project configuration:
+
+- Exclusions: Add to `sonar.exclusions` (files to skip)
+- Coverage paths: Set `sonar.python.coverage.reportPaths`
+- Custom quality gates: Configure in SonarCloud UI
+
+### Custom Quality Gates
+
+If your project has custom quality gates:
+
+- The skill shows all unresolved issues regardless of gate status
+- Quality gate failures are visible in the SonarCloud UI
+- PR-specific mode shows issues that would fail the gate for that PR
+
+---
+
+## Issue Resolution Guidance
+
+### How Issues Auto-Resolve
+
+SonarCloud issues resolve automatically when:
+
+1. **Fix is merged** - The code change reaches the default branch (e.g., `main`)
+2. **SonarCloud re-analyzes** - Triggered automatically after merge
+3. **Issue no longer detected** - The rule no longer flags that location
+
+**Timeline:** Issues typically resolve within 5-10 minutes after merge.
+
+### Handling False Positives in SonarCloud UI
+
+For false positives that can't be fixed in code:
+
+####Step 1: Navigate to the issue
+
+1. Go to SonarCloud project: `https://sonarcloud.io/project/issues?id=<PROJECT_KEY>`
+2. Filter to find the specific issue (by file, rule, or issue key)
+
+####Step 2: Mark as Won't Fix or False Positive
+
+1. Click on the issue
+2. Click "Resolve" button
+3. Select resolution type:
+   - **Won't Fix** - Valid finding but intentionally not addressing
+   - **False Positive** - Not actually an issue
+
+####Step 3: Add justification
+
+Provide a clear explanation:
+
+- "AWS metadata endpoint requires HTTP (169.254.169.254)"
+- "Random module used for non-cryptographic UUID generation"
+- "Framework callback signature requires unused parameter"
+
+**Impact:** Resolved issues are removed from:
+
+- Issue count metrics
+- Quality gate calculations
+- PR decoration (for PR-specific issues)
+
+### Tracking Resolution Progress
+
+After merging fix PRs:
+
+1. **Wait 5-10 minutes** for SonarCloud to re-analyze
+2. **Refresh the project page** in SonarCloud UI
+3. **Verify issue count decreased** in the affected category
+4. **Check quality gate status** if it was failing before
+
+If issues don't resolve after 15 minutes:
+
+- Check the SonarCloud analysis log for errors
+- Verify the fix actually changed the flagged code
+- Confirm the scanner ran on the correct branch
+
+---
+
+## Example Usage Scenarios
+
+### Example 1: PR Review
+
+**User:** "Check sonar for this PR"
+
+**Skill workflow:**
+
+1. Detects current branch: `feature/add-caching`
+2. Uses `get-pr-number` skill to find PR #1234
+3. Runs fetch script with `SONAR_PR_NUMBER=1234`
+4. Finds 3 new CODE_SMELL issues
+5. Groups by rule and module
+6. Presents table with 3 issues
+7. Reports: "3 new maintainability issues introduced. All are MINOR severity. Group #1: Duplicate strings in plugins/cache_utils.py"
+
+**Engineer response:** "Let me review before merging"
+
+### Example 2: Technical Debt Audit
+
+**User:** "Show me all security hotspots"
+
+**Skill workflow:**
+
+1. Detects project key from `get-upstream-info`
+2. Runs fetch script in project-wide mode
+3. Fetches all TO_REVIEW security hotspots
+4. Groups by `securityCategory`:
+   - 2 weak-cryptography
+   - 5 encrypt-data
+   - 1 dos
+5. Analyzes each category
+6. Reads affected code
+7. Identifies 3 false positives (AWS metadata HTTP calls)
+8. Recommends:
+   - "Fix 2 weak-cryptography issues (use `secrets` module)"
+   - "Mark 3 HTTP calls as false positives (AWS metadata)"
+   - "Review 1 DOS issue (regex backtracking)"
+
+**Engineer response:** "Fix the weak-cryptography group"
+
+### Example 3: Comprehensive Analysis
+
+**User:** "What's our SonarCloud status?"
+
+**Skill workflow:**
+
+1. Fetches all issue types (security, reliability, maintainability)
+2. Runs fetch script without PR filter
+3. Categorizes results:
+   - 8 security hotspots
+   - 18 bugs
+   - 156 code smells
+4. Presents summary table
+5. Sorts groups by priority (security first, then critical bugs)
+6. Recommends: "Focus on the 2 CRITICAL bugs first (Group #3), then review the 8 security hotspots (Groups #1-2)"
+
+**Engineer response:** "Show me the CRITICAL bugs"
+
+### Example 4: Large Codebase with Pagination
+
+**User:** "Analyze SonarCloud issues for ansible-collections/amazon.aws"
+
+**Skill workflow:**
+
+1. Uses `get-upstream-info` to determine project key: `ansible-collections_amazon.aws`
+2. Runs fetch script, which paginates automatically
+3. Fetch script retrieves:
+   - Page 1: issues 1-500
+   - Page 2: issues 501-1000
+   - ...
+   - Page 6: issues 2501-2626
+   - Total: 2,626 issues
+4. Categorizes all 2,626 issues
+5. Groups by rule and module
+6. Presents summary table with 47 groups
+7. Recommends starting with high-priority groups:
+   - Group #1: 2 CRITICAL bugs (S1862, plugins/modules/)
+   - Group #2: 8 security hotspots (weak-cryptography)
+   - Group #3: 23 MAJOR bugs (S3776, plugins/modules/ec2_instance.py)
+
+**Engineer response:** "Fix Group #1 and Group #2"
 
 ---
 

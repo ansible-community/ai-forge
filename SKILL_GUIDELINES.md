@@ -89,6 +89,7 @@ Choose the appropriate module for your skill:
 | `ansible-collection-standards` | Standards, reviews, scaffolding |
 | `ansible-role` | Role development and scaffolding |
 | `network_content` | Network automation specific skills |
+| `ansible-content-development` | Content development: writing modules, YAML content, and tests |
 | `cloud_content` | Cloud automation specific skills |
 
 ## Contribution Process

@@ -251,7 +251,7 @@ upstream_info = invoke get-upstream-info once
 Store values in session context
 
 # Pass to skills as they're invoked
-- sonarcloud-analysis: use cached SONARCLOUD_KEY
+- sonarcloud-remediation: use cached SONARCLOUD_KEY
 - get-pr-number: use cached UPSTREAM_PATH
 - create-pr: use cached UPSTREAM_PATH
 ```
@@ -271,7 +271,7 @@ Store values in session context
 
 This skill is designed to be referenced by other skills:
 
-**In sonarcloud-analysis skill:**
+**In sonarcloud-remediation skill:**
 
 ```
 Use the `get-upstream-info` skill to determine the SonarCloud project key.

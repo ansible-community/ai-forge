@@ -5,10 +5,12 @@ Fetch issues, hotspots, and duplication metrics from SonarCloud or SonarQube.
 Reads SONAR_PROJECT_KEY, SONAR_ORGANIZATION, and optionally
 SONARCLOUD_TOKEN from environment variables. Set SONAR_BASE_URL to
 target a self-hosted SonarQube instance (defaults to SonarCloud).
+Set SONAR_PR_NUMBER to filter results to a specific pull request.
 Outputs categorized JSON to stdout. Diagnostics go to stderr.
 
 Usage:
     python3 sonarcloud-fetch.py
+    SONAR_PR_NUMBER=123 python3 sonarcloud-fetch.py  # PR-specific mode
 """
 
 import json
@@ -84,13 +86,19 @@ def _org_param(organization):
     return ""
 
 
-def fetch_issues(project_key, organization, ssl_ctx):
+def _pr_param(pr_number):
+    if pr_number:
+        return f"&pullRequest={quote(pr_number, safe='')}"
+    return ""
+
+
+def fetch_issues(project_key, organization, pr_number, ssl_ctx):
     items = []
     page = 1
     total = None
 
     while True:
-        url = f"{BASE_URL}/issues/search?componentKeys={quote(project_key, safe='')}{_org_param(organization)}&resolved=false&ps={PAGE_SIZE}&p={page}"
+        url = f"{BASE_URL}/issues/search?componentKeys={quote(project_key, safe='')}{_org_param(organization)}{_pr_param(pr_number)}&resolved=false&ps={PAGE_SIZE}&p={page}"
         data = _request(url, ssl_ctx)
 
         if total is None:
@@ -124,13 +132,13 @@ def fetch_issues(project_key, organization, ssl_ctx):
     return {"total": total, "items": items}
 
 
-def fetch_hotspots(project_key, organization, ssl_ctx):
+def fetch_hotspots(project_key, organization, pr_number, ssl_ctx):
     items = []
     page = 1
     total = None
 
     while True:
-        url = f"{BASE_URL}/hotspots/search?projectKey={quote(project_key, safe='')}{_org_param(organization)}&status=TO_REVIEW&ps={PAGE_SIZE}&p={page}"
+        url = f"{BASE_URL}/hotspots/search?projectKey={quote(project_key, safe='')}{_org_param(organization)}{_pr_param(pr_number)}&status=TO_REVIEW&ps={PAGE_SIZE}&p={page}"
         data = _request(url, ssl_ctx)
 
         if total is None:
@@ -160,6 +168,10 @@ def fetch_hotspots(project_key, organization, ssl_ctx):
 
 
 def fetch_duplication(project_key, organization, ssl_ctx):
+    # Note: Duplication metrics are always project-scoped in SonarCloud.
+    # The /measures/component API endpoint does not support the pullRequest parameter,
+    # so duplication data is fetched for the entire project even in PR-specific mode.
+    # This is an API limitation, not a script limitation.
     url = (
         f"{BASE_URL}/measures/component?component={quote(project_key, safe='')}{_org_param(organization)}"
         "&metricKeys=duplicated_lines_density,duplicated_blocks,duplicated_files"
@@ -214,6 +226,7 @@ def categorize(issues_items, hotspots_items):
 def main():
     project_key = os.environ.get("SONAR_PROJECT_KEY", "").strip()
     organization = os.environ.get("SONAR_ORGANIZATION", "").strip()
+    pr_number = os.environ.get("SONAR_PR_NUMBER", "").strip()
     is_sonarcloud = BASE_URL == SONARCLOUD_DEFAULT_URL
 
     if not project_key:
@@ -232,9 +245,10 @@ def main():
 
     try:
         server_label = "SonarCloud" if is_sonarcloud else BASE_URL
-        print(f"Fetching data from {server_label} for {project_key}...", file=sys.stderr)
-        issues = fetch_issues(project_key, organization, ssl_ctx)
-        hotspots = fetch_hotspots(project_key, organization, ssl_ctx)
+        scope_label = f" (PR #{pr_number})" if pr_number else ""
+        print(f"Fetching data from {server_label} for {project_key}{scope_label}...", file=sys.stderr)
+        issues = fetch_issues(project_key, organization, pr_number, ssl_ctx)
+        hotspots = fetch_hotspots(project_key, organization, pr_number, ssl_ctx)
         duplication = fetch_duplication(project_key, organization, ssl_ctx)
     except urllib.error.HTTPError as e:
         if e.code == 400 and not organization:
@@ -262,8 +276,17 @@ def main():
 
     categories = categorize(issues["items"], hotspots["items"])
 
+    # Warn if PR mode was requested but returned zero results
+    if pr_number and issues["total"] == 0 and hotspots["total"] == 0:
+        print(
+            f"WARNING: No issues found for PR #{pr_number}. "
+            "Verify the PR exists in SonarCloud and has been analyzed.",
+            file=sys.stderr,
+        )
+
     result = {
         "project_key": project_key,
+        "pr_number": pr_number if pr_number else None,
         "fetched_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "issues": issues,
         "hotspots": hotspots,
