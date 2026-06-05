@@ -25,35 +25,40 @@ Before contributing, ensure you have:
 
 - **Lola package manager** installed: `uv tool install lola-ai` (or `pip install lola-ai`)
 - **At least one AI assistant** (Claude Code, Cursor, Gemini CLI, etc.)
-- **Pre-commit hooks** installed (see below)
+- **tox** installed: `uv tool install tox --with tox-uv`
+- **prek** installed: `brew install prek` (or `cargo install prek`, or `pip install prek`)
 - **Git** with user name and email configured
 
-### Pre-commit Hooks Setup
+### Git Hooks Setup
 
-This project uses pre-commit hooks to ensure code quality. Install them with:
+This project uses [prek](https://prek.j178.dev/) (a drop-in replacement for
+pre-commit) to run git hooks. Install and activate them with:
 
 ```bash
-# Install pre-commit
-pip install pre-commit
-
 # Install git hooks
-pre-commit install
+prek install
 
-# Test that hooks work
-pre-commit run --all-files
+# Run all checks
+tox -e lint
 ```
 
 ### What Gets Checked
 
-Pre-commit hooks run automatically on `git commit` and check:
+Hooks run automatically on `git commit` and via `tox -e lint`:
 
-- **Markdown** — Using markdownlint-cli2 with .markdownlint.json config
+- **Markdown** — markdownlint-cli2 with .markdownlint.json config
 - **YAML** — Frontmatter validation and syntax checking
-- **Shell scripts** — Using shellcheck
+- **Shell scripts** — shellcheck
+- **GitHub Actions** — actionlint
+- **Agent Skills spec** — [skillmark](https://github.com/michellepellon/skillmark) validates all SKILL.md files against the [agentskills.io specification](https://agentskills.io/specification)
 - **JSON** — Syntax validation
 - **File formatting** — Trailing whitespace, end-of-file, line endings
+- **Module structure** — Lola module directory layout validation
+- **Command frontmatter** — Command .md files have valid frontmatter
+- **mcps.json schema** — Each mcps.json has a `mcpServers` key
+- **Manifest completeness** — Every module with skills is in `lola-market.yml`
 
-These same checks run in GitHub Actions CI, so fixing them locally saves iteration time.
+CI runs the same `tox -e lint` command, so fixing issues locally saves iteration time.
 
 ## Development Workflow
 
@@ -86,7 +91,7 @@ All contributions use the **fork-and-pull** model. You work on a personal fork a
    # upstream         git@github.com:ansible-community/ai-forge.git (push)
    ```
 
-5. **Install pre-commit hooks** (see Prerequisites above).
+5. **Install git hooks** (see Prerequisites above).
 
 ### Making Changes
 
@@ -204,17 +209,16 @@ Before submitting a PR, verify:
 
 ### For All Contributions
 
-- [ ] Pre-commit hooks pass (`git commit` should succeed without errors)
+- [ ] `tox -e lint` passes
 - [ ] No secrets or real credentials in examples (use placeholders like `<token>`, `user@example.com`)
 - [ ] Professional and inclusive language (no offensive content)
 - [ ] GPL-3.0-or-later license header in new code files (if applicable)
 
 ### For Skills and Commands
 
-- [ ] **Frontmatter is complete and valid:**
-  - `description` — Clear one-sentence summary of what the skill does
-  - `allowed-tools` — List of all tools the skill uses
-  - `argument-hint` — Shows expected arguments/flags (e.g., `"[--version <ver>] [--branch <name>]"`)
+- [ ] **Frontmatter follows the [agentskills.io spec](https://agentskills.io/specification):**
+  - `name` — Must match the skill folder name (lowercase, hyphens, no consecutive hyphens)
+  - `description` — What the skill does **and** when to use it (include "Use when..." language)
 
 - [ ] **Documentation includes examples:**
   - Show how to invoke the skill
@@ -332,10 +336,10 @@ The Ansible community values transparency. When users see AI attribution, they k
 
 ### What Happens Next
 
-1. **CI checks run automatically:**
-   - Pre-commit hooks (markdown, YAML, shell)
-   - File structure validation
-   - License header checks (planned)
+1. **CI checks run automatically** (`tox -e lint`):
+   - Markdown, YAML, shell, and GitHub Actions linting
+   - Agent Skills spec validation (skillmark)
+   - Module structure, command frontmatter, and manifest completeness
 
 2. **A maintainer will review your PR:**
    - Usually within 1-2 weeks
@@ -365,34 +369,22 @@ Maintainers are here to **help you get your contribution merged**, not block you
 
 ## Linting Commands
 
-### Markdown
-
-Check markdown files:
+Run all checks (the primary command):
 
 ```bash
-npm run lint:md
+tox -e lint
 ```
 
-Auto-fix markdown issues:
+Run a specific hook:
 
 ```bash
-npm run lint:md:fix
+prek run <hook-id> --all-files
 ```
 
-### YAML
-
-YAML linting happens automatically via pre-commit hooks. To run manually:
+Auto-fix skillmark issues:
 
 ```bash
-pre-commit run yamllint --all-files
-```
-
-### All Checks
-
-Run all pre-commit hooks manually:
-
-```bash
-pre-commit run --all-files
+prek run skillmark-fix --all-files
 ```
 
 ## Adding a New Skill
@@ -467,6 +459,13 @@ Add an entry for your skill in the module's `AGENTS.md` file:
 
 Add your skill to the Components section in the module's `README.md`.
 
+### Step 6: Verify the module is in the manifest
+
+Ensure the module is listed in `lola-market.yml`. The `check-manifest-skills`
+hook (run via `tox -e lint`) will catch missing entries. Run `tox -e lint` to
+validate your skill against the [agentskills.io spec](https://agentskills.io/specification)
+via skillmark.
+
 ### Making the Skill Available
 
 After adding your skill, users can install it using [Lola](https://lobstertrap.org/lola/):
@@ -508,4 +507,6 @@ See [GOVERNANCE.md](GOVERNANCE.md) for project structure and decision-making.
 - [Red Hat CoP Contributing Guidelines](https://redhat-cop.github.io/contrib/)
 - [Lola Package Manager Documentation](https://lobstertrap.org/lola/)
 - [SKILL_GUIDELINES.md](SKILL_GUIDELINES.md) — Detailed skill writing guide
+- [AGENTS.md](AGENTS.md) — Agent guidelines and architectural invariants
 - [GOVERNANCE.md](GOVERNANCE.md) — Project governance and decision-making
+- [Agent Skills Specification](https://agentskills.io/specification) — SKILL.md format reference

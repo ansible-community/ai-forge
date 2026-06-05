@@ -1,13 +1,20 @@
 ---
 name: aws-terminator-analyze
-description: Analyze an Ansible AWS collection PR to determine what aws-terminator resources and permissions are needed
-allowed-tools: Read, Bash(command:gh *), Bash(command:git *), Bash(command:grep *)
+description: >-
+  Use this skill when analyzing an Ansible AWS collection PR to determine what
+  aws-terminator terminator classes and IAM permissions are needed. Fetches PR
+  changes, checks existing terminator coverage, and generates a structured
+  analysis report with implementation recommendations. Invoke for "analyze aws
+  terminator", "check terminator coverage", or "what terminator classes
+  needed".
+allowed-tools: Read Bash(command:gh *) Bash(command:git *) Bash(command:grep *)
 argument-hint: "--pr <number> [--repo <owner/repo>]"
 triggers:
   - "analyze aws terminator"
   - "aws-terminator analyze"
   - "check terminator coverage"
   - "what terminator classes needed"
+user-invocable: true
 ---
 
 # AWS Terminator Analyze

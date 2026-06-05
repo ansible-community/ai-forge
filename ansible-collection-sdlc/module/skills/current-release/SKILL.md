@@ -1,9 +1,10 @@
 ---
 name: current-release
-description: >-
-  Fetches the current release version from git tags and stable branches,
-  falling back to galaxy.yml if not found. Helper skill used by other skills
-  that need version information.
+description: >
+  Fetches the current release version from git tags, stable branches, or
+  galaxy.yml. Use this skill when you need to determine the latest published
+  collection version for version_added tags, changelog entries, or release
+  planning.
 ---
 
 # Skill: current-release

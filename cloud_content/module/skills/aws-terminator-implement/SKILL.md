@@ -1,13 +1,20 @@
 ---
 name: aws-terminator-implement
-description: Implement terminator classes and IAM permissions in aws-terminator repository based on analysis
-allowed-tools: Read, Edit, Write, Bash(command:git *), Bash(command:gh *), Bash(command:grep *)
+description: >-
+  Use this skill when implementing terminator classes and IAM permissions in
+  the mattclay/aws-terminator repository after analysis. Creates terminator
+  class code following Terminator/DbTerminator patterns, generates IAM
+  permission blocks, and validates changes for PR submission. Invoke for
+  "implement terminator", "create terminator classes", or "add terminator
+  permissions".
+allowed-tools: Read Edit Write Bash(command:git *) Bash(command:gh *) Bash(command:grep *)
 argument-hint: "[--analysis <file>] [--interactive]"
 triggers:
   - "implement terminator"
   - "aws-terminator implement"
   - "create terminator classes"
   - "add terminator permissions"
+user-invocable: true
 ---
 
 # AWS Terminator Implement
@@ -37,7 +44,7 @@ After analyzing an Ansible collection PR with `/aws-terminator-analyze`, this sk
 
 **Prerequisites**: Fork mattclay/aws-terminator, clone your fork, and run `/aws-terminator-analyze` first.
 
-**See full documentation below** for terminator class patterns, IAM permission structure, and validation steps.
+**See reference documentation** for terminator class patterns, IAM permission structure, and validation steps.
 
 ## When to Use
 
@@ -133,251 +140,22 @@ You can provide this by:
 
 For each resource type, generate and add the terminator class.
 
-### Determine Base Class
+Read `references/terminator-classes.md` for:
 
-**Read resource describe output** to check for timestamp field:
-
-```bash
-# If analysis includes example API response, check for:
-# CreatedTime, LaunchTime, StartTime, CreationDate, CreatedAt, etc.
-```
-
-**Decision**:
-
-- Has timestamp → use `Terminator` base class
-- No timestamp → use `DbTerminator` base class
-
-### Generate Terminator Class Code
-
-**Template for `Terminator` base class**:
-
-```python
-class <ResourceType>Terminator(Terminator):
-    @staticmethod
-    def create(credentials):
-        def get_<resource_type_snake_case>(client):
-            # Use paginator if API supports it and can return >default limit
-            # Otherwise use simple list call
-            <list_call> = client.<list_operation>()<'ResponseKey'>
-            return <list_call>
-        
-        return Terminator._create(
-            credentials,
-            <ResourceType>Terminator,
-            '<boto3-service-name>',
-            get_<resource_type_snake_case>
-        )
-    
-    @property
-    def id(self):
-        return self.instance['<IdField>']
-    
-    @property
-    def name(self):
-        # Prefer Name field, fallback to id
-        return self.instance.get('<NameField>', self.id)
-    
-    @property
-    def created_time(self):
-        return self.instance['<CreatedTimeField>']
-    
-    def terminate(self):
-        # Add any pre-delete requirements (e.g., stop, detach)
-        # Then delete
-        self.client.<delete_operation>(<IdParam>=self.id)
-```
-
-**Template for `DbTerminator` base class**:
-
-```python
-class <ResourceType>Terminator(DbTerminator):
-    @staticmethod
-    def create(credentials):
-        def get_<resource_type_snake_case>(client):
-            <list_call> = client.<list_operation>()<'ResponseKey'>
-            return <list_call>
-        
-        return Terminator._create(
-            credentials,
-            <ResourceType>Terminator,
-            '<boto3-service-name>',
-            get_<resource_type_snake_case>
-        )
-    
-    @property
-    def name(self):
-        return self.instance['<NameField>']
-    
-    def terminate(self):
-        self.client.<delete_operation>(<NameParam>=self.name)
-```
-
-### Add Class to Terminator File
-
-**Locate insertion point**:
-
-```bash
-cd ~/dev/aws-terminator
-# Read the appropriate terminator file
-# Classes are typically alphabetically ordered
-# Insert new class in alphabetical position
-```
-
-**Use Edit tool** to add the class:
-
-- Read the terminator file
-- Find insertion point (alphabetically by class name)
-- Insert the new class code
-
-### Handle Special Cases
-
-**Pagination required**:
-
-```python
-def get_resources(client):
-    paginator = client.get_paginator('list_resources')
-    resources = paginator.paginate(MaxResults=100).build_full_result()['Resources']
-    return resources
-```
-
-**Filter by account owner**:
-
-```python
-from aws.terminator.util import get_account_id
-
-def get_resources(client):
-    account = get_account_id(credentials)
-    return client.describe_resources(OwnerIds=[account])['Resources']
-```
-
-**Flattening nested lists**:
-
-```python
-def get_resources(client):
-    return [item for group in client.describe_groups()['Groups'] 
-            for item in group['Items']]
-```
-
-**Pre-delete operations**:
-
-```python
-def terminate(self):
-    # Example: Stop resource before deleting
-    if self.instance['State'] != 'stopped':
-        self.client.stop_resource(ResourceId=self.id)
-        # Wait for stopped state if needed
-    
-    self.client.delete_resource(ResourceId=self.id)
-```
-
-**Ignore terminated/deleted resources**:
-
-```python
-@property
-def ignore(self):
-    return self.instance['State'] in ['terminated', 'deleted']
-```
-
-**Custom age limit**:
-
-```python
-@property
-def age_limit(self):
-    # Default is 20 minutes
-    # Override for resources that need longer to provision
-    return datetime.timedelta(minutes=50)
-```
+- Base class selection (`Terminator` vs `DbTerminator`)
+- Class code templates
+- Insertion point guidance
+- Special cases (pagination, pre-delete, ignore terminated)
 
 ## Step 4: Implement IAM Permissions
 
-### Determine Policy Structure
+Add permission blocks to the appropriate policy file.
 
-**Permissions are grouped into blocks**:
+Read `references/iam-permissions.md` for:
 
-1. **Resource-scoped permissions** - Actions on specific ARNs
-2. **Global permissions** - List/Describe actions that require `Resource: "*"`
-
-### Generate Permission Blocks
-
-**Resource-scoped permission block**:
-
-```yaml
-- Sid: <ServiceName><ResourceType>Permissions
-  Effect: Allow
-  Action:
-    - <service>:Create<Resource>
-    - <service>:Delete<Resource>
-    - <service>:Describe<Resource>
-    - <service>:Update<Resource>
-    - <service>:Tag Resource
-    - <service>:UntagResource
-  Resource:
-    - 'arn:aws:<service>:{{ aws_region }}:{{ aws_account_id }}:<resource-type>/*'
-```
-
-**Global permission block**:
-
-```yaml
-- Sid: <ServiceName><ResourceType>GlobalPermissions
-  Effect: Allow
-  Action:
-    - <service>:List<Resources>
-    - <service>:Describe<Resource>  # If doesn't require resource ARN
-  Resource:
-    - '*'
-```
-
-### Add Permissions to Policy File
-
-**Locate policy file**:
-
-```bash
-cd ~/dev/aws-terminator
-# Read aws/policy/<appropriate-file>.yaml
-```
-
-**Use Edit tool** to add permissions:
-
-- Find appropriate insertion point (alphabetically by Sid)
-- Insert new permission blocks
-- Ensure no duplicate permissions (check existing blocks first)
-
-### Permission Best Practices
-
-**Least privilege**:
-
-- Only add actions actually used by tests or terminators
-- Avoid wildcards like `Delete*` unless necessary
-- Scope resources to specific ARN patterns
-
-**Action naming patterns**:
-
-```yaml
-# Prefer explicit actions
-- service:CreateFoo
-- service:DeleteFoo
-- service:DescribeFoo
-
-# Over wildcards
-- service:*  # Too broad
-```
-
-**Resource ARN patterns**:
-
-```yaml
-# Specific resource type
-Resource:
-  - 'arn:aws:service:{{ aws_region }}:{{ aws_account_id }}:foo/*'
-
-# Multiple resource types
-Resource:
-  - 'arn:aws:service:{{ aws_region }}:{{ aws_account_id }}:foo/*'
-  - 'arn:aws:service:{{ aws_region }}:{{ aws_account_id }}:bar/*'
-
-# Global (only for List/Describe)
-Resource:
-  - '*'
-```
+- Resource-scoped and global permission block templates
+- Policy file insertion guidance
+- Least-privilege best practices
 
 ## Step 5: Update Imports (if needed)
 
@@ -449,119 +227,7 @@ grep -r "<service>:<action>" aws/policy/
 
 ## Step 7: Generate Implementation Summary
 
-Create a summary of what was implemented:
-
-````markdown
-## AWS Terminator Implementation Summary
-
-**Branch**: add-<service>-terminators
-**Files Modified**:
-- `aws/terminator/<terminator-file>.py`
-- `aws/policy/<policy-file>.yaml`
-
-### Terminator Classes Added
-
-#### 1. <ResourceType>Terminator
-
-**File**: `aws/terminator/<terminator-file>.py`
-**Base Class**: `Terminator` | `DbTerminator`
-**Lines Added**: ~30
-
-**Properties**:
-- `id`: Returns `<IdField>` from instance
-- `name`: Returns `<NameField>` from instance
-- `created_time`: Returns `<TimestampField>` from instance (if Terminator)
-
-**Termination Logic**:
-```python
-def terminate(self):
-    self.client.<delete_operation>(<IdParam>=self.id)
-```
-
-**Special Handling**:
-- [None | Pagination | Pre-delete stop | Ignore terminated]
-
-#### 2. (Additional classes if multiple)
-
-### IAM Permissions Added
-
-**File**: `aws/policy/<policy-file>.yaml`
-
-**Permissions Block 1** - Resource-scoped:
-```yaml
-Sid: <ServiceName><ResourceType>Permissions
-Actions: <N> actions (<service>:Create*, Delete*, Describe*, Update*, Tag*)
-Resources: arn:aws:<service>:region:account:<resource-type>/*
-```
-
-**Permissions Block 2** - Global (if applicable):
-```yaml
-Sid: <ServiceName>GlobalPermissions
-Actions: <N> actions (<service>:List*, Describe*)
-Resources: *
-```
-
-### Testing Checklist
-
-**Before submitting PR**:
-
-- [ ] Python syntax valid (`python3 -m py_compile`)
-- [ ] YAML syntax valid
-- [ ] Tox tests pass (`tox`)
-- [ ] No duplicate terminator classes
-- [ ] No duplicate permission blocks
-- [ ] Imports added (if needed)
-- [ ] Classes in alphabetical order
-- [ ] Permissions in alphabetical order by Sid
-
-**Manual testing** (if possible):
-```bash
-# Create test resources in AWS account
-# Then run terminator in check mode
-cd ~/dev/aws-terminator/aws
-python cleanup.py --stage dev --target <ResourceType>Terminator -v -c
-
-# Should output:
-# cleanup: DEBUG located <ResourceType>Terminator: count=X
-# cleanup: DEBUG checked <ResourceType>Terminator: name=..., id=..., age=..., stale=True/False
-```
-
-### Next Steps
-
-1. **Review changes**:
-   ```bash
-   cd ~/dev/aws-terminator
-   git diff
-   ```
-
-2. **Commit changes**:
-   ```bash
-   git add aws/terminator/<terminator-file>.py
-   git add aws/policy/<policy-file>.yaml
-   git commit -m "Add <service> terminators and permissions
-   
-   - Add <ResourceType>Terminator class
-   - Add IAM permissions for <service> operations
-   - Required for ansible-collections/<collection> PR #<NUMBER>
-   
-   Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
-   ```
-
-3. **Push branch**:
-   ```bash
-   git push origin add-<service>-terminators
-   ```
-
-4. **Create PR**:
-   ```bash
-   gh pr create --repo mattclay/aws-terminator \
-     --title "Add <service> terminators and permissions" \
-     --body "..."
-   ```
-
----
-*Implementation generated by /aws-terminator-implement skill*
-````
+Create a summary of what was implemented using the template in `references/implementation-summary.md`.
 
 ## Interactive Mode
 
@@ -641,6 +307,9 @@ Run /aws-terminator-analyze first, or provide:
 
 ## References
 
+- `references/terminator-classes.md` - Terminator class templates and special cases
+- `references/iam-permissions.md` - IAM permission block templates
+- `references/implementation-summary.md` - Implementation summary template
 - aws-terminator repository: https://github.com/mattclay/aws-terminator
 - Terminator base classes: `aws/terminator/__init__.py`
 - Existing terminators: `aws/terminator/*.py`

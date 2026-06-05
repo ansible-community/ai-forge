@@ -1,3 +1,4 @@
+---
 name: Lint
 
 on:
@@ -7,73 +8,14 @@ on:
     branches: [main]
 
 jobs:
-  markdown-lint:
-    name: Markdown Lint
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Run markdownlint
-        uses: DavidAnson/markdownlint-cli2-action@v16
+      - uses: astral-sh/setup-uv@v6
+      - name: Install prek
+        uses: j178/prek-action@v2
         with:
-          globs: |
-            **/*.md
-            !tmp/**
-            !.git/**
-
-  yaml-lint:
-    name: YAML Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install yamllint
-        run: pip install yamllint
-
-      - name: Extract and lint frontmatter
-        run: |
-          # Create temporary directory for extracted frontmatter
-          mkdir -p /tmp/frontmatter
-
-          # Extract frontmatter from all .md files
-          find . -name "*.md" -not -path "./tmp/*" -not -path "./.git/*" | while read -r file; do
-            if head -1 "$file" | grep -q "^---$"; then
-              # Extract frontmatter between --- markers
-              awk '/^---$/{i++}i==1{print;next}i==2{exit}' "$file" > "/tmp/frontmatter/$(basename "$file").yml"
-            fi
-          done
-
-          # Lint extracted frontmatter
-          if [ -n "$(ls -A /tmp/frontmatter)" ]; then
-            yamllint -d '{extends: default, rules: {line-length: {max: 200}, truthy: {check-keys: false}}}' /tmp/frontmatter/
-          fi
-
-  shellcheck:
-    name: Shellcheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
-        with:
-          scandir: '.'
-          ignore_paths: 'tmp .git'
-
-  actionlint:
-    name: Action Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run actionlint
-        uses: reviewdog/action-actionlint@v1
-        with:
-          reporter: github-pr-review
-          filter_mode: nofilter
-          fail_level: error
+          install-only: true
+      - run: uvx --with tox-uv tox -e lint

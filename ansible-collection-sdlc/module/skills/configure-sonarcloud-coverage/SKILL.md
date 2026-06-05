@@ -1,10 +1,9 @@
 ---
 name: configure-sonarcloud-coverage
-description: >-
-  Second-phase SonarCloud setup for Ansible collections: CI emits XML coverage (ansible-test and/or
-  tox/pytest-cov), passes reports to the scanner via workflow_run + artifacts, reusable workflow_call
-  Sonar, or inline scan, aggregator gates, README badges. Use after Sonar project and sonar-project.properties exist; mirrors
-  ansible-collections/amazon.aws coverage patterns (e.g. PR 2871).
+description: >
+  Configures CI coverage reporting for SonarCloud on Ansible collections. Use
+  this skill when Sonar already runs but coverage is missing and you need to
+  wire XML reports, aggregator workflows, and scanner report paths.
 ---
 
 # Configure SonarCloud coverage for an Ansible Collection
