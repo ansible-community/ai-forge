@@ -1,14 +1,15 @@
 ---
 name: issue-fix
 description: Generic issue resolution workflow. Auto-detects bug vs feature, analyzes issue, creates plan, implements with tests, runs quality checks, and creates PR. Adapts workflow based on issue type (bug/feature/enhancement). Use for any GitHub issue.
-imports:
-  - issue-analyze
-  - issue-plan
-  - issue-implement
-  - lint-fix
-  - lint
-  - pr-create
 user-invocable: true
+metadata:
+  imports:
+    - issue-analyze
+    - issue-plan
+    - issue-implement
+    - lint-fix
+    - lint
+    - pr-create
 ---
 
 # Issue Fix Orchestrator
