@@ -52,8 +52,8 @@ jobs:
       # Should use GitHub secrets and OIDC
       - name: Configure AWS
         run: |
-          aws configure set aws_access_key_id AKIAIOSFODNN7EXAMPLE
-          aws configure set aws_secret_access_key wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+          aws configure set aws_access_key_id YOUR_AWS_ACCESS_KEY_HERE
+          aws configure set aws_secret_access_key YOUR_AWS_SECRET_KEY_HERE
 
       - name: Install dependencies
         run: npm ci
