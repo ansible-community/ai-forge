@@ -4,6 +4,7 @@ description: >-
   Fetch Ansible documentation from docs.ansible.com as Markdown. Use when the user asks
   about an Ansible topic, references a docs.ansible.com URL, or when the agent needs to
   look up official Ansible documentation to complete a task or verify information.
+user-invocable: true
 triggers:
   - "get ansible documentation"
   - "docs.ansible.com"
