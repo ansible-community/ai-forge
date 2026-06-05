@@ -18,6 +18,7 @@ triggers:
   - weekly triage
   - triage CI failure
   - triage collection issue
+user-invocable: true
 allowed-tools:
   - Bash
   - Read

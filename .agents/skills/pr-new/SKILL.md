@@ -6,6 +6,7 @@ description: >
   then creates the PR via gh against the upstream repo. Use when the user asks
   to submit, create, or open a pull request, or says "make a PR", "open PR",
   "create PR", "new PR".
+user-invocable: true
 metadata:
   author: ai-forge
   version: "1.0"

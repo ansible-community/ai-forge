@@ -5,6 +5,7 @@ description: >
   the branch is up to date, quality gates pass, PR description follows the
   template, and skills conform to the agentskills.io spec. Use when the user
   asks to review a PR, check a contributor's PR, or get a PR ready for merge.
+user-invocable: true
 metadata:
   author: ai-forge
   version: "1.0"
