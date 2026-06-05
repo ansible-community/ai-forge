@@ -102,19 +102,19 @@ IF issue has label "bug" OR type is "Bug Report":
     - Minimal, surgical changes
     - Focus on regression tests
     - Commit: "fix: ..."
-    
+
 ELSE IF issue has label "feature" OR type is "Feature Idea":
   → FEATURE IMPLEMENTATION approach
     - New functionality
     - Comprehensive test coverage
     - Commit: "feat: ..."
-    
+
 ELSE IF issue has label "enhancement":
   → ENHANCEMENT approach
     - Improve existing feature
     - Test enhancements
     - Commit: "enhance: ..."
-    
+
 ELSE:
   → ASK USER which approach to use
 ```
@@ -180,11 +180,11 @@ Changelog: bugfixes
 ```
 Plan: Add 'address' parameter to ec2_eip module
 Risk: MEDIUM
-Scope: 
+Scope:
   - Module parameter addition (15 lines)
   - API call modification (5 lines)
   - Documentation update (10 lines)
-Tests: 
+Tests:
   - 2 unit tests (parameter validation)
   - 1 integration test (specific IP assignment)
 Breaking: NO (optional parameter, backward compatible)
@@ -361,7 +361,7 @@ Repository: ansible-collections/amazon.aws
       Title: Allow ec2_eip to assign specific IP from byoip pool
       Type: FEATURE REQUEST 🆕
       Actionability: HIGH
-      
+
       Auto-detected approach: Feature implementation
       Reason: Issue labeled as "feature" and describes missing API parameter
 
@@ -373,7 +373,7 @@ Repository: ansible-collections/amazon.aws
       ✅ Plan created
       Approach: Add 'address' parameter to module
       Risk: MEDIUM
-      Scope: 
+      Scope:
         - Module: +25 lines (parameter, validation, API call)
         - Tests: +75 lines (unit + integration)
         - Docs: +10 lines (parameter documentation)

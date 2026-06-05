@@ -71,13 +71,13 @@ When this skill is invoked:
    ```bash
    # Find latest issue summary
    LATEST_ISSUE=$(ls -t .bug-fixes/issue-*.md 2>/dev/null | head -1)
-   
+
    if [ -z "$LATEST_ISSUE" ]; then
        echo "Error: No issue summary found"
        echo "Run /bug-pull --issue N first"
        exit 1
    fi
-   
+
    ISSUE_NUMBER=$(basename "$LATEST_ISSUE" .md | sed 's/issue-//')
    echo "Planning fix for issue #$ISSUE_NUMBER"
    ```
@@ -87,7 +87,7 @@ When this skill is invoked:
    ```bash
    # Read the issue summary created by bug-pull
    ISSUE_SUMMARY=$(cat ".bug-fixes/issue-$ISSUE_NUMBER.md")
-   
+
    # Extract affected files list
    AFFECTED_FILES=$(grep "Affects:" "$LATEST_ISSUE" | sed 's/.*Affects: //')
    ```
@@ -113,13 +113,13 @@ When this skill is invoked:
 
    ```python
    # Example: KeyError analysis
-   
+
    # Issue says: KeyError: 'optional_param'
    # Code shows:
    def my_function(params):
        value = params['optional_param']  # ← BUG: assumes key exists
        ...
-   
+
    # Root cause: Code doesn't handle missing optional parameter
    # Should use: params.get('optional_param', default_value)
    ```
@@ -142,7 +142,7 @@ When this skill is invoked:
        repo=REPO,
        query=f"is:closed {affected_file} {error_keyword}"
    )
-   
+
    # Find related PRs
    related_prs = github_search_issues(
        repo=REPO,
@@ -150,14 +150,14 @@ When this skill is invoked:
        sort="updated",
        order="desc"
    )
-   
+
    # Check commit history for affected file
    file_history = github_list_commits(
        repo=REPO,
        path=affected_file,
        per_page=10
    )
-   
+
    # Benefits:
    # - See how similar issues were fixed
    # - Avoid duplicating work
@@ -170,7 +170,7 @@ When this skill is invoked:
    ```bash
    # Check recent changes to affected file
    git log --oneline -10 -- plugins/modules/xyz.py
-   
+
    # Search for similar fix keywords
    git log --grep="KeyError" --grep="optional" --all
    ```
@@ -191,7 +191,7 @@ When this skill is invoked:
        validator = ParameterValidator(params)
        validator.validate_schema(COMPLEX_SCHEMA)
        value = validator.get_validated('optional_param')
-   
+
    # ✅ GOOD: Minimal, self-contained fix
    def my_function(params):
        value = params.get('optional_param', None)  # One line change
@@ -232,11 +232,11 @@ When this skill is invoked:
    ```bash
    # Find latest stable branch
    STABLE=$(git branch -r | grep "upstream/stable-" | grep -v patchback | sort -V | tail -1)
-   
+
    # Get version from stable branch
    STABLE_VERSION=$(git show ${STABLE}:galaxy.yml | grep "^version:" | awk '{print $2}')
    # Example output: 11.2.0
-   
+
    # If BREAKING change:
    #   Next MAJOR: 11.2.0 → 12.0.0
    # If feature (not breaking):
@@ -265,18 +265,18 @@ When this skill is invoked:
       - Line 45: Add parameter with version_added: "11.3.0"
       - Line 52: Add None check
       - Verify RETURN block (check if return values change)
-   
+
    2. tests/unit/plugins/modules/xyz/test_new_feature.py (NEW)
       - Add test_parameter_works()
       - Add test_parameter_validation()
       - Add test_edge_cases()
       - Add test_check_mode()
-   
+
    3. tests/integration/targets/xyz/tasks/new_feature.yml (NEW)
       - Add integration test (NO conditionals!)
       - Follow existing pattern from tasks/main.yml
       - Use common.yml helpers
-   
+
    Files to read but NOT modify:
    - plugins/module_utils/common.py (understand dependencies)
    - docs/xyz.md (verify parameter documentation)
@@ -300,20 +300,20 @@ When this skill is invoked:
        result = my_function(params)
        assert result['changed'] == False
        assert 'error' not in result
-   
+
    # 2. Test parameter validation
    def test_parameter_validation():
        """Test that address requires public_ipv4_pool"""
        # Test that required_by is enforced
        pass
-   
+
    # 3. Test edge cases
    def test_none_optional_param():
        """Test module handles None optional_param"""
        params = {'required': 'value', 'optional_param': None}
        result = my_function(params)
        # Should not crash
-   
+
    # 4. Test check_mode (if applicable)
    def test_check_mode():
        """Test that check_mode doesn't make changes"""
@@ -357,22 +357,22 @@ When this skill is invoked:
      ec2_eip:
        public_ipv4_pool: amazon  # Always available
      register: eip_result
-   
+
    - name: Save IP for reuse
      set_fact:
        test_ip: "{{ eip_result.public_ip }}"
-   
+
    - name: Release IP
      ec2_eip:
        state: absent
        public_ip: "{{ test_ip }}"
-   
+
    - name: Re-allocate with address parameter
      ec2_eip:
        public_ipv4_pool: amazon
        address: "{{ test_ip }}"  # Test specific IP!
      register: specific_result
-   
+
    - assert:
        that:
          - specific_result.public_ip == test_ip
@@ -387,35 +387,35 @@ When this skill is invoked:
        <params>
      register: result
      check_mode: true
-   
+
    - assert:
        that: result is changed
-   
+
    - name: Verify no changes in check mode
      include_tasks: tasks/common.yml
      vars:
        has_no_new_resource: true
-   
+
    - name: <feature> - actual
      <module>:
        <params>
      register: result
-   
+
    - assert:
        that:
          - result is changed
          - result.expected_value == expected
-   
+
    - name: Verify resource created
      include_tasks: tasks/common.yml
      vars:
        has_new_resource: true
-   
+
    - name: <feature> - idempotence
      <module>:
        <params>
      register: result
-   
+
    - assert:
        that: result is not changed
    ```
@@ -437,7 +437,7 @@ When this skill is invoked:
    # - Line length: 100 chars (from .editorconfig)
    # - Quotes: Double quotes
    # - Error handling: Raise AnsibleError
-   
+
    # Plan must match these conventions
    ```
 
@@ -447,10 +447,10 @@ When this skill is invoked:
 
    ```markdown
    # Bug Fix Plan: Issue #123
-   
+
    ## Issue Summary
    Module xyz fails with KeyError when optional_param is not provided
-   
+
    ## Root Cause
    File: plugins/modules/xyz.py, line 45
    Code assumes `optional_param` always exists in params dict
@@ -467,10 +467,10 @@ When this skill is invoked:
    ```python
    # Line 45 (before)
    value = params['optional_param']
-   
+
    # Line 45 (after)
    value = params.get('optional_param', None)
-   
+
    # Add check at line 46
    if value is not None:
        # existing logic
@@ -497,11 +497,11 @@ When this skill is invoked:
    def test_missing_optional_param():
        """Ensure module works without optional_param"""
        # Test code here
-   
+
    def test_none_optional_param():
        """Ensure module handles None optional_param"""
        # Test code here
-   
+
    def test_with_optional_param():
        """Ensure original behavior preserved"""
        # Test code here
@@ -560,7 +560,7 @@ When this skill is invoked:
     cat > .bug-fixes/plan-$ISSUE_NUMBER.md <<EOF
     [Generated plan]
     EOF
-    
+
     echo "✅ Implementation plan saved: .bug-fixes/plan-$ISSUE_NUMBER.md"
     ```
 
@@ -571,21 +571,21 @@ When this skill is invoked:
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     Implementation Plan: Issue #123
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
+
     Root Cause: Missing optional parameter handling in xyz.py:45
-    
+
     Fix Approach: Add .get() with default value (2 line change)
-    
+
     Files to modify:
       - plugins/modules/xyz.py (fix)
       - tests/unit/test_xyz_missing_param.py (new tests)
-    
+
     Risk: LOW (minimal, backward compatible)
-    
+
     Plan saved: .bug-fixes/plan-123.md
-    
+
     Proceed with implementation? [Y/n]
-    
+
     Next steps:
       1. Review plan: cat .bug-fixes/plan-123.md
       2. Implement: /bug-implement
@@ -648,9 +648,9 @@ similar = github_search_issues(repo=REPO, query="is:closed similar error")
 
 # Then ask for more information:
 github_add_issue_comment(
-    owner=OWNER, 
-    repo=REPO_NAME, 
-    number=123, 
+    owner=OWNER,
+    repo=REPO_NAME,
+    number=123,
     body="Need more details on reproduction"
 )
 

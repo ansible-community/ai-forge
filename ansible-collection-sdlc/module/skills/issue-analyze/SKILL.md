@@ -77,7 +77,7 @@ When this skill is invoked:
    except ToolNotAvailable:
        # Fall back to gh CLI
        use_mcp = False
-       
+
    if use_mcp:
        echo "✓ Using GitHub MCP (richer data)"
    else:
@@ -113,7 +113,7 @@ When this skill is invoked:
        echo "  /issue-analyze --issue 123"
        exit 1
    fi
-   
+
    echo "Repository: $OWNER/$REPO_NAME"
    echo "Issue: #$ISSUE_NUMBER"
    ```
@@ -129,7 +129,7 @@ When this skill is invoked:
        repo=REPO_NAME,
        number=ISSUE_NUMBER
    )
-   
+
    # Returns structured data:
    # - issue.title
    # - issue.body
@@ -150,7 +150,7 @@ When this skill is invoked:
    gh issue view $ISSUE_NUMBER \
      --repo $OWNER/$REPO_NAME \
      --json number,title,body,state,labels,author,comments,createdAt,updatedAt
-   
+
    # Note: gh CLI provides less data (no timeline, no linked PRs)
    ```
 
@@ -175,7 +175,7 @@ When this skill is invoked:
    comments = issue.comments  # Full comment thread
    created_at = issue.created_at
    updated_at = issue.updated_at
-   
+
    # MCP-exclusive data:
    timeline = issue.timeline  # Events, references, cross-links
    linked_prs = issue.linked_pull_requests  # Related PRs
@@ -187,7 +187,7 @@ When this skill is invoked:
    # Parse JSON from gh output
    import json
    issue_json = json.loads(gh_output)
-   
+
    title = issue_json['title']
    description = issue_json['body']
    labels = [l['name'] for l in issue_json['labels']]
@@ -196,7 +196,7 @@ When this skill is invoked:
    comments = issue_json.get('comments', [])
    created_at = issue_json['createdAt']
    updated_at = issue_json['updatedAt']
-   
+
    # Note: No timeline or linked PRs available
    ```
 
@@ -219,7 +219,7 @@ When this skill is invoked:
    ```python
    labels = issue['labels']
    is_bug = any(label['name'].lower() in ['bug', 'defect', 'error'] for label in labels)
-   
+
    if not is_bug:
        print("⚠️  Issue not labeled as 'bug'")
        print("Labels:", [l['name'] for l in labels])
@@ -244,12 +244,12 @@ When this skill is invoked:
        'actual_behavior': ['actual', 'instead', 'error'],
        'environment': ['version', 'python', 'ansible']
    }
-   
+
    missing = []
    for section, keywords in required_info.items():
        if not any(kw in issue['body'].lower() for kw in keywords):
            missing.append(section)
-   
+
    # GitHub MCP advantage: Check comments for missing info
    if use_mcp and missing and issue.comments:
        for comment in issue.comments:
@@ -258,7 +258,7 @@ When this skill is invoked:
                    if any(kw in comment.body.lower() for kw in keywords):
                        missing.remove(section)
                        print(f"✅ Found {section} in comment by {comment.author.login}")
-   
+
    if missing:
        print(f"⚠️  Missing information: {', '.join(missing)}")
        print("Continue anyway? [y/N]")
@@ -270,7 +270,7 @@ When this skill is invoked:
    # Check issue body
    has_traceback = 'Traceback' in issue['body'] or '```' in issue['body']
    has_error = 'error' in issue['body'].lower() or 'exception' in issue['body'].lower()
-   
+
    # GitHub MCP advantage: Also check comments for stack traces
    if use_mcp and not (has_traceback or has_error) and issue.comments:
        for comment in issue.comments:
@@ -282,7 +282,7 @@ When this skill is invoked:
                has_error = True
                print(f"✅ Found error info in comment by {comment.author.login}")
                break
-   
+
    if not (has_traceback or has_error):
        print("⚠️  No error messages or stack traces found")
        print("May be hard to reproduce. Continue? [y/N]")
@@ -294,20 +294,20 @@ When this skill is invoked:
 
    ```python
    import re
-   
+
    file_patterns = [
        r'`([a-zA-Z0-9_/]+\.py)`',  # Backticked paths
        r'plugins/([a-zA-Z0-9_/]+\.py)',  # Plugin paths
        r'modules/([a-zA-Z0-9_/]+\.py)',  # Module paths
    ]
-   
+
    affected_files = []
-   
+
    # Search issue body
    for pattern in file_patterns:
        matches = re.findall(pattern, issue.body)
        affected_files.extend(matches)
-   
+
    # GitHub MCP advantage: Structured access to comments
    if use_mcp and issue.comments:
        for comment in issue.comments:
@@ -316,18 +316,18 @@ When this skill is invoked:
                if matches:
                    affected_files.extend(matches)
                    print(f"Found file references in comment by {comment.author.login}")
-   
+
    # GitHub MCP exclusive: Check timeline for code references
    if use_mcp and issue.timeline:
        for event in issue.timeline:
            if event.type == 'cross-referenced':
                print(f"Cross-referenced in {event.source.type} {event.source.number}")
-   
+
    # GitHub MCP exclusive: Check linked PRs for related work
    if use_mcp and issue.linked_pull_requests:
        for pr in issue.linked_pull_requests:
            print(f"Related PR: #{pr.number} - {pr.title} ({pr.state})")
-   
+
    print(f"Potentially affected files: {affected_files}")
    ```
 
@@ -341,9 +341,9 @@ When this skill is invoked:
        'api_break': ['breaking', 'api change', 'incompatible'],
        'docs': ['documentation', 'readme', 'typo'],
    }
-   
+
    detected_types = []
-   
+
    # Build text corpus from issue
    if use_mcp:
        # MCP: Use structured properties
@@ -356,11 +356,11 @@ When this skill is invoked:
        text = (issue['title'] + ' ' + issue['body']).lower()
        if issue.get('comments'):
            text += ' ' + ' '.join(c['body'].lower() for c in issue['comments'])
-   
+
    for bug_type, keywords in bug_categories.items():
        if any(kw in text for kw in keywords):
            detected_types.append(bug_type)
-   
+
    print(f"Bug type: {detected_types or ['unknown']}")
    ```
 
@@ -370,65 +370,65 @@ When this skill is invoked:
 
    ```markdown
    # Issue #123: [Title]
-   
+
    **Status**: OPEN
    **Labels**: bug, high-priority
    **Reporter**: @username
    **Created**: 2026-03-15
    **Last Updated**: 2026-03-20
-   
+
    ## Summary
    [Extract 2-3 sentence summary from description]
-   
+
    ## Bug Type
    - Logic error
    - Affects: plugins/modules/my_module.py
-   
+
    ## Steps to Reproduce
    1. [Extracted from issue]
    2. [...]
-   
+
    ## Expected Behavior
    [What should happen]
-   
+
    ## Actual Behavior
    [What actually happens]
-   
+
    ## Error Messages
    ```
 
    [Stack trace or error output]
 
    ```
-   
+
    ## Environment
    - Python: 3.9
    - Ansible: 2.15
    - Collection: amazon.aws 5.0.0
-   
+
    ## Related Work (GitHub MCP only)
    **Linked PRs**:
    - #456: Fix for similar issue (MERGED)
    - #789: Attempted fix (CLOSED)
-   
+
    **Timeline Events**:
    - Referenced in PR #456 (2026-03-18)
    - Mentioned in issue #234 (2026-03-19)
-   
+
    **Discussion Highlights** (from comments):
    - @contributor: Provided additional stack trace
    - @maintainer: Confirmed affected version range
-   
+
    ## Validation
    ✅ Labeled as bug
    ✅ Issue is open
    ✅ Has reproduction steps
    ✅ Has error messages
    ⚠️  Missing: environment details (found in comments)
-   
+
    ## Actionability: HIGH
    This issue is ready for implementation.
-   
+
    ## Next Steps
    1. Run /bug-plan to create implementation plan
    2. Verify reproduction in local environment
@@ -444,7 +444,7 @@ When this skill is invoked:
    cat > .bug-fixes/issue-$ISSUE_NUMBER.md <<EOF
    [Generated summary]
    EOF
-   
+
    echo "✅ Issue summary saved: .bug-fixes/issue-$ISSUE_NUMBER.md"
    ```
 
@@ -454,23 +454,23 @@ When this skill is invoked:
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     Issue Analysis: #123
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
+
     Title: Module xyz fails with KeyError on missing parameter
     Status: OPEN
     Labels: bug, high-priority
-    
+
     Validation:
       ✅ Labeled as bug
       ✅ Issue is open
       ✅ Has reproduction steps
       ✅ Has error messages
       ⚠️  Missing environment details
-    
+
     Bug Type: logic_error
     Affected: plugins/modules/xyz.py
-    
+
     Actionability: HIGH ✅
-    
+
     Next steps:
       1. Review: cat .bug-fixes/issue-123.md
       2. Plan: /bug-plan

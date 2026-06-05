@@ -439,7 +439,7 @@ Do this:
 - name: Test feature using created resource
   module:
     special_param: "{{ created_resource.value }}"
-  
+
 - name: Cleanup
   module:
     state: absent
@@ -763,20 +763,20 @@ Next steps (run manually):
    git add plugins/modules/route53_zone.py \
            tests/unit/plugins/modules/test_route53_zone_wait.py \
            changelogs/fragments/2981-route53_zone-wait-dnssec.yml
-   
+
    git commit -m "feat: add waiter support for Route53 DNSSEC operations
 
    Add wait and wait_timeout parameters to route53_zone module.
-   
+
    Closes #2981
-   
+
    Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 
 3. Push to YOUR FORK and create PR:
    git push origin feature-<issue>-<description>
    gh pr create --title "..." --body "..."
 
-Note: Branch is created from main (synced with upstream) but pushed to 
+Note: Branch is created from main (synced with upstream) but pushed to
 your fork (origin). PR will be from your fork to upstream.
 ```
 
@@ -819,10 +819,10 @@ Summary:
   - plugins/modules/route53_zone.py (+53 lines)
   - tests/unit/plugins/modules/test_route53_zone_wait.py (+115 lines, new)
   - changelogs/fragments/2981-route53_zone-wait-dnssec.yml (+3 lines, new)
-  
+
   version_added: "11.4.0"
   Breaking changes: None
-  
+
 All implementation steps complete. Ready for manual git operations.
 ```
 
@@ -909,7 +909,7 @@ Summary:
   - plugins/modules/module_y.py (+25, -5)
   - tests/unit/plugins/modules/test_module_y.py (+110 lines, new)
   - changelogs/fragments/NNNN-module-y-parameter.yml (+3 lines, new)
-  
+
   version_added: "11.3.0"
   Breaking changes: None
 
@@ -924,13 +924,13 @@ Next steps (run manually):
    git add plugins/modules/module_y.py \
            tests/unit/plugins/modules/test_module_y.py \
            changelogs/fragments/NNNN-module-y-parameter.yml
-   
+
    git commit -m "feat: add parameter_x to module_y
-   
+
    <description>
-   
+
    Closes #NNNN
-   
+
    Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 
 3. Push and create PR:
