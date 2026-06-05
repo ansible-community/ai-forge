@@ -18,7 +18,8 @@ Fetch SonarCloud issues, analyze and group them, suggest fixes, and create focus
 
 ### Prerequisites
 
-- **`gh`** (GitHub CLI) or **`glab`** (GitLab CLI) — one must be installed and authenticated, matching the repo's hosting platform. Used by `/sonarcloud-fix` to create PRs/MRs and post comments. The skill auto-detects the platform from the git remote URL.
+- **`gh`** (GitHub CLI) or **`glab`** (GitLab CLI) — one must be installed and authenticated, matching the repo's hosting platform.
+Used by `/sonarcloud-fix` to create PRs/MRs and post comments. The skill auto-detects the platform from the git remote URL.
 - **`python3`** (3.8+) — used by the fetch script (`scripts/sonarcloud-fetch.py`). Uses only Python stdlib (no external dependencies).
 
 ### Environment Variables
@@ -45,12 +46,13 @@ Invoked via `/sonarcloud-analyze`. Fetches all open issues and presents a priori
 
 Before fetching data, detect the hosting platform and collect required variables.
 
-####Step 0a: Detect hosting platform
+#### Step 0a: Detect hosting platform
 
 Read the git remote URL to determine whether this is a GitHub or GitLab repository:
 
 ```bash
 git remote get-url origin
+
 ```
 
 - If the URL contains `github.com` → **GitHub** (use `gh` CLI)
@@ -59,13 +61,15 @@ git remote get-url origin
 
 Store the detected platform for use in Phase B.
 
-####Step 0b: Collect SonarCloud variables
+#### Step 0b: Collect SonarCloud variables
 
 Check whether the required variables are available as environment variables. For any that are missing, prompt the engineer interactively using AskUserQuestion.
 
-1. If `SONAR_ORGANIZATION` is not set and the target is SonarCloud (no `SONAR_BASE_URL` override), ask: "What is your SonarCloud organization slug?" For self-hosted SonarQube instances, `SONAR_ORGANIZATION` is optional — skip this prompt.
+1. If `SONAR_ORGANIZATION` is not set and the target is SonarCloud (no `SONAR_BASE_URL` override), ask: "What is your SonarCloud organization slug?" For self-hosted SonarQube instances,
+`SONAR_ORGANIZATION` is optional — skip this prompt.
 2. If `SONAR_PROJECT_KEY` is not set, ask: "What is your Sonar project key?"
 3. If `SONARCLOUD_TOKEN` is not set and the project is private, **do not prompt for the token**. Instead, guide the engineer to set it up themselves and restart Claude:
+
    > "This project requires a `SONARCLOUD_TOKEN` for API access. Please set it as an environment variable and restart Claude:
    >
    > ```bash
@@ -82,21 +86,24 @@ For Ansible collections repos, attempt to auto-detect configuration using the `g
 
 ```
 Invoke get-upstream-info skill to get:
+
 - UPSTREAM_PATH (e.g., ansible-collections/amazon.aws)
 - SONARCLOUD_KEY (e.g., ansible-collections_amazon.aws)
 - UPSTREAM_ORG (e.g., ansible-collections)
 - UPSTREAM_REPO (e.g., amazon.aws)
+
 ```
 
 **Cache these values** for use throughout the skill execution. If `get-upstream-info` succeeds, use `SONARCLOUD_KEY` as `SONAR_PROJECT_KEY` and `UPSTREAM_ORG` as `SONAR_ORGANIZATION`.
 
-After collecting the required values, also remind the engineer: "If you plan to fix issues after analysis, I'll need a few more values later — the base branch name and your validation commands. You can provide them now or when we get to the fix phase."
+After collecting the required values, also remind the engineer: "If you plan to fix issues after analysis, I'll need a few more values later —
+the base branch name and your validation commands. You can provide them now or when we get to the fix phase."
 
 If the engineer provides Phase B values at this point (`SONAR_DEFAULT_BRANCH`, `SONAR_VALIDATE_COMMANDS`, `SONAR_PR_COMMENT`), store them for later use and skip re-prompting in Phase B Step 0.
 
 Use the collected values for the remainder of the session.
 
-####Step 0c: Determine analysis mode
+#### Step 0c: Determine analysis mode
 
 **Auto-detect mode from context:**
 
@@ -111,9 +118,11 @@ Use the collected values for the remainder of the session.
 
   ```
   Invoke get-pr-number skill to get:
+
   - PR_NUMBER
   - PR_FOUND (boolean)
   - PR_STATE
+
   ```
 
 - If `PR_FOUND` is false, inform user and ask if they want project-wide analysis instead
@@ -129,22 +138,26 @@ Ask the user which types to analyze (or analyze all if not specified):
 
 ### Step 1: Fetch and Categorize Issues
 
-Run the fetch script to retrieve all SonarCloud data. If `SONAR_ORGANIZATION` or `SONAR_PROJECT_KEY` were provided interactively (not via environment variables), pass them as inline environment variables. **Never pass `SONARCLOUD_TOKEN` on the command line** — it must already be in the environment.
+Run the fetch script to retrieve all SonarCloud data. If `SONAR_ORGANIZATION` or `SONAR_PROJECT_KEY` were provided interactively (not via environment variables), pass them as inline environment
+variables. **Never pass `SONARCLOUD_TOKEN` on the command line** — it must already be in the environment.
 
 ```bash
 SONAR_PROJECT_KEY=<value> SONAR_ORGANIZATION=<value> python3 ansible-collection-sdlc/module/skills/sonarcloud-remediation/scripts/sonarcloud-fetch.py
+
 ```
 
 If all values are already set as environment variables, run the script directly:
 
 ```bash
 python3 ansible-collection-sdlc/module/skills/sonarcloud-remediation/scripts/sonarcloud-fetch.py
+
 ```
 
 **For PR-specific mode, pass the PR number:**
 
 ```bash
 SONAR_PR_NUMBER=<PR_NUMBER> python3 ansible-collection-sdlc/module/skills/sonarcloud-remediation/scripts/sonarcloud-fetch.py
+
 ```
 
 The script handles pagination, authentication, and categorization automatically. It outputs JSON to stdout with this structure:
@@ -160,10 +173,12 @@ The script handles pagination, authentication, and categorization automatically.
 - `categories` — pre-grouped object with keys: `Security`, `Reliability`, `Maintainability`, `Security Hotspots`, `Duplication`
 
 If the script exits with code 1, read the `error` field from its JSON output and display the error message to the user. Common errors:
+
 - Missing env vars → prompt the user to set them
 - HTTP 401 → invalid token
 - HTTP 404 → wrong project key
-- `"hint": "missing_organization"` → the Sonar instance requires an organization. Prompt the user: "This Sonar instance requires an organization. What is your Sonar organization slug?" Then re-run the fetch script with `SONAR_ORGANIZATION` set to the provided value.
+- `"hint": "missing_organization"` → the Sonar instance requires an organization. Prompt the user: "This Sonar instance requires an organization.
+What is your Sonar organization slug?" Then re-run the fetch script with `SONAR_ORGANIZATION` set to the provided value.
 
 Parse the JSON output. Use the `categories` object as the starting point for Step 2.
 
@@ -173,7 +188,8 @@ Within each category, group issues by **SonarCloud rule key** and **module** (wo
 
 **Special handling for Security Hotspots:**
 
-Security hotspots should be grouped by **securityCategory** and module (not by rule key), as the category provides more actionable context than individual rules. The fetch script provides a `securityCategory` field for each hotspot. Use these standardized category names:
+Security hotspots should be grouped by **securityCategory** and module (not by rule key), as the category provides more actionable context than individual rules.
+The fetch script provides a `securityCategory` field for each hotspot. Use these standardized category names:
 
 - `weak-cryptography` - Cryptographic issues (often `random` module usage, weak hashing algorithms)
 - `encrypt-data` - Data encryption issues (HTTP vs HTTPS, unencrypted storage)
@@ -192,7 +208,7 @@ For all other issue types (Reliability, Maintainability, Security), use the stan
 
 Determine the repo's module structure **once at the start of analysis**, then apply it consistently to all issues.
 
-####Step 2a: Check for monorepo workspace definitions
+#### Step 2a: Check for monorepo workspace definitions
 
 Look for workspace/package definitions in this order:
 
@@ -201,24 +217,27 @@ Look for workspace/package definitions in this order:
 3. **`nx.json`** or `workspace.json` — Nx monorepo
 4. **`lerna.json`** — Lerna monorepo (`packages` list)
 
-If any of these exist, resolve the workspace patterns to actual directories. Map each issue's `component` file path to the workspace whose path prefix matches. Use the workspace directory name (or a human-friendly label derived from it) as the module name.
+If any of these exist, resolve the workspace patterns to actual directories. Map each issue's `component` file path to the workspace whose path prefix matches.
+Use the workspace directory name (or a human-friendly label derived from it) as the module name.
 
 Example: if `package.json` has `"workspaces": ["frontend/*", "framework"]`, then:
+
 - `frontend/awx/src/Foo.tsx` → module `frontend/awx`
 - `framework/PageTable.tsx` → module `framework`
 - `scripts/build.js` → module `root`
 
-####Step 2b: No workspace definitions found (non-monorepo)
+#### Step 2b: No workspace definitions found (non-monorepo)
 
 Group issues by their **top-level directory** from the `component` field (the first path segment after the project key). Files in the repo root go into a `root` group.
 
 Example:
+
 - `src/api/handler.ts` → module `src`
 - `lib/utils.ts` → module `lib`
 - `tests/unit/foo.test.ts` → module `tests`
 - `README.md` → module `root`
 
-####Step 2c: Ansible collection module detection
+#### Step 2c: Ansible collection module detection
 
 For Ansible collections (detected by presence of `galaxy.yml` or `plugins/` directory), use Ansible-specific module grouping:
 
@@ -235,7 +254,8 @@ Each group is identified as: `<rule key> — <module>` (e.g., `typescript:S1854 
 
 ### Step 3: Sort by Remediation Priority
 
-Within each category, sort groups by this priority order. Match by rule ID suffix (the numeric part is language-agnostic in SonarCloud — e.g., `S1128` appears as `typescript:S1128`, `python:S1128`, `java:S1128`, etc.):
+Within each category, sort groups by this priority order. Match by rule ID suffix (the numeric part is language-agnostic in SonarCloud —
+e.g., `S1128` appears as `typescript:S1128`, `python:S1128`, `java:S1128`, etc.):
 
 1. Unused imports and variables (`S1128`, `S1481`, `S1144`)
 2. Dead code / dead stores (`S1854`, `S1186`, `S1068`)
@@ -253,6 +273,7 @@ Rules not matching any priority bucket sort to the end, ordered by issue count d
 ### Step 4: Estimate LOC Impact
 
 For each group, estimate the lines of code that will change:
+
 - Unused imports: ~1 LOC per issue (removal)
 - Dead stores: ~1-2 LOC per issue
 - Duplicate strings: ~2-3 LOC per issue (extract to const + references)
@@ -265,7 +286,8 @@ For each group, estimate the lines of code that will change:
 
 Display one table per category. Include total issue count in the heading.
 
-**CRITICAL: Use a single continuous numbering sequence across all categories.** The group `#` is the ID that `/sonarcloud-fix` uses to select groups. It must be globally unique, not reset per category. All rows — including security hotspots — must use the same table format with the rule or category identifier in parentheses.
+**CRITICAL: Use a single continuous numbering sequence across all categories.** The group `#` is the ID that `/sonarcloud-fix` uses to select groups.
+It must be globally unique, not reset per category. All rows — including security hotspots — must use the same table format with the rule or category identifier in parentheses.
 
 **Include mode context at the top:**
 
@@ -276,6 +298,7 @@ Project: <project-key>
 Mode: <Project-wide | Pull Request #<PR_NUMBER>>
 Issue Types: <All | Security | Reliability | Maintainability>
 Link: https://sonarcloud.io/project/<issues or pull_requests>?id=<PROJECT_KEY><&pullRequest=<PR_NUMBER>>
+
 ```
 
 **Example output:**
@@ -316,18 +339,22 @@ Link: https://sonarcloud.io/project/<issues or pull_requests>?id=<PROJECT_KEY><&
 ## Duplication
 Duplicated lines density: 3.2%  |  Duplicated blocks: 47  |  Duplicated files: 12
 (Duplicate string literal issues are listed under Maintainability above.)
+
 ```
 
 Flag any group where Est. LOC > 200 with "Will split" in the Note column.
 
 At the end of the report, suggest low-risk starting groups for `/sonarcloud-fix` using their group numbers:
+
 ```
 Good starting groups for /sonarcloud-fix:
   /sonarcloud-fix 1   — Unused imports (45 issues, ~45 LOC, Low risk)
   /sonarcloud-fix 2   — Dead stores (23 issues, ~35 LOC, Low risk)
+
 ```
 
-**Tip:** If you plan to fix issues after analysis, it's best to have `SONAR_DEFAULT_BRANCH` and `SONAR_VALIDATE_COMMANDS` ready. You can set them as environment variables beforehand, or provide them interactively when Phase B starts.
+**Tip:** If you plan to fix issues after analysis, it's best to have `SONAR_DEFAULT_BRANCH` and `SONAR_VALIDATE_COMMANDS` ready.
+You can set them as environment variables beforehand, or provide them interactively when Phase B starts.
 
 ### Optional Filters
 
@@ -350,6 +377,7 @@ Message: Refactor this function to reduce its Cognitive Complexity from 45 to th
 
 Context: The `ensure_present()` function has deeply nested conditionals and loops
 that make it difficult to understand and maintain.
+
 ```
 
 **b) Read the affected code:**
@@ -371,6 +399,7 @@ Use the Read tool to show the relevant lines with context.
 
 ```
 Rule details: https://rules.sonarsource.com/python/RSPEC-<number>
+
 ```
 
 ### Step 7: Prioritization and Recommendations
@@ -412,7 +441,7 @@ Invoked via `/sonarcloud-fix`. The engineer selects groups from the analyze outp
 
 **Before doing any work**, check all required Phase B configuration. If any variables are missing and were not already provided during Phase A Step 0, prompt the engineer interactively using AskUserQuestion.
 
-####Step 0a: Collect missing Phase B variables
+#### Step 0a: Collect missing Phase B variables
 
 If `SONAR_DEFAULT_BRANCH` is not set (env var or earlier prompt), ask:
 > "What is the base branch for fix PRs? (e.g. `main`, `devel`)"
@@ -425,7 +454,7 @@ If `SONAR_PR_COMMENT` is not set (env var or earlier prompt), ask:
 
 Use the values provided for the remainder of the session.
 
-####Step 0b: Display configuration summary
+#### Step 0b: Display configuration summary
 
 Display all non-sensitive configuration values so the engineer can verify them:
 
@@ -440,6 +469,7 @@ Display all non-sensitive configuration values so the engineer can verify them:
 | SONAR_DEFAULT_BRANCH      | main                           | interactive | Branch that fix PRs will target                    |
 | SONAR_VALIDATE_COMMANDS   | make lint && make test         | interactive | Commands that must pass before a PR can be created |
 | SONAR_PR_COMMENT          | /run-playwright                | env         | Comment posted automatically on each PR/MR         |
+
 ```
 
 - Show `(set)` or `(not set)` for `SONARCLOUD_TOKEN` — never display the actual value. This variable is always sourced from the environment (never interactive).
@@ -459,6 +489,7 @@ Then ask: "Do these settings look correct? If any need updating, let me know."
 If the user provided a group number or name as an argument, use that.
 
 If no group was specified, prompt interactively:
+
 1. If no `/sonarcloud-analyze` was run in this session, run it first to generate the group table
 2. Display the available groups (or remind the user of the table)
 3. Ask which group(s) to fix — accept by number from the analyze table, by rule key, or by name
@@ -467,6 +498,7 @@ If no group was specified, prompt interactively:
 ### Step 2: Read Affected Files
 
 For each issue in the selected group(s):
+
 1. Read the affected file using the Read tool
 2. Focus on the specific line number and surrounding context (~10 lines above/below)
 3. Identify whether the issue is a true positive or false positive
@@ -490,11 +522,13 @@ Display:
 ...
 
 **Risk Assessment:** Low — removing unused imports has no runtime effect.
+
 ```
 
 ### Step 4: Get Fix Approval
 
 Ask the engineer to:
+
 - **Approve all** — apply every fix in the group
 - **Exclude specific files** — list file numbers to skip
 - **Reject** — skip this group entirely
@@ -518,6 +552,7 @@ These strategies apply across languages. Adapt to the project's language and con
 Apply all approved fixes using the Edit tool.
 
 **CRITICAL: Cap at ~200 LOC per PR.** If the group exceeds 200 LOC of changes:
+
 - Split into batches by file or logical grouping
 - Each batch becomes its own branch
 - Inform the engineer: "This group will produce N branches of ~X LOC each."
@@ -549,6 +584,7 @@ After applying fixes (and adding any necessary unit tests), run the validation c
 
 ```bash
 eval "$SONAR_VALIDATE_COMMANDS"
+
 ```
 
 **For Ansible collections**, if validation commands are not set, run:
@@ -563,9 +599,11 @@ ansible-test units --coverage
 # Run integration tests if behavior changed
 # (optional, ask engineer first as integration tests can be time-consuming)
 ansible-test integration <target>
+
 ```
 
 If validation fails:
+
 1. Read the error output
 2. Diagnose whether the fix introduced the failure
 3. Correct the fix
@@ -596,22 +634,26 @@ git checkout -b "maintainability/<module-name>" "origin/$SONAR_DEFAULT_BRANCH"
 # Mixed types
 git checkout -b "sonarcloud/<description>" "origin/$SONAR_DEFAULT_BRANCH"
 # Examples: sonarcloud/critical-issues, sonarcloud/pr-blockers
+
 ```
 
 **For other projects** - Use rule-specific naming:
 
 ```bash
 git checkout -b "sonar/<rule-key>-<module-slug>" "origin/$SONAR_DEFAULT_BRANCH"
+
 ```
 
 Where `<module-slug>` is the module name with `/` replaced by `-` (e.g., `sonar/S1854-frontend-awx`, `sonar/S1128-framework`, `sonar/S1481-src`)
 
 **Commit** with a descriptive message:
+
 ```
 fix: remove dead stores in frontend/awx (SonarCloud S1854)
 
 Addresses 23 typescript:S1854 violations in frontend/awx/.
 SonarCloud issue keys: AZxx1, AZxx2, ...
+
 ```
 
 **For Ansible collections, use conventional commits:**
@@ -626,6 +668,7 @@ Addresses 2 security issue(s) identified by SonarCloud.
 Rule: python:S2245 - Pseudorandom number generators (PRNGs) must not be used for security-critical purposes
 
 SonarCloud issue keys: AZxx1, AZxx2
+
 ```
 
 **CRITICAL: Pause here.** Inform the engineer:
@@ -634,11 +677,13 @@ SonarCloud issue keys: AZxx1, AZxx2
 Branch `sonar/S1854-frontend-awx` is ready with N commits.
 
 You can now:
+
   - Review the diff: git diff origin/<SONAR_DEFAULT_BRANCH>...HEAD
   - Run additional tests locally
   - Make manual adjustments and commit them to this branch
 
 When you're satisfied, let me know and I'll create the PR.
+
 ```
 
 **Wait for the engineer's explicit go-ahead before proceeding to PR creation.** Do NOT create the PR automatically.
@@ -658,6 +703,7 @@ Ready to create PR(s)/MR(s):
 Total: 2 PR(s)/MR(s) targeting `<SONAR_DEFAULT_BRANCH>`.
 
 Proceed?
+
 ```
 
 **Wait for explicit approval.** Then for each PR/MR:
@@ -668,9 +714,11 @@ All titles **must** start with the prefix `SonarCloud Fix:` followed by a short 
 
 ```
 SonarCloud Fix: <brief description of fix> (<rule key>, <module>)
+
 ```
 
 Examples:
+
 - `SonarCloud Fix: Remove unused imports (S1128, frontend/awx)`
 - `SonarCloud Fix: Remove dead stores (S1854, framework)`
 - `SonarCloud Fix: Extract duplicate string literals (S1192, frontend/hub)`
@@ -678,6 +726,7 @@ Examples:
 - `SonarCloud Fix: Remove commented-out code (S125, src)`
 
 For batched PRs/MRs, append the batch number:
+
 - `SonarCloud Fix: Remove dead stores (S1854, frontend/awx) [batch 1/2]`
 
 **Creating the PR/MR:**
@@ -708,9 +757,11 @@ SonarCloud dashboard: https://sonarcloud.io/project/issues?id=<PROJECT_KEY>&rule
 ## Testing
 
 Validation passed: `<SONAR_VALIDATE_COMMANDS>`.
+
 ```
 
 Adjust **Type of Change** and **Risk Analysis** based on the fix category:
+
 - Dead code, unused imports, commented-out code → **Low**
 - Duplicate strings, unused params, type safety → **Low** to **Medium** (depending on scope)
 - Cognitive complexity refactoring → **Medium**
@@ -730,23 +781,30 @@ Example fragment content:
 
 ```yaml
 bugfixes:
+
   - >-
+
     Fixed reliability issues identified by SonarCloud static analysis
     (https://github.com/ORG/REPO/pull/XXXX).
+
 ```
 
 or
 
 ```yaml
 trivial:
+
   - >-
+
     Improved code quality by addressing maintainability issues in module_name
     (https://github.com/ORG/REPO/pull/XXXX).
+
 ```
 
 ### Step 9: Post PR/MR Comment and Continue
 
-1. Check `SONAR_PR_COMMENT`. If the variable is **not set**, **skip** this step entirely. If set to `none`, `skip`, `false`, or an empty string `""`, also **skip**. Otherwise, post the comment on each newly created PR/MR using the detected platform:
+1. Check `SONAR_PR_COMMENT`. If the variable is **not set**, **skip** this step entirely. If set to `none`, `skip`, `false`, or an empty string `""`, also **skip**.
+Otherwise, post the comment on each newly created PR/MR using the detected platform:
    - **GitHub**: `gh pr comment <PR_NUMBER> --body "$SONAR_PR_COMMENT"`
    - **GitLab**: `glab mr note <MR_NUMBER> --message "$SONAR_PR_COMMENT"`
 2. Offer to continue — return to group selection for the next batch
@@ -770,6 +828,7 @@ trivial:
 ```python
 # For MD5 hash used for non-cryptographic purposes (e.g., checksums, cache keys)
 hashlib.md5(data, usedforsecurity=False).hexdigest()
+
 ```
 
 This parameter explicitly indicates to both Python and SonarCloud that the hash is not being used for security purposes.
@@ -864,6 +923,7 @@ Example code comment:
 # SonarCloud S2245: Random is used for non-cryptographic UUID generation
 import random
 uuid = random.randint(100000, 999999)
+
 ```
 
 ---
@@ -902,6 +962,7 @@ For issues you determine are false positives:
 ```python
 # SonarCloud false positive - HTTP to AWS metadata endpoint is required
 response = requests.get("http://169.254.169.254/latest/meta-data/")
+
 ```
 
 **In SonarCloud UI:**
@@ -919,6 +980,7 @@ When creating fix PRs, note any issues that were intentionally skipped:
 
 - AZxx3: HTTP call to AWS metadata endpoint (required by AWS SDK)
 - AZxx7: random.randint for UUID generation (not cryptographic use)
+
 ```
 
 ---
@@ -974,12 +1036,12 @@ SonarCloud issues resolve automatically when:
 
 For false positives that can't be fixed in code:
 
-####Step 1: Navigate to the issue
+#### Step 1: Navigate to the issue
 
 1. Go to SonarCloud project: `https://sonarcloud.io/project/issues?id=<PROJECT_KEY>`
 2. Filter to find the specific issue (by file, rule, or issue key)
 
-####Step 2: Mark as Won't Fix or False Positive
+#### Step 2: Mark as Won't Fix or False Positive
 
 1. Click on the issue
 2. Click "Resolve" button
@@ -987,7 +1049,7 @@ For false positives that can't be fixed in code:
    - **Won't Fix** - Valid finding but intentionally not addressing
    - **False Positive** - Not actually an issue
 
-####Step 3: Add justification
+#### Step 3: Add justification
 
 Provide a clear explanation:
 
@@ -1108,9 +1170,11 @@ If issues don't resolve after 15 minutes:
 This skill is designed for adoption across repositories:
 
 1. **No hardcoded values** — all project-specific config via environment variables or interactive prompts
-2. **SonarCloud and SonarQube** — works with SonarCloud (default) and self-hosted SonarQube instances via `SONAR_BASE_URL`. Organization parameter is automatically omitted for self-hosted instances where it is not required.
+2. **SonarCloud and SonarQube** — works with SonarCloud (default) and self-hosted SonarQube instances via `SONAR_BASE_URL`.
+Organization parameter is automatically omitted for self-hosted instances where it is not required.
 3. **Configurable base branch** — `SONAR_DEFAULT_BRANCH` set via env var or provided interactively
-4. **Automatic module detection** — detects monorepo workspaces from `package.json`, `pnpm-workspace.yaml`, `nx.json`, or `lerna.json`. For non-monorepo projects, groups issues by top-level directory. For Ansible collections, uses Ansible-specific module grouping. No repo-specific configuration required.
+4. **Automatic module detection** — detects monorepo workspaces from `package.json`, `pnpm-workspace.yaml`, `nx.json`, or `lerna.json`.
+For non-monorepo projects, groups issues by top-level directory. For Ansible collections, uses Ansible-specific module grouping. No repo-specific configuration required.
 5. **Fetch script** — `scripts/sonarcloud-fetch.py` uses only Python stdlib (no external dependencies). Handles pagination, authentication, and categorization deterministically.
 6. **Validation commands** — `SONAR_VALIDATE_COMMANDS` set via env var or provided interactively
 7. **GitHub and GitLab** — auto-detects hosting platform from git remote URL; uses `gh` or `glab` accordingly
@@ -1127,6 +1191,7 @@ export SONAR_BASE_URL=https://sonarqube.corp.example.com/api  # only for self-ho
 export SONAR_DEFAULT_BRANCH=main                          # if not devel
 export SONAR_VALIDATE_COMMANDS="make lint && make test"    # your validation pipeline
 export SONAR_PR_COMMENT="/run-e2e"                         # your PR comment, or "none" to disable
+
 ```
 
 Then use `/sonarcloud-analyze` and `/sonarcloud-fix`.
