@@ -6,6 +6,7 @@ triggers:
   - "create plan"
   - "plan the fix"
   - "how to implement"
+user-invocable: true
 ---
 
 # Issue Plan Skill

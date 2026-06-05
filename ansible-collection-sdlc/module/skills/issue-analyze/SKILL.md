@@ -6,6 +6,7 @@ triggers:
   - "check issue"
   - "pull issue"
   - "fetch issue"
+user-invocable: true
 ---
 
 # Issue Analyze Skill

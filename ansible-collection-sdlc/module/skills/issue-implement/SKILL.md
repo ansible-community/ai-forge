@@ -6,6 +6,7 @@ triggers:
   - "apply fix"
   - "write the code"
   - "execute plan"
+user-invocable: true
 ---
 
 # Issue Implement Skill

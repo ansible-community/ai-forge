@@ -8,6 +8,7 @@ imports:
   - lint-fix
   - lint
   - pr-create
+user-invocable: true
 ---
 
 # Issue Fix Orchestrator
