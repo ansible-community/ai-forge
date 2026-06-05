@@ -147,7 +147,7 @@ while IFS= read -r action; do
     if echo "$deprecated_repos" | grep -q "^$action_repo@"; then
         echo "❌ ERROR: Deprecated action: $action"
         echo "  Repository: $action_repo is deprecated/archived"
-        
+
         # Find suggested replacement from config
         replacement=$(yq eval ".deprecated_repos[] | select(. == \"$action\") | comment" "$config_file")
         if [[ -n "$replacement" ]]; then
@@ -190,7 +190,7 @@ while IFS= read -r action; do
     # Check if repo exists and is public
     if command -v gh &> /dev/null; then
         repo_status=$(gh api "repos/$action_repo" --jq '{archived:.archived, private:.private}' 2>/dev/null || echo "{}")
-        
+
         archived=$(echo "$repo_status" | jq -r '.archived // false')
         private=$(echo "$repo_status" | jq -r '.private // false')
 
