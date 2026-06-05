@@ -5,6 +5,7 @@ description: >-
   Supports both project-wide debt reduction and PR-specific quality gates.
   Phase A analyzes and groups issues by rule and module with priority sorting.
   Phase B applies fixes with validation gates, batching, and strategic approval checkpoints.
+user-invocable: true
 ---
 
 # Claude Skill: SonarCloud Issue Remediation
