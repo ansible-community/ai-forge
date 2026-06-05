@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module: [ansible-collection-standards, ansible-role, ansible-collection-sdlc]
+        module: [ansible-collection-standards, ansible-role, ansible-collection-sdlc, cloud_content, network_content]
     steps:
       - uses: actions/checkout@v4
 
