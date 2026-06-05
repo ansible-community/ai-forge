@@ -5,6 +5,7 @@ description: >-
   and calculate appropriate SemVer versions. Checks for unreleased commits,
   analyzes changelog fragments, and recommends next version. Use when asked
   to check which collections need releases or what version to release.
+user-invocable: false
 ---
 
 # Skill: stable-release-analyze

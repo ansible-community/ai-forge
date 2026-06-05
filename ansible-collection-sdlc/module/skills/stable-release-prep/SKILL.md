@@ -5,6 +5,7 @@ description: >
   stable-release-analyze has identified a version and you need to create a prep
   branch, update galaxy.yml, generate changelog entries, and run
   antsibull-changelog release.
+user-invocable: false
 ---
 
 # Skill: stable-release-prep
@@ -282,7 +283,7 @@ Optional environment variables (read from `~/.ansible-release.conf` if present):
 export ANSIBLE_COLLECTIONS_PATH="~/dev/collections/ansible_collections"
 
 # Remote name for canonical repository (default: "upstream")
-# Set to "origin" if you use different remote naming convention  
+# Set to "origin" if you use different remote naming convention
 export REMOTE_UPSTREAM="upstream"
 ```
 

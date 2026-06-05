@@ -4,6 +4,7 @@ description: >
   Creates a new feature branch following project conventions. Use this skill when
   you need to start new work by fetching latest from origin, basing off
   origin/main, and configuring fork-friendly upstream tracking.
+user-invocable: true
 ---
 
 # Skill: create-branch

@@ -138,6 +138,11 @@ EOF
 The PR targets upstream's `main` branch from your fork. Return the PR URL
 to the user.
 
+**Do not hard-wrap lines** in the PR body. GitHub renders Markdown and
+handles line length — hard wraps at 72 or 80 characters create ragged
+paragraphs in the GitHub UI. Write each sentence or bullet as a single
+long line and let the renderer wrap it.
+
 ### Including non-code changes (Quality of life)
 
 PRs often include changes that are not directly part of the feature or fix

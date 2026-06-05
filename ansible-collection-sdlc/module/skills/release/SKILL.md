@@ -8,6 +8,7 @@ description: >-
   release PR, tagging, Galaxy publication, version bump, and GitHub
   release. Use when asked to release, publish, or tag a new
   collection version.
+user-invocable: true
 ---
 
 # Skill: release

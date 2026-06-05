@@ -5,6 +5,7 @@ description: >-
   against project standards and the Ansible Collection Review
   Checklist. Use when asked to review a PR, patch, diff, or set
   of code changes. Do not use for GitHub Issues or general Q&A.
+user-invocable: true
 ---
 
 # Skill: pr-review

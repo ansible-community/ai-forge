@@ -590,9 +590,8 @@ Keep variable names visible while values stay encrypted:
 ```
 group_vars/
 └── webservers/
-    ├── vars.yml      # db_password: "{{ vault_db_password }}"
-    └── vault.yml     # vault_db_password: !vault |
-                      #   <EXAMPLE_VAULT_CIPHERTEXT>
+    ├── vars.yml      # db_config: "{{ vault_db_config }}"
+    └── vault.yml     # vault_db_config: <ansible-vault encrypted>
 ```
 
 Reference `vault_`-prefixed variables from `vars.yml` so names remain searchable.

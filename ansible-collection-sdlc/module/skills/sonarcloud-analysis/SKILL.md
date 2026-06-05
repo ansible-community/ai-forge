@@ -4,6 +4,7 @@ description: >-
   Fetch and analyse SonarCloud issues for a project or pull request.
   Use when asked to check, review, or analyse SonarCloud issues, code quality,
   security hotspots, or technical debt.
+user-invocable: true
 ---
 
 # SonarCloud Analysis Skill

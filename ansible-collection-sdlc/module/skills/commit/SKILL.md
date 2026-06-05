@@ -5,6 +5,7 @@ description: >-
   'create a commit', or 'git commit'. It creates conventional
   commits with FQCN scopes for Ansible collection content
   (roles, modules, plugins).
+user-invocable: true
 ---
 
 You are executing the `commit` skill. Follow these steps precisely.

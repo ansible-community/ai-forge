@@ -90,11 +90,11 @@ python cleanup.py --stage dev --target <ResourceType>Terminator -v -c
    git add aws/terminator/<terminator-file>.py
    git add aws/policy/<policy-file>.yaml
    git commit -m "Add <service> terminators and permissions
-   
+
    - Add <ResourceType>Terminator class
    - Add IAM permissions for <service> operations
    - Required for ansible-collections/<collection> PR #<NUMBER>
-   
+
    Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
    ```
 

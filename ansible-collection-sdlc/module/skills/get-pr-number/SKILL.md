@@ -4,6 +4,7 @@ description: >
   Determines the pull request number, status, and URL for a branch using the gh
   CLI. Use this skill when you need PR context for CI checks, SonarCloud
   analysis, or other workflows tied to an open pull request.
+user-invocable: false
 ---
 
 # Get PR Number Skill

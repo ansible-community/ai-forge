@@ -9,6 +9,7 @@ metadata:
   author: Ansible Community
   version: 1.0.0
   inspired-by: https://github.com/ansible/apme
+user-invocable: true
 ---
 
 # Security Scan

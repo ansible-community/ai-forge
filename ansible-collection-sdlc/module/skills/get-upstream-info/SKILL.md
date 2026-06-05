@@ -4,6 +4,7 @@ description: >
   Determines upstream repository information and service identifiers using the
   gh CLI. Use this skill when you need the canonical GitHub org, repo path, or
   derived keys such as SonarCloud project identifiers.
+user-invocable: false
 ---
 
 # Get Upstream Info Skill

@@ -5,6 +5,7 @@ description: >-
   Ansible collections, validating module code, running pre-commit checks, or
   preparing releases. Supports smart mode (tests only changed files - fast),
   full mode (all files), and changed-only mode (custom range).
+user-invocable: true
 ---
 
 # Skill: sanity
@@ -75,10 +76,10 @@ if [ -z "$CHANGED_FILES" ]; then
 else
   echo "Testing changed files:"
   echo "$CHANGED_FILES"
-  
+
   # Count changed files
   FILE_COUNT=$(echo "$CHANGED_FILES" | wc -l | tr -d ' ')
-  
+
   if [ "$FILE_COUNT" -gt 10 ]; then
     echo "Many files changed ($FILE_COUNT files)"
     echo "Running full sanity for efficiency..."

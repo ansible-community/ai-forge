@@ -29,27 +29,27 @@ class <ResourceType>Terminator(Terminator):
             # Otherwise use simple list call
             <list_call> = client.<list_operation>()<'ResponseKey'>
             return <list_call>
-        
+
         return Terminator._create(
             credentials,
             <ResourceType>Terminator,
             '<boto3-service-name>',
             get_<resource_type_snake_case>
         )
-    
+
     @property
     def id(self):
         return self.instance['<IdField>']
-    
+
     @property
     def name(self):
         # Prefer Name field, fallback to id
         return self.instance.get('<NameField>', self.id)
-    
+
     @property
     def created_time(self):
         return self.instance['<CreatedTimeField>']
-    
+
     def terminate(self):
         # Add any pre-delete requirements (e.g., stop, detach)
         # Then delete
@@ -65,18 +65,18 @@ class <ResourceType>Terminator(DbTerminator):
         def get_<resource_type_snake_case>(client):
             <list_call> = client.<list_operation>()<'ResponseKey'>
             return <list_call>
-        
+
         return Terminator._create(
             credentials,
             <ResourceType>Terminator,
             '<boto3-service-name>',
             get_<resource_type_snake_case>
         )
-    
+
     @property
     def name(self):
         return self.instance['<NameField>']
-    
+
     def terminate(self):
         self.client.<delete_operation>(<NameParam>=self.name)
 ```
@@ -123,7 +123,7 @@ def get_resources(client):
 
 ```python
 def get_resources(client):
-    return [item for group in client.describe_groups()['Groups'] 
+    return [item for group in client.describe_groups()['Groups']
             for item in group['Items']]
 ```
 
@@ -135,7 +135,7 @@ def terminate(self):
     if self.instance['State'] != 'stopped':
         self.client.stop_resource(ResourceId=self.id)
         # Wait for stopped state if needed
-    
+
     self.client.delete_resource(ResourceId=self.id)
 ```
 
