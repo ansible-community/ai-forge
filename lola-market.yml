@@ -45,3 +45,12 @@ modules:
     repository: https://github.com/ansible-community/ai-forge.git
     path: network_content/module
     tags: [ansible, content, collections, standards]
+
+  - name: ansible-documentation
+    description: >-
+      A module providing skills and workflows for working with Ansible documentation at docs.ansible.com.
+      Includes fetching, reading, and navigating official Ansible documentation inline in an AI assistant conversation.
+    version: 0.0.1
+    repository: https://github.com/ansible-community/ai-forge.git
+    path: ansible-documentation/module
+    tags: [ansible, documentation, docs, markdown]
