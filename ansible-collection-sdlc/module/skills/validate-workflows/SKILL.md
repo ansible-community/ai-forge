@@ -5,6 +5,8 @@ description: >-
   Checks action sources against approved lists, detects deprecated/archived
   repositories, validates SHA pinning, identifies secret exposure, and audits
   permissions. Use when reviewing workflows before PRs or during security audits.
+argument-hint: "[--check-permissions] [--check-secrets] [--check-actions] [--check-sources] [--fix] [--all]"
+user-invocable: true
 ---
 
 # Skill: validate-workflows
