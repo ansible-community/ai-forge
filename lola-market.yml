@@ -1,3 +1,4 @@
+---
 name: Ansible Content Marketplace
 description: Curated collection of AI skills related to Ansible content development
 version: 0.0.1
@@ -27,6 +28,16 @@ modules:
     repository: https://github.com/ansible-community/ai-forge.git
     path: ansible-role/module
     tags: [ansible, content, collections, standards]
+
+  - name: ansible-content-development
+    description: >-
+      A module for developing and testing Ansible content following official best
+      practices. Covers Python-based module development, YAML-based content
+      authoring, and testing for both.
+    version: 0.0.1
+    repository: https://github.com/ansible-community/ai-forge.git
+    path: ansible-content-development/module
+    tags: [ansible, content, development, testing]
 
   - name: cloud_content
     description: >-

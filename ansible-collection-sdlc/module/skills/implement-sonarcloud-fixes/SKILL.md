@@ -1,9 +1,10 @@
 ---
 name: implement-sonarcloud-fixes
-description: >-
-  Implement fixes for SonarCloud issues identified by the sonarcloud-analysis skill.
-  Creates feature branches, applies code changes, runs tests, and creates pull requests.
-  Use after reviewing SonarCloud analysis results.
+description: >
+  Implements fixes for SonarCloud issues identified by sonarcloud-analysis.
+  Use this skill when you want to apply suggested fixes, run tests, and create a
+  pull request after reviewing SonarCloud analysis results.
+user-invocable: true
 ---
 
 # Skill: implement-sonarcloud-fixes

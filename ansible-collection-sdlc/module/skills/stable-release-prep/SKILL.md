@@ -1,10 +1,11 @@
 ---
 name: stable-release-prep
-description: >-
-  Prepare Ansible collection release by creating prep branch from stable branch,
-  updating galaxy.yml version, creating release summary fragment with proper
-  backtick formatting for module names, and running antsibull-changelog release.
-  Use after stable-release-analyze determines a version is needed.
+description: >
+  Prepares an Ansible collection release on a stable branch. Use this skill when
+  stable-release-analyze has identified a version and you need to create a prep
+  branch, update galaxy.yml, generate changelog entries, and run
+  antsibull-changelog release.
+user-invocable: false
 ---
 
 # Skill: stable-release-prep
@@ -239,143 +240,9 @@ grep -q "VERSION:" changelogs/changelog.yaml || {
 }
 ```
 
-**CRITICAL**: Fix common antsibull-changelog bugs:
-
-**Issue 1: changelog.yaml indentation errors**
-antsibull-changelog has a known bug where it generates incorrect YAML indentation (4 spaces instead of 6/8 for list items). This causes ansible-lint to fail in CI even though tox linters pass locally.
-
-**IMPORTANT**: You must check ALL list structures in the entire file, not just the new release section. The bug affects multiple release entries and different list types.
-
-**Complete validation checklist:**
-
-1. **Read the entire changelog.yaml file** (not just the new release section)
-2. **Check ALL occurrences** of these list structures:
-   - `fragments:` - list items must be 6 spaces
-   - `modules:` - list items must be 6 spaces, with `name:`/`namespace:` at 8 spaces
-   - `plugins:` - nested items (e.g., `connection:`) must be 8 spaces, with `name:`/`namespace:` at 10 spaces
-   - `minor_changes:` / `bugfixes:` / `breaking_changes:` - list items must be 8 spaces (nested under `changes:`)
-   - `major_changes:` / `deprecated_features:` / `removed_features:` - list items must be 8 spaces
-
-3. **Validate with ansible-lint** after fixing:
-
-   ```bash
-   ansible-lint --offline changelogs/changelog.yaml
-   ```
-
-**Common indentation patterns to fix:**
-
-```yaml
-# WRONG Pattern 1: fragments list items at 4 spaces
-    fragments:
-    - 1.1.0.yml
-    - other-fragment.yml
-
-# CORRECT: fragments list items at 6 spaces
-    fragments:
-      - 1.1.0.yml
-      - other-fragment.yml
-```
-
-```yaml
-# WRONG Pattern 2: minor_changes list items at 6 spaces
-      minor_changes:
-      - Added new feature to module
-      - Updated documentation
-
-# CORRECT: minor_changes list items at 8 spaces
-      minor_changes:
-        - Added new feature to module
-        - Updated documentation
-```
-
-```yaml
-# WRONG Pattern 3: modules with name/namespace at 6 spaces
-    modules:
-      - description: Call a specific tool
-      name: run_tool
-      namespace: ''
-
-# CORRECT: modules with name/namespace at 8 spaces (aligned with description)
-    modules:
-      - description: Call a specific tool
-        name: run_tool
-        namespace: ''
-```
-
-```yaml
-# WRONG Pattern 4: plugins nested items at 6 spaces
-    plugins:
-      connection:
-      - description: Persistent connection
-      name: mcp
-      namespace: null
-
-# CORRECT: plugins nested items at 8 spaces, name/namespace at 10 spaces
-    plugins:
-      connection:
-        - description: Persistent connection
-          name: mcp
-          namespace: null
-```
-
-**Pro tip:** After fixing indentation, always validate the entire file:
-
-```bash
-# Validate YAML syntax
-ansible-lint --offline changelogs/changelog.yaml
-
-# Should output: "Passed: 0 failure(s), 0 warning(s)"
-```
-
-**Why this happens:**
-antsibull-changelog generates different list items inconsistently across releases. Even if you
-fixed indentation during a previous release (e.g., 1.0.0), the next release (e.g., 1.1.0) will
-have the same bug. You must check the entire file every time, not just the new release section.
-
-**RECOMMENDATION**: Fix indentation as a **separate commit** before the release PR:
-
-```bash
-# 1. Fix indentation issues FIRST
-ansible-lint --offline changelogs/changelog.yaml
-# (Fix any indentation errors found)
-
-# 2. Commit separately
-git add changelogs/changelog.yaml
-git commit -m "Fix changelog.yaml indentation (antsibull-changelog bug)"
-
-# 3. THEN proceed with release
-# Run antsibull-changelog release, and you'll only see new changes in the diff
-```
-
-This keeps your release PR focused on the actual release changes, not historical indentation fixes.
-
-**Issue 1b: release_summary line too long**
-ansible-lint enforces a 160-character line length limit. If the release_summary exceeds this, break it into multiple lines using YAML's implicit string continuation:
-
-```yaml
-# WRONG (line too long):
-      release_summary: This minor release adds new features and enhancements to the ansible.mcp collection, including enhanced ``tools_info`` action plugin with server metadata support, JQ query support for MCP server event auditing, and updates to the ``run_tool`` module for node count query support.
-
-# CORRECT (broken into multiple lines):
-      release_summary: This minor release adds new features and enhancements to the
-        ansible.mcp collection, including enhanced ``tools_info`` action plugin with
-        server metadata support, JQ query support for MCP server event auditing, and
-        updates to the ``run_tool`` module for node count query support.
-```
-
-**Note:** When using YAML implicit continuation (no `>` or `|`), line breaks are collapsed into spaces, producing the same single-line output as the original.
-
-**Issue 2: .plugin-cache.yaml committed**
-collection_prep (run by docs-generate) creates `changelogs/.plugin-cache.yaml`. This file should never be committed (it's in build_ignore).
-
-Remove it if present:
-
-```bash
-if [ -f "changelogs/.plugin-cache.yaml" ]; then
-  rm -f "changelogs/.plugin-cache.yaml"
-  echo "Removed .plugin-cache.yaml (auto-generated, should not be committed)"
-fi
-```
+**CRITICAL**: Fix common antsibull-changelog bugs. See
+[references/changelog-validation.md](references/changelog-validation.md) for indentation
+fixes, line-length limits, and `.plugin-cache.yaml` cleanup.
 
 ### Step 9 — Display changes and next steps
 
@@ -405,59 +272,8 @@ Provide next steps:
 
 ## Release Summary Formatting Rules
 
-Per cloud-content-handbook guidelines, wrap all module/plugin/collection names in double backticks:
-
-**✅ Correct:**
-
-```yaml
-release_summary: >-
-  This release includes updates to the ``my_module`` and ``other_module``
-  modules for better ``aws_service`` integration.
-```
-
-**❌ Incorrect (missing backticks):**
-
-```yaml
-release_summary: >-
-  This release includes updates to the my_module and other_module
-  modules for better aws_service integration.
-```
-
-**❌ Incorrect (using `|` instead of `>`):**
-
-```yaml
-release_summary: |
-  This release includes updates to the ``my_module`` and ``other_module``
-  modules for better ``aws_service`` integration.
-```
-
-**Why use `>` (folded block scalar)?**
-
-- `>` collapses line breaks into spaces, producing clean single-line output in changelog.yaml
-- `|` (literal block scalar) preserves blank lines exactly, causing awkward formatting in changelog.yaml
-- Both are valid YAML, but `>` produces cleaner antsibull-changelog output
-
-**Example output comparison:**
-
-```yaml
-# Using `>` (correct):
-release_summary: This release includes updates to the ``my_module`` and ``other_module`` modules for better ``aws_service`` integration.
-
-# Using `|` (produces blank lines):
-release_summary: 'This release includes updates to the ``my_module`` and ``other_module``
-
-  modules for better ``aws_service`` integration.
-
-  '
-```
-
-## Module Name Detection
-
-The generate-release-summary.py script extracts module names from git diff:
-
-- Pattern: `plugins/modules/MODULE_NAME.py`
-- Automatically wraps in backticks: ``MODULE_NAME``
-- Generates appropriate summary based on fragment categories
+See [references/release-summary-formatting.md](references/release-summary-formatting.md) for
+backtick formatting, block scalar guidance, and module name detection.
 
 ## Configuration
 
@@ -467,7 +283,7 @@ Optional environment variables (read from `~/.ansible-release.conf` if present):
 export ANSIBLE_COLLECTIONS_PATH="~/dev/collections/ansible_collections"
 
 # Remote name for canonical repository (default: "upstream")
-# Set to "origin" if you use different remote naming convention  
+# Set to "origin" if you use different remote naming convention
 export REMOTE_UPSTREAM="upstream"
 ```
 

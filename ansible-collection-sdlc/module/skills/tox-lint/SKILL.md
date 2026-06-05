@@ -1,9 +1,10 @@
 ---
 name: tox-lint
-description: >-
-  Run all configured tox linters on an Ansible collection or Python project.
-  Executes ansible-lint, black, isort, flake8, pylint, flynt, and ruff to ensure
-  code quality and style consistency. Use before commits or as part of release workflow.
+description: >
+  Runs configured tox linters on an Ansible collection or Python project.
+  Use this skill when you need to validate code quality with ansible-lint,
+  black, isort, flake8, pylint, flynt, or ruff before commits or releases.
+user-invocable: true
 ---
 
 # Skill: tox-lint
@@ -12,7 +13,8 @@ description: >-
 
 Execute tox linting environments to ensure code quality and style consistency.
 Runs multiple linters in parallel including black, isort, flake8, pylint,
-ansible-lint, flynt, and ruff.
+ansible-lint, flynt, and ruff. The `scripts/run-linters.py` helper can detect
+and run the appropriate tox lint command when a standard tox.ini layout is present.
 
 ## When to Invoke
 
@@ -49,7 +51,7 @@ if tox -l -m lint 2>/dev/null | grep -q -E '[^[:space:]]+'; then
 # Method 2: Check for linters environment (older pattern)
 elif tox -l 2>/dev/null | grep -qE "^linters$"; then
     echo "Found linters environment"
-    TOX_CMD="tox -e linters"  
+    TOX_CMD="tox -e linters"
 # Method 3: Check for individual lint environments
 elif tox -l 2>/dev/null | grep -qE "^(black-lint|flake8-lint|pylint)$"; then
     echo "Found individual lint environments"
@@ -145,12 +147,12 @@ All linters passed! ✨
 ```
 ❌ black-lint: FAILED (3 files would be reformatted)
    plugins/modules/my_module.py
-   
+
    ➤ Auto-fix: tox -e black
 
 ❌ pylint: FAILED (score: 8.45/10)
    plugins/modules/my_module.py:45: unused-variable 'result'
-   
+
    ⚠️  Manual fix required
 ```
 

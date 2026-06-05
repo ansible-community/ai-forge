@@ -6,6 +6,7 @@ description: >-
   or return values, before releases, or when README needs regeneration.
   Automatically updates module RST files and README.md with current module
   information.
+user-invocable: false
 ---
 
 # Skill: docs-generate

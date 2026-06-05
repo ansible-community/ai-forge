@@ -1,8 +1,10 @@
 ---
 name: get-branch-changes
-description: >-
-  Determines merge-base and changed files for current branch. Helper skill used
-  by changelog-fragment and create-pr to correctly identify branch changes.
+description: >
+  Determines merge-base and changed files for the current branch. Use this skill
+  when you need to identify branch-scoped changes without unrelated commits from
+  the target branch.
+user-invocable: false
 ---
 
 # Skill: get-branch-changes

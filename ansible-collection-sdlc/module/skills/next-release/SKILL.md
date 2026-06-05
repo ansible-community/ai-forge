@@ -1,8 +1,10 @@
 ---
 name: next-release
-description: >-
-  Calculates next patch/minor/major release versions following Semantic
-  Versioning. Used to determine version_added values for new features.
+description: >
+  Calculates next patch, minor, and major release versions following SemVer.
+  Use this skill when you need to determine version_added values or answer
+  questions about the next collection release version.
+user-invocable: true
 ---
 
 # Skill: next-release

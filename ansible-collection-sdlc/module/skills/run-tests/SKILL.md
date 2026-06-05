@@ -5,6 +5,7 @@ description: >-
   collection using ansible-test. Use when asked to run, check, or
   write tests for a module or utility. Do not use for PR reviews
   or questions unrelated to testing.
+user-invocable: true
 ---
 
 # Skill: run-tests

@@ -1,6 +1,10 @@
 ---
 name: create-pr
-description: Create a draft pull request with all required checks and formatting
+description: >
+  Creates a draft pull request with pre-flight checks, changelog validation,
+  and formatted PR details. Use this skill when you are ready to open a pull
+  request for collection changes.
+user-invocable: true
 ---
 
 # Skill: create-pr

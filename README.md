@@ -107,6 +107,19 @@ Full lifecycle: commits, PRs, releases, tests. Includes skills for changelog fra
 
 [Full documentation](./ansible-collection-sdlc/README.md)
 
+### ansible-content-development
+
+Ansible content authoring and testing: module development, playbook/role writing, unit and integration tests, Molecule scenarios.
+
+**Skills:**
+
+- `write-module` - Scaffold and review Python-based Ansible modules
+- `write-content` - Write playbooks, tasks, handlers, templates, and variables following CoP good practices
+- `write-module-tests` - Write unit (pytest) and integration (ansible-test) tests for modules
+- `write-content-tests` - Write Molecule scenarios for functional testing of roles and playbooks
+
+[Full documentation](./ansible-content-development/README.md)
+
 ### All Skills
 
 See **[SKILLS.md](./SKILLS.md)** for the complete auto-generated index of all available skills.

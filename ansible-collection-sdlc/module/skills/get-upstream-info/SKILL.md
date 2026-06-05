@@ -1,9 +1,10 @@
 ---
 name: get-upstream-info
-description: >-
-  Determines upstream repository information using gh CLI.
-  Returns organisation, repository name, and derived identifiers.
-  This is a helper skill used by other skills.
+description: >
+  Determines upstream repository information and service identifiers using the
+  gh CLI. Use this skill when you need the canonical GitHub org, repo path, or
+  derived keys such as SonarCloud project identifiers.
+user-invocable: false
 ---
 
 # Get Upstream Info Skill
