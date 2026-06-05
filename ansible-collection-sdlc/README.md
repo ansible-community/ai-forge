@@ -97,7 +97,7 @@ ansible-collection-sdlc/
 - **gh CLI** (optional) - Used for GitHub/GitLab operations (PRs, releases, upstream detection)
 - **ansible-test** - Used for running sanity, unit, and integration tests
 - **curl** (optional) - Used for fetching SonarCloud analysis results
-- **yq** (v4+, optional) - Used for YAML parsing in workflow validation
+- **yq** (v4+) - Used for YAML parsing in workflow validation
 - **jq** (optional) - Used for JSON processing in workflow validation
 
 ## License
