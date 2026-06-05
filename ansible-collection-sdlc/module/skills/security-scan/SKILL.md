@@ -1,12 +1,10 @@
 ---
 name: security-scan
-description: >-
-  Scan Ansible collection dependencies, CI workflows, and code for security
-  vulnerabilities. Checks for hardcoded secrets, vulnerable packages, and
-  supply chain risks. Use when asked to scan for vulnerabilities, check for
-  compromised packages, audit security, or before releases.
-argument-hint: "[--update] [--fix]"
-user-invocable: true
+description: >
+  Scans Ansible collection dependencies, CI workflows, and code for security
+  vulnerabilities. Use this skill when asked to audit security, detect
+  hardcoded secrets, check for vulnerable packages, or validate supply chain
+  risks before releases. Supports optional `--update` and `--fix` flags.
 metadata:
   author: Ansible Community
   version: 1.0.0

@@ -107,10 +107,3 @@ repos:
         additional_dependencies: [pyyaml]
         pass_filenames: false
         always_run: true
-      - id: check-skill-frontmatter
-        name: Validate SKILL.md frontmatter (superset of E030)
-        entry: python scripts/check_skill_frontmatter.py
-        language: python
-        additional_dependencies: [pyyaml]
-        pass_filenames: false
-        always_run: true

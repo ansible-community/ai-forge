@@ -1,9 +1,9 @@
 ---
 name: get-pr-zuul-results
-description: >-
-  Get Zuul CI build status and log URLs for a pull request in ansible-collections repositories.
-  Identifies failing builds, provides log URLs, and summarizes build results.
-  Helper skill typically invoked by check-pr-actions or other workflows.
+description: >
+  Fetches Zuul CI build status and log URLs for ansible-collections pull
+  requests. Use this skill when you need to check Zuul results, summarize
+  failing builds, or retrieve log links for a PR.
 ---
 
 # Skill: get-pr-zuul-results
