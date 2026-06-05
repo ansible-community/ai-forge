@@ -5,6 +5,7 @@ description: >
   galaxy.yml. Use this skill when you need to determine the latest published
   collection version for version_added tags, changelog entries, or release
   planning.
+user-invocable: false
 ---
 
 # Skill: current-release

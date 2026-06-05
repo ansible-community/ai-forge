@@ -2,7 +2,7 @@
 
 The orchestrator executes skills in this order:
 
-### Step 1: Analyze (`stable-release-analyze`)
+## Step 1: Analyze (`stable-release-analyze`)
 
 **Purpose**: Determine if release is needed and calculate version
 
@@ -32,7 +32,7 @@ Proceed with release? [Y/n]:
 
 If `--analyze-only`: Stop here and exit.
 
-### Step 2: Prepare (`stable-release-prep`)
+## Step 2: Prepare (`stable-release-prep`)
 
 **Purpose**: Create release branch and update files
 
@@ -62,7 +62,7 @@ Review git diff before proceeding? [Y/n]:
 
 If yes: Display `git diff --stat`
 
-### Step 3: Documentation (`docs-generate`)
+## Step 3: Documentation (`docs-generate`)
 
 **Purpose**: Update module documentation
 
@@ -82,7 +82,7 @@ If yes: Display `git diff --stat`
 
 Skip if `--skip-docs` flag provided.
 
-### Step 4: Quality Checks (Parallel)
+## Step 4: Quality Checks (Parallel)
 
 **Purpose**: Validate code quality and tests
 
@@ -92,7 +92,7 @@ Skip if `--skip-docs` flag provided.
 In ONE message, invoke:
   - Skill: "tox-lint" with args "--path=${COLLECTION_PATH}"
   - Skill: "sanity" with args "--mode=${SANITY_MODE} --path=${COLLECTION_PATH}"
-  
+
 This batches permission requests and runs checks in parallel.
 ```
 
@@ -139,7 +139,7 @@ Choice [r/s/a]:
 Skip if `--skip-lint` or `--skip-sanity` flags provided.
 Continue despite failures if `--force` flag provided.
 
-### Step 5: Commit & Push (`release-commit-push`)
+## Step 5: Commit & Push (`release-commit-push`)
 
 **Purpose**: Commit changes and push to fork
 
@@ -158,7 +158,7 @@ git commit and git push
 ✅ Pushed to origin/prep_v1.0.1
 ```
 
-### Step 6: Pull Request (Conditional)
+## Step 6: Pull Request (Conditional)
 
 **Purpose**: Create PR to upstream
 

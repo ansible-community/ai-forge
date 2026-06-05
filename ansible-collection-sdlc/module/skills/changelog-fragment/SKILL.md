@@ -5,6 +5,7 @@ description: >-
   collections. Use when asked to create a changelog fragment, add a fragment,
   or update fragments with PR URLs. Automatically detects repository context
   from git.
+user-invocable: true
 ---
 
 # Skill: changelog-fragment

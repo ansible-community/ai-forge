@@ -4,6 +4,7 @@ description: >
   Fetches Zuul CI build status and log URLs for ansible-collections pull
   requests. Use this skill when you need to check Zuul results, summarize
   failing builds, or retrieve log links for a PR.
+user-invocable: false
 ---
 
 # Skill: get-pr-zuul-results

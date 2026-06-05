@@ -4,6 +4,7 @@ description: >
   Fetches GitHub Actions or GitLab CI results for a pull request or branch and
   analyzes failures. Use this skill when you need to diagnose CI failures,
   examine logs, and get suggested fixes.
+user-invocable: false
 ---
 
 # Skill: get-pr-action-results

@@ -4,6 +4,7 @@ description: >
   Configures CI coverage reporting for SonarCloud on Ansible collections. Use
   this skill when Sonar already runs but coverage is missing and you need to
   wire XML reports, aggregator workflows, and scanner report paths.
+user-invocable: true
 ---
 
 # Configure SonarCloud coverage for an Ansible Collection

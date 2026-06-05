@@ -4,6 +4,7 @@ description: >
   Runs configured tox linters on an Ansible collection or Python project.
   Use this skill when you need to validate code quality with ansible-lint,
   black, isort, flake8, pylint, flynt, or ruff before commits or releases.
+user-invocable: true
 ---
 
 # Skill: tox-lint
@@ -50,7 +51,7 @@ if tox -l -m lint 2>/dev/null | grep -q -E '[^[:space:]]+'; then
 # Method 2: Check for linters environment (older pattern)
 elif tox -l 2>/dev/null | grep -qE "^linters$"; then
     echo "Found linters environment"
-    TOX_CMD="tox -e linters"  
+    TOX_CMD="tox -e linters"
 # Method 3: Check for individual lint environments
 elif tox -l 2>/dev/null | grep -qE "^(black-lint|flake8-lint|pylint)$"; then
     echo "Found individual lint environments"
@@ -146,12 +147,12 @@ All linters passed! ✨
 ```
 ❌ black-lint: FAILED (3 files would be reformatted)
    plugins/modules/my_module.py
-   
+
    ➤ Auto-fix: tox -e black
 
 ❌ pylint: FAILED (score: 8.45/10)
    plugins/modules/my_module.py:45: unused-variable 'result'
-   
+
    ⚠️  Manual fix required
 ```
 

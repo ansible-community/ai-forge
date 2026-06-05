@@ -1,3 +1,4 @@
+---
 # markdownlint-cli2 configuration
 config: .markdownlint.json
 ignores:

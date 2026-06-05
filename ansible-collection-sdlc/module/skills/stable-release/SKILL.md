@@ -5,6 +5,7 @@ description: >
   when you want to release a collection with stable-X branches by coordinating
   stable-release-analyze, stable-release-prep, docs-generate, tox-lint, and
   sanity in sequence.
+user-invocable: true
 ---
 
 # Stable Branch Release Orchestrator

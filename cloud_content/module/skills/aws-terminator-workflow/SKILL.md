@@ -144,7 +144,7 @@ if [ ! -d ~/dev/aws-terminator ]; then
   # Clone from YOUR fork, not mattclay's repo
   FORK_USER=$(gh api user --jq .login)
   git clone https://github.com/$FORK_USER/aws-terminator.git ~/dev/aws-terminator
-  
+
   cd ~/dev/aws-terminator
   # Set up upstream remote to mattclay's repo
   git remote add upstream https://github.com/mattclay/aws-terminator.git

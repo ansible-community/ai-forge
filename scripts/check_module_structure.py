@@ -10,9 +10,9 @@ Required layout per module::
     └── module/
         ├── AGENTS.md
         ├── mcps.json
-        ├── commands/
-        ├── skills/
-        └── agents/
+        ├── skills/          (required)
+        ├── commands/        (optional)
+        └── agents/          (optional)
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 REQUIRED_FILES = ["AGENTS.md", "mcps.json"]
-REQUIRED_DIRS = ["commands", "skills", "agents"]
+REQUIRED_DIRS = ["skills"]
 
 
 def discover_modules(root: Path) -> list[Path]:

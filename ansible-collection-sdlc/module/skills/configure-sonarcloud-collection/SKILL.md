@@ -6,6 +6,7 @@ description: >-
   and contributor-facing docs; includes fork/secret and assistant-safe patterns (see Security section).
   Use when onboarding SonarCloud, wiring CI secrets, producing coverage.xml, or mirroring
   ansible-collections setups like amazon.aws.
+user-invocable: true
 ---
 
 # Configure SonarCloud for an Ansible Collection

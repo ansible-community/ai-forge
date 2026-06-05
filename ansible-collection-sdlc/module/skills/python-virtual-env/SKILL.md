@@ -6,6 +6,7 @@ description: >-
   Use when setting up local Python dev, installing Python dependencies with pip, or before
   running non-Docker Python commands. Do not use when the user requests system Python,
   containers only, or ansible-test --docker.
+user-invocable: true
 ---
 
 # Skill: python-virtual-env

@@ -4,6 +4,7 @@ description: >-
   Find and remediate overdue deprecation warnings in Ansible collection code.
   Identifies deprecated code past removal date/version and helps implement
   necessary changes. Use when preparing releases or cleaning up technical debt.
+user-invocable: true
 ---
 
 # Skill: remove-deprecations
