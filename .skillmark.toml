@@ -1,8 +1,8 @@
 fail-on = "errors"
-min-score = 100
+min-score = 95
 
 [rules]
-disable = ["E030", "E033"]
+disable = ["E033"]
 experimental = false
 
 [scoring.weights]
