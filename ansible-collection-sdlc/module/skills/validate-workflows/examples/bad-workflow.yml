@@ -94,7 +94,7 @@ jobs:
       # 🚨 CRITICAL: Hardcoded GitHub token pattern
       - name: Create release
         run: |
-          TOKEN="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          TOKEN="YOUR_GITHUB_TOKEN_HERE"
           curl -H "Authorization: token $TOKEN" \
             https://api.github.com/repos/owner/repo/releases
 

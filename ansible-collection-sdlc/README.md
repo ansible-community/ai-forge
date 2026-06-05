@@ -59,7 +59,9 @@ See `ansible-release.conf.template` for all options and documentation.
 
 See **[SKILLS.md](../SKILLS.md#ansible-collection-sdlc)** for the complete list of skills in this module.
 
-Key skills include: changelog-fragment, commit, create-branch, create-pr, pr-review, release, run-tests, and SonarCloud integration (configure-sonarcloud-collection, configure-sonarcloud-coverage, sonarcloud-remediation).
+Key skills include: changelog-fragment, commit, create-branch, create-pr, pr-review, release, run-tests,
+validate-workflows, and SonarCloud integration (configure-sonarcloud-collection, configure-sonarcloud-coverage,
+sonarcloud-remediation).
 
 ### Commands
 
