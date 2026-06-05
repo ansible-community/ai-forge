@@ -1,9 +1,9 @@
 ---
 name: write-module-tests
 description: >-
-  Write unit and integration tests for Ansible modules using ansible-test
-  and pytest. Covers test structure, mocking AnsibleModule, argument
-  validation, and integration test patterns. Do NOT use for Ansible
+  Use this skill when writing unit or integration tests for Ansible modules
+  with ansible-test and pytest. Covers test structure, mocking AnsibleModule,
+  argument validation, and integration test patterns. Do NOT use for Ansible
   content tests (use write-content-tests for Molecule).
 argument-hint: "[module-file-path or test-description]"
 user-invocable: true

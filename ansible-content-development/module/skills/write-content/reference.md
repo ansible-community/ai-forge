@@ -592,8 +592,7 @@ group_vars/
 └── webservers/
     ├── vars.yml      # db_password: "{{ vault_db_password }}"
     └── vault.yml     # vault_db_password: !vault |
-                      #   $ANSIBLE_VAULT;1.1;AES256
-                      #   ...
+                      #   <EXAMPLE_VAULT_CIPHERTEXT>
 ```
 
 Reference `vault_`-prefixed variables from `vars.yml` so names remain searchable.
