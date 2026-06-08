@@ -5,7 +5,7 @@ argument-hint: "[pr-number]"
 
 Check the SonarCloud static analysis results for the current pull request.
 
-Use the `get-pr-number` skill to detect the PR number from the current branch, then use the `sonarcloud-analysis` skill to:
+Use the `get-pr-number` skill to detect the PR number from the current branch, then use the `sonarcloud-remediation` skill to:
 
 1. Fetch SonarCloud issues specific to this pull request
 2. Filter issues to show only those introduced or affected by PR changes

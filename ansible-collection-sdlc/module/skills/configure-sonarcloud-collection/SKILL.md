@@ -12,7 +12,7 @@ user-invocable: true
 # Configure SonarCloud for an Ansible Collection
 
 Guide repository changes so SonarCloud can analyze Python/plugins/tests and display coverage.
-Complements `sonarcloud-analysis` (read findings) and `implement-sonarcloud-fixes` (fix findings)—run those **after** the project exists on SonarCloud and CI uploads analysis.
+Complements `sonarcloud-remediation` (analyze and fix findings)—run that **after** the project exists on SonarCloud and CI uploads analysis.
 
 ## Purpose
 
@@ -61,8 +61,7 @@ TRIGGER when the user asks to:
 
 DO NOT TRIGGER when:
 
-- The user only wants to **view** Sonar issues on an already-configured project (use `sonarcloud-analysis`)
-- The user only wants to **fix** existing Sonar findings (use `implement-sonarcloud-fixes`)
+- The user wants to **view** or **fix** Sonar issues on an already-configured project (use `sonarcloud-remediation`)
 
 ## Prerequisites (human / org)
 
@@ -224,8 +223,7 @@ Where org policy applies, collections should **aim for ~90%** coverage across th
 | ----- | ----- |
 | Derive org/repo/Sonar key | `get-upstream-info` |
 | Sonar coverage CI (`workflow_run`, artifacts, badges) | `configure-sonarcloud-coverage` |
-| After CI uploads analysis | `sonarcloud-analysis` |
-| Fix findings | `implement-sonarcloud-fixes` |
+| Analyze and fix findings | `sonarcloud-remediation` |
 
 ## Checklist (copy for PR description)
 

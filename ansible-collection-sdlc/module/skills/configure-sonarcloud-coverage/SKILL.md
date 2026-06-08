@@ -57,7 +57,7 @@ DO NOT TRIGGER when:
 
 - There is **no** Sonar project or `sonar-project.properties` yet (use `configure-sonarcloud-collection`
   first)
-- The user only wants Sonar **issue** review or fixes (`sonarcloud-analysis`, `implement-sonarcloud-fixes`)
+- The user only wants Sonar **issue** review or fixes (`sonarcloud-remediation`)
 
 ## Prerequisites
 
@@ -197,8 +197,7 @@ checks.
 | ----- | ----- |
 | Initial Sonar files and scanner workflow | `configure-sonarcloud-collection` |
 | Coverage jobs, artifacts, `workflow_run`, badges | `configure-sonarcloud-coverage` |
-| Read Sonar findings | `sonarcloud-analysis` |
-| Fix findings | `implement-sonarcloud-fixes` |
+| Analyze and fix Sonar findings | `sonarcloud-remediation` |
 
 ## Checklist (copy for PR description)
 

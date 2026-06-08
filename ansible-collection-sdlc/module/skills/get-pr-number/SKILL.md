@@ -332,7 +332,7 @@ PR_FOUND=false
 
 This skill is designed to be referenced by other skills:
 
-**In sonarcloud-analysis skill:**
+**In sonarcloud-remediation skill:**
 
 ```
 Use the `get-pr-number` skill to determine if the current work has an associated PR.
