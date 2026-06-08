@@ -9,7 +9,7 @@ A Lola module providing skills and workflows for working with Ansible documentat
 pip install lola-cli
 
 # Register the module from GitHub
-lola mod add https://github.com/ansible-community/ai-forge/ansible-documentation
+lola mod add https://github.com/ansible-community/ai-forge.git --module-content ansible-documentation/module -n ansible-documentation
 
 # Or clone and register locally
 git clone https://github.com/ansible-community/ai-forge.git
@@ -69,6 +69,8 @@ ansible-documentation/
 ├── README.md           # This file
 └── module/             # Lola-importable content
     ├── AGENTS.md       # Module-level instructions
+    ├── agents/         # Agent definitions
+    ├── commands/       # Command definitions
     ├── skills/         # Skill folders with SKILL.md
     │   └── ansible-markdown-docs/
     │       └── SKILL.md

@@ -44,7 +44,8 @@ DO NOT TRIGGER when:
 ## Prerequisites
 
 - `curl` available in PATH
-- Web search available for resolving topic descriptions to URLs
+- Web search available for resolving topic descriptions to URLs.
+  If web search is unavailable, ask the user to provide a direct `docs.ansible.com` URL.
 
 ## Workflow
 
@@ -71,7 +72,7 @@ Ensure the resolved URL begins with `https://docs.ansible.com/`. If it does not,
 Run:
 
 ```bash
-curl -s <url> -H "Accept: text/markdown"
+curl -s -m 30 <url> -H "Accept: text/markdown"
 ```
 
 The `Accept: text/markdown` header instructs docs.ansible.com (powered by Read the Docs)
@@ -110,7 +111,7 @@ User: "Get the docs at https://docs.ansible.com/ansible/latest/playbook_guide/pl
 
 Step 1: URL provided — use directly.
 Step 2: Validate ✓
-Step 3: curl -s <url> -H "Accept: text/markdown"
+Step 3: curl -s -m 30 <url> -H "Accept: text/markdown"
 Step 4: Use content as context.
 Step 5: Summarise and answer.
 ```
@@ -123,7 +124,7 @@ User: "Look up the Ansible community package collections requirements"
 Step 1: No URL — search site:docs.ansible.com ansible community package collections requirements
         → resolves to e.g. https://docs.ansible.com/ansible/latest/community/collection_contributors/collection_requirements.html
 Step 2: Validate ✓
-Step 3: curl -s <url> -H "Accept: text/markdown"
+Step 3: curl -s -m 30 <url> -H "Accept: text/markdown"
 Step 4: Use content as context.
 Step 5: Answer: "According to the Ansible docs, community package collections must meet the
         following requirements: ..."
@@ -131,7 +132,8 @@ Step 5: Answer: "According to the Ansible docs, community package collections mu
 
 ## Notes
 
-- Always use `curl -s` (silent mode) to suppress progress output.
+- Always use `curl -s -m 30` (silent mode with 30-second timeout) to suppress progress output
+  and prevent hangs on network issues.
 - The fetched Markdown is agent context — synthesise from it, do not print it verbatim.
 - Only fetch from `docs.ansible.com`; validate before every request.
 - **NEVER truncate the fetched content.** Process the full response regardless of length.
