@@ -136,39 +136,109 @@ sed -i "s/^version: .*/version: VERSION/" galaxy.yml
 git checkout -b release_VERSION
 ```
 
-### Step 7 — Generate changelog
+### Step 7 — Create release summary fragment (BEFORE antsibull-changelog)
 
-Determine the release type from `VERSION` and suggest a release summary using this template:
+**CRITICAL**: The release summary fragment MUST be created BEFORE running `antsibull-changelog release`.
+This is the required order per the [cloud-content-handbook release process](https://github.com/ansible-collections/cloud-content-handbook/blob/main/Releases/release_collections.md):
 
-- **Major** (`X.0.0`): `This is a major release of the ``NAMESPACE.COLLECTION`` collection.`
-- **Minor** (`X.Y.0`): `This is a minor release of the ``NAMESPACE.COLLECTION`` collection.`
-- **Patch** (`X.Y.Z`): `This is a patch release of the ``NAMESPACE.COLLECTION`` collection.`
+1. Create `changelogs/fragments/<version>.yml` with `release_summary`
+2. Then run `antsibull-changelog release`
 
-Followed by:
-`This changelog contains all changes to the modules and plugins in this collection that have been made after the previous release.`
+If you run antsibull-changelog first, the release summary will be missing from the generated changelog.
+
+#### Generate release summary content
+
+Determine the release type from `VERSION` and generate a meaningful summary:
+
+1. **Analyze the changelog fragments** in `changelogs/fragments/` to understand what's included
+2. **Identify key modules/plugins affected** by checking which files were changed:
+
+   ```bash
+   git diff $(git describe --tags --abbrev=0)..HEAD --stat | grep "plugins/modules/"
+   ```
+
+3. **Draft a summary** that describes the actual changes, not just the release type
+
+**Release summary templates** (starting point, customize based on actual changes):
+
+- **Major** (`X.0.0`): `This major release of the ``NAMESPACE.COLLECTION`` collection includes breaking changes, new features, and improvements.`
+- **Minor** (`X.Y.0`): `This minor release of the ``NAMESPACE.COLLECTION`` collection includes new features and improvements.`
+- **Patch** (`X.Y.Z`): `This patch release of the ``NAMESPACE.COLLECTION`` collection includes bugfixes and minor improvements.`
+
+**Formatting rules:**
+
+- Use `>-` (folded block scalar) to avoid blank lines in the output
+- Wrap all module/plugin names in double backticks: ``module_name``
+- Be specific about what changed when possible
 
 **CONFIRM:** Present the suggested release summary and the list of changelog fragments that will be included. Ask the human to approve or edit the text before writing the fragment.
 
-Create the release summary fragment:
+#### Create the release summary fragment
 
 ```bash
 cat > changelogs/fragments/VERSION.yml << 'EOF'
-release_summary: |-
+release_summary: >-
   This is a <major/minor/patch> release of the ``NAMESPACE.COLLECTION`` collection.
-  This changelog contains all changes to the modules and plugins in this collection
-  that have been made after the previous release.
+  <Add specific details about key changes, affected modules, or notable fixes.>
 EOF
 ```
 
-Generate the changelog:
+Verify the fragment was created:
+
+```bash
+cat changelogs/fragments/VERSION.yml
+ls changelogs/fragments/
+```
+
+### Step 8 — Run antsibull-changelog release
+
+**Only run this AFTER the release summary fragment exists.**
 
 ```bash
 antsibull-changelog release --reload-plugins
 ```
 
+This will:
+
+- Process all fragment YAML files in `changelogs/fragments/`
+- Include the release summary in the generated changelog
+- Update `CHANGELOG.rst` and `changelogs/changelog.yaml`
+- Delete processed fragment files
+
+#### Verify version ordering in changelog.yaml
+
+**CRITICAL**: Versions in `changelogs/changelog.yaml` must be ordered **semantically (numerically)**, NOT alphabetically.
+
+Alphabetical sorting incorrectly places version `10.x` before `2.x` (since "1" < "2" as strings).
+The correct order is: `1.0.0` → `2.0.0` → ... → `9.0.0` → `10.0.0` → `11.0.0`
+
+After running `antsibull-changelog release`, check the `releases:` section in `changelogs/changelog.yaml`:
+
+```yaml
+# WRONG (alphabetical):
+releases:
+  1.0.0: ...
+  10.0.0: ...   # ❌ Should come after 9.0.0
+  2.0.0: ...
+
+# CORRECT (semantic):
+releases:
+  1.0.0: ...
+  2.0.0: ...
+  ...
+  9.0.0: ...
+  10.0.0: ...  # ✅ Correctly after 9.0.0
+```
+
+If versions are misordered, edit `changelogs/changelog.yaml` to fix the order, then regenerate:
+
+```bash
+antsibull-changelog generate
+```
+
 **CONFIRM:** Show the human the generated `CHANGELOG.rst` diff and ask them to confirm the content is correct before continuing.
 
-### Step 8 — Commit and push release branch
+### Step 9 — Commit and push release branch
 
 ```bash
 git add -A
@@ -176,7 +246,7 @@ git commit -m "Release VERSION"
 git push origin release_VERSION
 ```
 
-### Step 9 — Create pull request
+### Step 10 — Create pull request
 
 ```bash
 gh pr create --repo UPSTREAM_PATH --title "Release VERSION" --body "Release VERSION of NAMESPACE.COLLECTION."
@@ -184,7 +254,7 @@ gh pr create --repo UPSTREAM_PATH --title "Release VERSION" --body "Release VERS
 
 **CONFIRM:** Wait for the human to confirm that CI has passed and the PR has been reviewed and merged before continuing.
 
-### Step 10 — Update local main
+### Step 11 — Update local main
 
 After the PR is merged:
 
@@ -193,7 +263,7 @@ git checkout main
 git pull --rebase upstream main
 ```
 
-### Step 11 — Tag and push
+### Step 12 — Tag and push
 
 **CONFIRM:** Ask the human to confirm before creating and pushing the tag. This action is irreversible.
 
@@ -202,13 +272,13 @@ git tag -a VERSION -m "NAMESPACE.COLLECTION: VERSION"
 git push upstream VERSION
 ```
 
-### Step 12 — Create GitHub release
+### Step 13 — Create GitHub release
 
 ```bash
 gh release create VERSION --repo UPSTREAM_PATH --title "VERSION" --notes "See [CHANGELOG.rst](https://github.com/UPSTREAM_PATH/blob/main/CHANGELOG.rst) for details."
 ```
 
-### Step 13 — Bullhorn release announcement
+### Step 14 — Bullhorn release announcement
 
 Generate and present the following announcement text for the user to post
 in the [Bullhorn newsletter](https://forum.ansible.com/c/news/bullhorn/17)
