@@ -1,0 +1,104 @@
+#
+# -*- coding: utf-8 -*-
+# Copyright {{year}} Red Hat
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+#
+
+from __future__ import absolute_import, division, print_function
+
+
+__metaclass__ = type
+
+"""
+The {{platform}}_{{resource}} config file.
+It is in this file where the current configuration (as dict)
+is compared to the provided configuration (as dict) and the command set
+necessary to bring the current configuration to its desired end-state is
+created.
+"""
+
+from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.rm_base.resource_module import (
+    ResourceModule,
+)
+from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils import (
+    dict_merge,
+)
+
+from ansible_collections.{{namespace}}.{{collection_name}}.plugins.module_utils.network.{{platform}}.facts.facts import Facts
+from ansible_collections.{{namespace}}.{{collection_name}}.plugins.module_utils.network.{{platform}}.rm_templates.{{resource}} import (
+    {{Resource}}Template,
+)
+
+
+class {{Resource}}(ResourceModule):
+    """
+    The {{platform}}_{{resource}} config class
+    """
+
+    def __init__(self, module):
+        super({{Resource}}, self).__init__(
+            empty_fact_val={},
+            facts_module=Facts(module),
+            module=module,
+            resource="{{resource}}",
+            tmplt={{Resource}}Template(),
+        )
+        self.parsers = [
+            # TODO: List parser names matching entries in rm_templates PARSERS
+            # e.g. "name", "state", "mtu"
+        ]
+
+    def execute_module(self):
+        """Execute the module
+
+        :rtype: A dictionary
+        :returns: The result from module execution
+        """
+        if self.state not in ["parsed", "gathered"]:
+            self.generate_commands()
+            self.run_commands()
+        return self.result
+
+    def generate_commands(self):
+        """Generate configuration commands to send based on
+        want, have and desired state.
+        """
+        wantd = {entry["{{list_key}}"]: entry for entry in self.want}
+        haved = {entry["{{list_key}}"]: entry for entry in self.have}
+
+        # if state is merged, merge want onto have and then compare
+        if self.state == "merged":
+            wantd = dict_merge(haved, wantd)
+
+        # if state is overridden, first remove entries not in want
+        if self.state == "overridden":
+            for k, have in haved.items():
+                if k not in wantd:
+                    self._compare(want={}, have=have)
+
+        # if state is deleted, empty out wantd and set haved to wantd
+        if self.state in ["deleted", "purged"]:
+            haved = {k: v for k, v in haved.items() if k in wantd or not wantd}
+            for k, have in haved.items():
+                self._compare(want={}, have=have)
+            wantd = {}
+
+        for k, want in wantd.items():
+            self._compare(want=want, have=haved.pop(k, {}))
+
+    def _compare(self, want, have):
+        """Leverages the base class `compare()` method and
+        populates the list of commands to be run by comparing
+        the `want` and `have` data with the `parsers` defined
+        for the {{Resource}} network resource.
+        """
+        begin = len(self.commands)
+        self.compare(parsers=self.parsers, want=want, have=have)
+        if len(self.commands) != begin:
+            # Prepend the resource context command (e.g. "vlan 10")
+            # TODO: Update the render call to match your resource's context command
+            self.commands.insert(
+                begin,
+                self._tmplt.render(want or have, "{{resource}}", False),
+            )

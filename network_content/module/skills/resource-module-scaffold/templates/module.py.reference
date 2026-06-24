@@ -1,0 +1,172 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# Copyright {{year}} Red Hat
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+"""
+The module file for {{platform}}_{{resource}}
+"""
+
+from __future__ import absolute_import, division, print_function
+
+
+__metaclass__ = type
+
+DOCUMENTATION = """
+module: {{platform}}_{{resource}}
+short_description: Resource module to configure {{resource_description}}.
+description:
+  - This module provides declarative management of {{resource_description}} on
+    {{vendor}} {{platform_upper}} devices.
+version_added: "{{version_added}}"
+author:
+  - {{author}}
+notes:
+  - Tested against {{platform_upper}} {{test_version}}.
+  - This module works with connection C(network_cli).
+options:
+  config:
+    description: A dictionary of {{resource}} options
+    type: {{config_type}}  # 'dict' for simple, 'list' for list-based
+    # TODO: Add suboptions for each config attribute
+    # suboptions:
+    #   attribute_name:
+    #     description: Description of attribute
+    #     type: str
+  running_config:
+    description:
+      - This option is used only with state I(parsed).
+      - The value of this option should be the output received from the {{platform_upper}} device
+        by executing the command B({{show_command}}).
+      - The state I(parsed) reads the configuration from C(running_config) option and
+        transforms it into Ansible structured data as per the resource module's argspec
+        and the value is then returned in the I(parsed) key within the result.
+    type: str
+  state:
+    choices:
+      - merged
+      - replaced
+      - overridden
+      - deleted
+      - rendered
+      - gathered
+      - parsed
+    default: merged
+    description:
+      - The state the configuration should be left in
+      - The states I(rendered), I(gathered) and I(parsed) does not perform any change
+        on the device.
+      - The state I(rendered) will transform the configuration in C(config) option to
+        platform specific CLI commands which will be returned in the I(rendered) key
+        within the result. For state I(rendered) active connection to remote host is
+        not required.
+      - The state I(gathered) will fetch the running configuration from device and transform
+        it into structured data in the format as per the resource module argspec and
+        the value is returned in the I(gathered) key within the result.
+      - The state I(parsed) reads the configuration from C(running_config) option and
+        transforms it into JSON format as per the resource module parameters and the
+        value is returned in the I(parsed) key within the result.
+    type: str
+"""
+
+EXAMPLES = """
+# TODO: Add examples for each state (merged, replaced, deleted, gathered, parsed, rendered)
+
+# Using state: merged
+
+- name: Merge {{resource}} configuration
+  {{namespace}}.{{collection_name}}.{{platform}}_{{resource}}:
+    config:
+      # TODO: Add example config
+    state: merged
+
+# Using state: deleted
+
+- name: Delete {{resource}} configuration
+  {{namespace}}.{{collection_name}}.{{platform}}_{{resource}}:
+    state: deleted
+"""
+
+RETURN = """
+before:
+  description: The configuration prior to the invocation.
+  returned: always
+  type: {{config_type}}
+  sample: >
+    This output will always be in the same format as the
+    module argspec.
+after:
+  description: The resulting configuration after module execution.
+  returned: when changed
+  type: {{config_type}}
+  sample: >
+    This output will always be in the same format as the
+    module argspec.
+commands:
+  description: The set of commands pushed to the remote device.
+  returned: always
+  type: list
+  sample:
+    - sample command 1
+    - sample command 2
+rendered:
+  description: The set of CLI commands pushed to the remote device.
+  returned: when I(state) is C(rendered)
+  type: list
+  sample:
+    - sample command 1
+gathered:
+  description:
+    - Facts about the network resource gathered from the remote device as structured data.
+  returned: when I(state) is C(gathered)
+  type: {{config_type}}
+  sample: >
+    This output will always be in the same format as the
+    module argspec.
+parsed:
+  description:
+    - The device native config provided in I(running_config) option, parsed into
+      structured data as per module argspec.
+  returned: when I(state) is C(parsed)
+  type: {{config_type}}
+  sample: >
+    This output will always be in the same format as the
+    module argspec.
+"""
+
+from ansible.module_utils.basic import AnsibleModule
+
+from ansible_collections.{{namespace}}.{{collection_name}}.plugins.module_utils.network.{{platform}}.argspec.{{resource}}.{{resource}} import (
+    {{Resource}}Args,
+)
+from ansible_collections.{{namespace}}.{{collection_name}}.plugins.module_utils.network.{{platform}}.config.{{resource}}.{{resource}} import (
+    {{Resource}},
+)
+
+
+def main():
+    """
+    Main entry point for module execution
+
+    :returns: the result form module invocation
+    """
+    module = AnsibleModule(
+        argument_spec={{Resource}}Args.argument_spec,
+        mutually_exclusive=[["config", "running_config"]],
+        required_if=[
+            ["state", "merged", ["config"]],
+            ["state", "replaced", ["config"]],
+            ["state", "overridden", ["config"]],
+            ["state", "rendered", ["config"]],
+            ["state", "parsed", ["running_config"]],
+        ],
+        supports_check_mode=True,
+    )
+
+    result = {{Resource}}(module).execute_module()
+    module.exit_json(**result)
+
+
+if __name__ == "__main__":
+    main()

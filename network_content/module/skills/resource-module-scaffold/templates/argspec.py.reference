@@ -1,0 +1,58 @@
+# -*- coding: utf-8 -*-
+# Copyright {{year}} Red Hat
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+from __future__ import absolute_import, division, print_function
+
+
+__metaclass__ = type
+
+"""
+The arg spec for the {{platform}}_{{resource}} module
+"""
+
+
+class {{Resource}}Args(object):  # pylint: disable=R0903
+    """The arg spec for the {{platform}}_{{resource}} module"""
+
+    argument_spec = {
+        "config": {
+            "type": "{{config_type}}",  # "dict" for simple, "list" for list-based
+            # ---- FOR dict-type resources ----
+            "options": {
+                # TODO: Add config attributes here
+                # "attribute_name": {"type": "str"},
+                # "attribute_with_choices": {
+                #     "type": "str",
+                #     "choices": ["option1", "option2"],
+                # },
+                # "nested_attribute": {
+                #     "type": "dict",
+                #     "options": {
+                #         "sub_attr": {"type": "str"},
+                #     },
+                # },
+            },
+            # ---- FOR list-type resources (uncomment and use instead) ----
+            # "elements": "dict",
+            # "options": {
+            #     "{{list_key}}": {"type": "int", "required": True},  # unique key
+            #     # TODO: Add list element attributes here
+            # },
+        },
+        "running_config": {"type": "str"},
+        "state": {
+            "choices": [
+                "merged",
+                "replaced",
+                "overridden",
+                "deleted",
+                "rendered",
+                "gathered",
+                "parsed",
+            ],
+            "default": "merged",
+            "type": "str",
+        },
+    }  # pylint: disable=C0301

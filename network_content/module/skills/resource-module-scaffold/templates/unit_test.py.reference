@@ -1,0 +1,151 @@
+# -*- coding: utf-8 -*-
+# Copyright {{year}} Red Hat
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+from __future__ import absolute_import, division, print_function
+
+
+__metaclass__ = type
+
+from textwrap import dedent
+from unittest.mock import patch
+
+from ansible_collections.{{namespace}}.{{collection_name}}.plugins.modules import {{platform}}_{{resource}}
+from ansible_collections.{{namespace}}.{{collection_name}}.tests.unit.modules.utils import set_module_args
+
+from .{{platform}}_module import Test{{Platform}}Module
+
+
+class Test{{Platform}}{{Resource}}Module(Test{{Platform}}Module):
+    """Tests for {{platform}}_{{resource}} module"""
+
+    module = {{platform}}_{{resource}}
+
+    def setUp(self):
+        super(Test{{Platform}}{{Resource}}Module, self).setUp()
+
+        self.mock_get_resource_connection_facts = patch(
+            "ansible_collections.ansible.netcommon.plugins.module_utils."
+            "network.common.rm_base.resource_module_base."
+            "get_resource_connection",
+        )
+        self.get_resource_connection_facts = (
+            self.mock_get_resource_connection_facts.start()
+        )
+
+        self.mock_execute_show_command = patch(
+            "ansible_collections.{{namespace}}.{{collection_name}}.plugins.module_utils."
+            "network.{{platform}}.facts.{{resource}}.{{resource}}."
+            "{{Resource}}Facts.get_{{resource}}_data",
+        )
+        self.execute_show_command = self.mock_execute_show_command.start()
+
+    def tearDown(self):
+        super(Test{{Platform}}{{Resource}}Module, self).tearDown()
+        self.mock_get_resource_connection_facts.stop()
+        self.mock_execute_show_command.stop()
+
+    def test_{{platform}}_{{resource}}_merged_idempotent(self):
+        """Test merged state when config already matches — no changes expected"""
+        # TODO: Replace with actual show command output for your resource
+        self.execute_show_command.return_value = dedent(
+            """\
+            TODO: paste sample show command output here
+            """,
+        )
+        # TODO: Set config that matches the show output above
+        set_module_args(
+            dict(
+                config=dict(
+                    # TODO: Add config matching the show output
+                ),
+                state="merged",
+            ),
+        )
+        commands = []
+        result = self.execute_module(changed=False)
+        self.assertEqual(sorted(result["commands"]), sorted(commands))
+
+    def test_{{platform}}_{{resource}}_merged(self):
+        """Test merged state with config change — commands expected"""
+        # TODO: Replace with actual show command output
+        self.execute_show_command.return_value = dedent(
+            """\
+            TODO: paste sample show command output here
+            """,
+        )
+        # TODO: Set config that differs from the show output
+        set_module_args(
+            dict(
+                config=dict(
+                    # TODO: Add config that requires changes
+                ),
+                state="merged",
+            ),
+        )
+        # TODO: Expected commands for the change
+        commands = [
+            # "command that would be generated",
+        ]
+        result = self.execute_module(changed=True)
+        self.assertEqual(sorted(result["commands"]), sorted(commands))
+
+    def test_{{platform}}_{{resource}}_deleted(self):
+        """Test deleted state — negation commands expected"""
+        # TODO: Replace with actual show command output
+        self.execute_show_command.return_value = dedent(
+            """\
+            TODO: paste sample show command output here
+            """,
+        )
+        set_module_args(dict(state="deleted"))
+        # TODO: Expected negation commands
+        commands = [
+            # "no command",
+        ]
+        result = self.execute_module(changed=True)
+        self.assertEqual(sorted(result["commands"]), sorted(commands))
+
+    def test_{{platform}}_{{resource}}_gathered(self):
+        """Test gathered state — structured data returned"""
+        # TODO: Replace with actual show command output
+        self.execute_show_command.return_value = dedent(
+            """\
+            TODO: paste sample show command output here
+            """,
+        )
+        set_module_args(dict(state="gathered"))
+        result = self.execute_module(changed=False)
+        # TODO: Verify gathered facts match expected structure
+        # self.assertEqual(result["gathered"], {"key": "value"})
+
+    def test_{{platform}}_{{resource}}_parsed(self):
+        """Test parsed state — parse running_config into structured data"""
+        # TODO: Replace with actual config text
+        running_config = dedent(
+            """\
+            TODO: paste config to parse here
+            """,
+        )
+        set_module_args(dict(running_config=running_config, state="parsed"))
+        result = self.execute_module(changed=False)
+        # TODO: Verify parsed output matches expected structure
+        # self.assertEqual(result["parsed"], {"key": "value"})
+
+    def test_{{platform}}_{{resource}}_rendered(self):
+        """Test rendered state — generate commands without device connection"""
+        set_module_args(
+            dict(
+                config=dict(
+                    # TODO: Add config to render
+                ),
+                state="rendered",
+            ),
+        )
+        # TODO: Expected rendered commands
+        commands = [
+            # "command that would be generated",
+        ]
+        result = self.execute_module(changed=False)
+        self.assertEqual(sorted(result["commands"]), sorted(commands))
