@@ -23,19 +23,19 @@ jobs:
       - name: Check for new skills not in index
         id: check-new
         run: |
-          # Get newly added SKILL.md files in this PR
-          NEW_SKILL_PATHS=$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }}...HEAD -- '*/module/skills/*/SKILL.md')
+          # Find all skills in the file structure
+          SKILL_PATHS=$(find . -path '*/module/skills/*/SKILL.md' -type f 2>/dev/null)
 
-          if [ -z "$NEW_SKILL_PATHS" ]; then
-            echo "No new skills added"
+          if [ -z "$SKILL_PATHS" ]; then
+            echo "No skills found in file structure"
             echo "needs_update=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # Check if each new skill is already in SKILLS.md
+          # Check if each skill is already in SKILLS.md
           MISSING_SKILLS=""
-          for skill_path in $NEW_SKILL_PATHS; do
-            # Extract skill name from path (e.g., ansible-collection/module/skills/commit/SKILL.md -> commit)
+          for skill_path in $SKILL_PATHS; do
+            # Extract skill name from path (e.g., ./ansible-collection/module/skills/commit/SKILL.md -> commit)
             skill_name="${skill_path%/SKILL.md}"
             skill_name="${skill_name##*/}"
             if ! grep -q "| \[$skill_name\](" SKILLS.md 2>/dev/null; then
@@ -47,12 +47,20 @@ jobs:
           done
 
           if [ -z "$MISSING_SKILLS" ]; then
-            echo "All new skills already in index"
+            echo "All skills already in index"
             echo "needs_update=false" >> "$GITHUB_OUTPUT"
           else
             echo "Skills missing from index:$MISSING_SKILLS"
             echo "needs_update=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Require manual SKILLS.md update for fork PRs
+        if: >-
+          steps.check-new.outputs.needs_update == 'true' &&
+          github.event.pull_request.head.repo.full_name != github.repository
+        run: |
+          echo "::error::New skills detected but SKILLS.md is not updated. Run: python3 .github/scripts/generate-skills-index.py && git add SKILLS.md"
+          exit 1
 
       - name: Set up Python
         if: steps.check-new.outputs.needs_update == 'true'
@@ -69,7 +77,11 @@ jobs:
         run: python3 .github/scripts/generate-skills-index.py
 
       - name: Commit and push to PR
-        if: steps.check-new.outputs.needs_update == 'true'
+        if: >-
+          steps.check-new.outputs.needs_update == 'true' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -78,5 +90,5 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "docs: update SKILLS.md index"
-            git push
+            git push origin "HEAD:$HEAD_REF"
           fi
