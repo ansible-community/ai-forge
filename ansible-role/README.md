@@ -6,7 +6,7 @@ A Lola module providing commands for scaffolding Ansible roles following Red Hat
 
 ```bash
 # Install Lola package manager
-pip install lola-cli
+pip install lola-ai
 
 # Register the module from GitHub
 lola mod add https://github.com/ansible-community/ai-forge/ansible-role
