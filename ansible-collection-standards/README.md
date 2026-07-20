@@ -7,7 +7,7 @@ Provides tools to ensure your Ansible collections meet community standards and i
 
 ```bash
 # Install Lola package manager
-pip install lola-cli
+pip install lola-ai
 
 # Register the module from GitHub
 lola mod add https://github.com/ansible-community/ai-forge/ansible-collection-standards

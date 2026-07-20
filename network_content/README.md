@@ -7,7 +7,7 @@ Contains community-facing skills for network device management, configuration, a
 
 ```bash
 # Install Lola package manager
-pip install lola-cli
+pip install lola-ai
 
 # Register the module from GitHub
 lola mod add https://github.com/ansible-community/ai-forge/network_content
