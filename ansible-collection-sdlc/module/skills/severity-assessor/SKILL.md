@@ -4,6 +4,8 @@ description: >-
   Categorizes an issue or PR and assigns severity (critical/major/minor/trivial)
   with configurable escalation rules. Generic helper for any Ansible collection.
 user-invocable: false
+allowed-tools:
+  - Bash
 ---
 
 # Severity Assessor Skill
@@ -162,6 +164,43 @@ bug actually breaks downstream collections (e.g. by inspecting downstream CI
 status). A bug in a shared collection does **not** automatically warrant Critical —
 only confirmed downstream breakage does. Unconfirmed risk should use `bump+1` to
 flag for investigation.
+
+---
+
+## Context Profiles
+
+Pre-built and custom escalation contexts live in the `contexts/` directory.
+Each file defines the collections in scope and the domain-specific escalation
+rules for a collection type.
+
+### Available profiles
+
+| File | Domain | Collections |
+|---|---|---|
+| `contexts/network.yaml` | Network platform collections | netcommon, ios, iosxr, nxos, eos, ... |
+| `contexts/cloud.yaml` | Cloud provider collections | amazon.aws, community.aws, google.cloud, ... |
+| `contexts/community.yaml` | Community-maintained collections | community.general, community.crypto, ... |
+
+### Creating a new profile
+
+1. Copy `contexts/_template.yaml` to a new file (e.g. `contexts/security.yaml`)
+2. Fill in `name`, `description`, and the `collections` list
+3. Add escalation rules specific to your domain
+4. The calling triage skill loads the appropriate context file and passes
+   matched rules to the severity-assessor at invocation time
+
+### How context files are used
+
+The severity-assessor skill does **not** read context files directly. The
+calling skill (e.g. a triage workflow) is responsible for:
+
+1. Loading the relevant context file for the repositories being triaged
+2. Evaluating each escalation rule's `condition` against the current issue
+3. Passing only the **matched rules** to severity-assessor via the
+   `escalationRules` input
+
+This keeps the severity-assessor generic while giving each team a
+versioned, reviewable place to maintain their escalation policy.
 
 ---
 

@@ -1,0 +1,38 @@
+# Severity Assessor — Network Collection Context
+#
+# Escalation rules for Ansible network collections.
+# Covers shared dependencies (netcommon, utils, pylibssh) and
+# certified network platform collections.
+
+name: network
+description: >-
+  Network collection triage context covering cisco.ios, cisco.iosxr,
+  cisco.nxos, arista.eos, and shared dependencies (ansible.netcommon,
+  ansible.utils, ansible.pylibssh).
+
+collections:
+  - ansible-collections/ansible.netcommon
+  - ansible-collections/ansible.utils
+  - ansible-collections/ansible.pylibssh
+  - ansible-collections/cisco.ios
+  - ansible-collections/cisco.iosxr
+  - ansible-collections/cisco.nxos
+  - ansible-collections/arista.eos
+  - ansible-collections/cisco.asa
+  - ansible-collections/vyos.vyos
+
+escalationRules:
+  - name: shared-dependency-cascade
+    condition: "Bug in ansible.netcommon confirmed breaking downstream collections"
+    action: "critical"
+    reason: "Confirmed cascade — CI failing in downstream collections due to netcommon change"
+
+  - name: shared-dependency-risk
+    condition: "Bug is in ansible.netcommon but downstream impact not yet confirmed"
+    action: "bump+1"
+    reason: "Potential cascade risk — needs downstream CI verification before full escalation"
+
+  - name: certified-collection
+    condition: "Affected collection is Red Hat certified"
+    action: "bump+1"
+    reason: "Higher SLA for certified content"
