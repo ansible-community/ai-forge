@@ -6,15 +6,94 @@ For the main skill documentation, see [SKILL.md](./SKILL.md).
 
 ## Table of Contents
 
-1. [Discover Workflow Files](#step-1-discover-workflow-files)
-2. [Check Permissions](#step-2-check-permissions)
-3. [Check Secrets Exposure](#step-3-check-secrets-exposure)
-4. [Check Action Sources](#step-4-check-action-sources)
-5. [Check Action References](#step-5-check-action-references)
-6. [Generate Report](#step-6-generate-report)
-7. [Apply Fixes](#step-7-apply-fixes)
+1. [Load Configuration](#step-1-load-configuration)
+2. [Discover Workflow Files](#step-2-discover-workflow-files)
+3. [Check Permissions](#step-3-check-permissions)
+4. [Check Secrets Exposure](#step-4-check-secrets-exposure)
+5. [Check Action Sources](#step-5-check-action-sources)
+6. [Check Action References](#step-6-check-action-references)
+7. [Generate Report](#step-7-generate-report)
+8. [Apply Fixes](#step-8-apply-fixes)
 
-## Step 1: Discover Workflow Files
+## Step 1: Load Configuration
+
+Load the trusted-actions configuration using a three-tier model: remote fetch from ai-forge, local fallback, then project overrides merged on top.
+
+### Tier 1: Fetch latest from ai-forge (best-effort)
+
+```bash
+remote_url="https://raw.githubusercontent.com/ansible-community/ai-forge/main/ansible-collection-sdlc/module/skills/validate-workflows/trusted-actions.yml"
+remote_config=$(curl -sf --connect-timeout 5 --max-time 10 "$remote_url" 2>/dev/null) || remote_config=""
+```
+
+### Tier 2: Fall back to local skill copy
+
+```bash
+if [[ -n "$remote_config" ]]; then
+    base_config_source="remote (latest from ai-forge)"
+    echo "$remote_config" > /tmp/validate-wf-base-config.yml
+    base_config="/tmp/validate-wf-base-config.yml"
+else
+    base_config="${SKILL_DIR}/trusted-actions.yml"
+    base_config_source="local (installed with skill)"
+fi
+
+# Parse base trusted lists
+trusted_owners=$(yq eval '.trusted_owners[]' "$base_config" 2>/dev/null)
+trusted_repos=$(yq eval '.trusted_repos[]' "$base_config" 2>/dev/null)
+deprecated_repos=$(yq eval '.deprecated_repos[]' "$base_config" 2>/dev/null)
+```
+
+### Tier 3: Merge project-specific overrides
+
+```bash
+project_config=".claude/approved-sources.yml"
+if [[ -f "$project_config" ]]; then
+    # Detect old-format config (flat trusted_owners key)
+    has_flat_owners=$(yq eval '.trusted_owners // ""' "$project_config" 2>/dev/null)
+    has_additive_owners=$(yq eval '.additional_trusted_owners // ""' "$project_config" 2>/dev/null)
+
+    if [[ -n "$has_flat_owners" && -z "$has_additive_owners" ]]; then
+        # Old format: treat flat keys as full overrides
+        echo "ℹ️ Project config uses legacy format (flat trusted_owners)."
+        echo "  Consider migrating to additional_* keys for additive merging."
+        echo "  See: ${SKILL_DIR}/examples/project-approved-sources.yml"
+        trusted_owners=$(yq eval '.trusted_owners[]' "$project_config" 2>/dev/null)
+        trusted_repos=$(yq eval '.trusted_repos[]' "$project_config" 2>/dev/null)
+        deprecated_repos=$(yq eval '.deprecated_repos[]' "$project_config" 2>/dev/null)
+    else
+        # New format: merge additive keys
+        additional_owners=$(yq eval '.additional_trusted_owners[]' "$project_config" 2>/dev/null)
+        additional_repos=$(yq eval '.additional_trusted_repos[]' "$project_config" 2>/dev/null)
+        additional_deprecated=$(yq eval '.additional_deprecated_repos[]' "$project_config" 2>/dev/null)
+
+        if [[ -n "$additional_owners" ]]; then
+            trusted_owners=$(printf '%s\n%s' "$trusted_owners" "$additional_owners")
+        fi
+        if [[ -n "$additional_repos" ]]; then
+            trusted_repos=$(printf '%s\n%s' "$trusted_repos" "$additional_repos")
+        fi
+        if [[ -n "$additional_deprecated" ]]; then
+            deprecated_repos=$(printf '%s\n%s' "$deprecated_repos" "$additional_deprecated")
+        fi
+    fi
+
+    # Policy sections override defaults when present
+    # (sha_pinning, permissions, secret_patterns, etc.)
+fi
+
+# Build trusted-owner pattern for grep exclusions
+trusted_pattern=$(echo "$trusted_owners" | tr '\n' '|' | sed 's/|$//')
+
+# Report config sources
+echo "Configuration:"
+echo "  Base: $base_config_source"
+if [[ -f "$project_config" ]]; then
+    echo "  Project overrides: $project_config"
+fi
+```
+
+## Step 2: Discover Workflow Files
 
 Find all workflow files to validate:
 
@@ -26,7 +105,7 @@ git diff --name-only $(git merge-base HEAD origin/main)..HEAD | grep -E '^\.gith
 find .github/workflows -type f \( -name '*.yml' -o -name '*.yaml' \)
 ```
 
-## Step 2: Check Permissions
+## Step 3: Check Permissions
 
 For each workflow file, validate permissions configuration:
 
@@ -64,12 +143,12 @@ permissions:
   pull-requests: write  # Only if needed
 ```
 
-## Step 3: Check Secrets Exposure
+## Step 4: Check Secrets Exposure
 
 ### Check 1: Hardcoded secrets
 
 ```bash
-# Scan for common secret patterns
+# Scan for common secret patterns (loaded from config secret_patterns)
 grep -n -E '(AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{36,}|xox[baprs]-[0-9]{10,12})' workflow.yml
 
 # Scan for generic API keys
@@ -96,10 +175,10 @@ grep -n -E 'https?://[^/]*\${{ *secrets\.' workflow.yml
 ### Check 4: Secrets to untrusted actions
 
 ```bash
-# Find steps that pass secrets to third-party (non-official) actions
-# Trusted: actions/*, github/*, docker/*, aws-actions/*, azure/*, google-github-actions/*
+# Find steps that pass secrets to non-trusted actions
+# Uses $trusted_pattern built from loaded config in Step 1
 yq eval '.jobs.*.steps[] | select(.uses and (.with | contains("secrets."))) | .uses' workflow.yml \
-  | grep -v -E '^(actions|github|docker|aws-actions|azure|google-github-actions)/'
+  | grep -v -E "^($trusted_pattern)/"
 ```
 
 ### Check 5: pull_request_target with secrets
@@ -111,53 +190,33 @@ if grep -q 'pull_request_target' workflow.yml && grep -q 'secrets\.' workflow.ym
 fi
 ```
 
-## Step 4: Check Action Sources
+## Step 5: Check Action Sources
 
-### Check 1: Load approved sources configuration
-
-```bash
-# Load approved-sources.yml from skill directory or .claude/
-config_file="${SKILL_DIR}/approved-sources.yml"
-if [[ ! -f "$config_file" ]]; then
-    config_file=".claude/approved-sources.yml"
-fi
-
-# Parse trusted owners and repos using yq
-trusted_owners=$(yq eval '.trusted_owners[]' "$config_file")
-trusted_repos=$(yq eval '.trusted_repos[]' "$config_file")
-deprecated_repos=$(yq eval '.deprecated_repos[]' "$config_file")
-```
-
-### Check 2: Extract all action uses
+### Check 1: Extract all action uses
 
 ```bash
 # Get all action references from workflow
 yq eval '.jobs.*.steps[] | select(.uses) | .uses' workflow.yml > actions_used.txt
 ```
 
-### Check 3: Validate against deprecated repositories
+### Check 2: Validate against deprecated repositories
 
 ```bash
-# Check each action against deprecated list
+# Check each action against deprecated list (loaded from config in Step 1)
 while IFS= read -r action; do
     action_repo=$(echo "$action" | cut -d@ -f1)
-    action_ref=$(echo "$action" | cut -d@ -f2)
 
-    # Check if action is deprecated
-    if echo "$deprecated_repos" | grep -q "^$action_repo@"; then
+    # Check if exact action or action@version is deprecated
+    if echo "$deprecated_repos" | grep -qx "$action"; then
+        echo "❌ ERROR: Deprecated action version: $action"
+    elif echo "$deprecated_repos" | grep -qx "$action_repo"; then
         echo "❌ ERROR: Deprecated action: $action"
         echo "  Repository: $action_repo is deprecated/archived"
-
-        # Find suggested replacement from config
-        replacement=$(yq eval ".deprecated_repos[] | select(. == \"$action\") | comment" "$config_file")
-        if [[ -n "$replacement" ]]; then
-            echo "  Suggested: $replacement"
-        fi
     fi
 done < actions_used.txt
 ```
 
-### Check 4: Validate against approved sources
+### Check 3: Validate against approved sources
 
 ```bash
 # For each action, check if it's from a trusted source
@@ -205,7 +264,7 @@ while IFS= read -r action; do
 done < actions_used.txt
 ```
 
-### Check 5: Detect personal vs organization actions
+### Check 4: Detect personal vs organization actions
 
 ```bash
 # Personal repos are higher risk than org-maintained
@@ -231,18 +290,21 @@ while IFS= read -r action; do
 done < actions_used.txt
 ```
 
-**Auto-fix**: Add untrusted actions to local approved list (with confirmation)
+**Auto-fix**: Add untrusted actions to project approved list (with confirmation)
 
 ```bash
 # Offer to add reviewed actions to .claude/approved-sources.yml
-echo "Add $action_repo to trusted sources? [y/N]"
+echo "Add $action_repo to project trusted sources? [y/N]"
 read -r response
 if [[ "$response" =~ ^[Yy]$ ]]; then
-    yq eval -i '.trusted_repos += ["'$action_repo'"]' .claude/approved-sources.yml
+    if [[ ! -f .claude/approved-sources.yml ]]; then
+        echo "additional_trusted_repos: []" > .claude/approved-sources.yml
+    fi
+    yq eval -i '.additional_trusted_repos += ["'$action_repo'"]' .claude/approved-sources.yml
 fi
 ```
 
-## Step 5: Check Action References
+## Step 6: Check Action References
 
 ### Check 1: Mutable references
 
@@ -295,24 +357,12 @@ done < actions_used.txt
 ### Check 3: Deprecated versions
 
 ```bash
-# Check against deprecated versions list
+# Check against deprecated list loaded from config in Step 1
 while IFS= read -r action; do
-    # Check if exact action@version is in deprecated list
     if echo "$deprecated_repos" | grep -qx "$action"; then
         echo "❌ ERROR: Deprecated action version: $action"
-
-        # Extract suggested replacement from comments
-        suggestion=$(yq eval '.deprecated_repos | to_entries[] | select(.value == "'$action'") | .key' "$config_file" 2>/dev/null)
-        if [[ -n "$suggestion" ]]; then
-            echo "  Upgrade to: $suggestion"
-        fi
     fi
 done < actions_used.txt
-
-# Common deprecated patterns
-grep -n 'actions/checkout@v[12]' workflow.yml && echo "❌ Update to actions/checkout@v4"
-grep -n 'actions/setup-node@v[12]' workflow.yml && echo "❌ Update to actions/setup-node@v4"
-grep -n 'actions/cache@v[12]' workflow.yml && echo "❌ Update to actions/cache@v4"
 ```
 
 **Check 4: Pin to SHA** (when --fix enabled)
@@ -330,11 +380,11 @@ sha=$(gh api repos/$owner_repo/commits/$ref --jq .sha)
 echo "- uses: $owner_repo@$sha  # $ref"
 ```
 
-## Step 6: Generate Report
+## Step 7: Generate Report
 
 Create a structured report with findings. See the main SKILL.md for the complete report format.
 
-## Step 7: Apply Fixes
+## Step 8: Apply Fixes
 
 When `--fix` flag is provided, automatically apply safe fixes:
 

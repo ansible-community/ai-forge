@@ -181,49 +181,66 @@ permissions:
 
 ## Configuration
 
-### Approved Sources Configuration
+### Three-Tier Configuration Model
 
-The skill uses `approved-sources.yml` to define trusted action sources, deprecated repositories, and security policies.
+The skill uses a three-tier configuration model that keeps the community-maintained trusted-actions list up to date while allowing project-specific customization.
 
-**Load Order** (first found is used):
+**Tier 1 - Remote fetch (best-effort)**: On each run, the skill fetches the latest
+`trusted-actions.yml` from the [ai-forge](https://github.com/ansible-community/ai-forge)
+repository on GitHub (5-second timeout). This ensures users always have the latest
+trusted-owner additions and deprecation notices without reinstalling.
 
-1. `.claude/approved-sources.yml` (project-specific overrides)
-2. `${SKILL_DIR}/approved-sources.yml` (skill defaults)
+**Tier 2 - Local fallback**: If the remote fetch fails (no internet, rate limited,
+`curl` unavailable), the skill uses the `trusted-actions.yml` file installed locally
+with the skill.
 
-**Customize for your project**: Copy the default `approved-sources.yml` to `.claude/` and modify.
+**Tier 3 - Project overrides**: If `.claude/approved-sources.yml` exists in the project
+root, its contents are **merged** on top of the base configuration:
 
-**Key Configuration Sections**:
+- List fields use additive keys (`additional_trusted_owners`, `additional_trusted_repos`,
+  `additional_deprecated_repos`) that extend the base lists
+- Policy fields (`sha_pinning`, `permissions`) replace defaults when present
+
+**Backward compatibility**: Project configs using the old flat-key format (`trusted_owners`
+instead of `additional_trusted_owners`) are detected and treated as full overrides.
+A migration note is displayed suggesting the additive format.
+
+### Project-Specific Configuration
+
+Create `.claude/approved-sources.yml` in your project root to extend the community defaults:
 
 ```yaml
 # Add your organization to trusted owners
-trusted_owners:
-  - actions
-  - github
-  - your-org-name  # <-- Add your org here
+additional_trusted_owners:
+  - your-org-name
+  - your-partner-org
 
 # Add specific trusted repositories
-trusted_repos:
+additional_trusted_repos:
   - your-org/internal-action
-  - community-user/vetted-action
+  - vendor/certified-action
 
-# Mark deprecated actions
-deprecated_repos:
-  - old-org/archived-action@v1  # Use new-org/replacement instead
+# Mark additional actions as deprecated for your project
+additional_deprecated_repos:
+  - old-vendor/legacy-action@v1  # Use new-vendor/action@v2
 
-# SHA pinning policy
+# Override security policy (optional - replaces defaults when present)
 sha_pinning:
-  required: true  # Require SHA pinning
-  allow_version_tags_from_trusted: true  # Allow v1, v2 from trusted owners
-  forbid_mutable_refs: true  # Block @main, @master
+  required: true
+  allow_version_tags_from_trusted: true
+  forbid_mutable_refs: true
 
-# Permissions policy
 permissions:
-  require_explicit: true  # Must have permissions: block
-  forbid_write_all: true  # Block permissions: write-all
-  max_default_scope: "read"  # Maximum default permission
+  require_explicit: true
+  forbid_write_all: true
+  max_default_scope: "read"
+  elevated_permission_jobs:
+    - release
+    - publish
+    - deploy
 ```
 
-See the included `approved-sources.yml` for complete configuration options.
+See `examples/project-approved-sources.yml` for a complete template.
 
 ## Examples
 
@@ -309,10 +326,7 @@ Include workflow security in security reviews (workflow validation would be part
 
 - `gh` CLI - For resolving action refs to SHAs and checking repository status
 - `jq` - For processing JSON responses from GitHub API
-
-**Optional**:
-
-- `curl` - For direct API calls (fallback if `gh` CLI unavailable)
+- `curl` - For fetching the latest trusted-actions list from ai-forge and as a fallback for API calls
 
 **Installation**:
 
@@ -336,9 +350,9 @@ gh auth login
 - Validation is **read-only by default** (no modifications)
 - `--fix` flag enables safe auto-fixes with confirmation
 - Critical findings (hardcoded secrets) always require manual intervention
-- Uses `approved-sources.yml` for configurable security policies
-- Project-specific config (`.claude/approved-sources.yml`) overrides skill defaults
-- Works offline for most checks; GitHub API used only for SHA resolution and repository status checks
+- Trusted-actions list is maintained centrally in ai-forge and auto-fetched on each run
+- Project-specific config (`.claude/approved-sources.yml`) extends the community defaults with additive keys
+- Works offline for most checks; remote config fetch and GitHub API calls degrade gracefully
 - Respects GitHub API rate limits when using `gh` CLI
 - Actions from local repositories (`./path/to/action`) always pass source validation
 
@@ -359,7 +373,8 @@ gh auth login
 
 See [reference.md](./reference.md) for detailed implementation examples including:
 
-- Creating organization-wide approved sources
+- Three-tier configuration loading and merging
+- Creating project-specific approved sources
 - Automated validation in CI/CD
 - Custom severity levels
 - Action source scoring

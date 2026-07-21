@@ -35,13 +35,15 @@ Use the `validate-workflows` skill to:
 
 ## Configuration
 
-The skill uses `approved-sources.yml` for security policies:
+The skill uses a three-tier configuration model:
 
-- **Load order** (first found wins):
-  1. `.claude/approved-sources.yml` (project-specific)
-  2. Skill directory default
+1. **Remote fetch**: Latest `trusted-actions.yml` from [ai-forge](https://github.com/ansible-community/ai-forge) (auto, 5s timeout)
+2. **Local fallback**: `trusted-actions.yml` installed with the skill
+3. **Project overrides**: `.claude/approved-sources.yml` merged additively on top
 
-- **Customize**: Copy skill's `approved-sources.yml` to `.claude/` and modify trusted sources, deprecated actions, and policies
+- **Customize**: Create `.claude/approved-sources.yml` with `additional_trusted_owners`,
+  `additional_trusted_repos`, and `additional_deprecated_repos` keys to extend the
+  community list. Policy sections (`sha_pinning`, `permissions`) override defaults when present.
 
 ## Example Output
 
