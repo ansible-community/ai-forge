@@ -25,6 +25,8 @@ allowed-tools:
   - Write
   - Glob
   - Grep
+invokes:
+  - severity-assessor
 argument-hint: "[<github-issue-url>] [--scan]"
 ---
 
