@@ -1,0 +1,33 @@
+---
+# Repositories scanned by network-issues-scanner
+# Consumed by: agent workflow (Step 1 clone list) and scanner scripts via
+# scripts/scanner_config.py (path templates, platform, module_prefix).
+# GitHub org: ansible-collections
+
+collections:
+  - repo: cisco.ios
+    platform: ios
+    module_prefix: ios_
+  - repo: cisco.nxos
+    platform: nxos
+    module_prefix: nxos_
+  - repo: cisco.iosxr
+    platform: iosxr
+    module_prefix: iosxr_
+  - repo: arista.eos
+    platform: eos
+    module_prefix: eos_
+
+github_org: ansible-collections
+
+# Resource-module paths (relative to collection root)
+# Use {platform} substitution where shown. integration_tests has no {platform} segment —
+# integration targets are named by module (e.g. tests/integration/targets/ios_interfaces/),
+# not by platform subdirectory. Do not substitute {platform} into that path.
+paths:
+  argspec: "plugins/module_utils/network/{platform}/argspec"
+  rm_templates: "plugins/module_utils/network/{platform}/rm_templates"
+  config: "plugins/module_utils/network/{platform}/config"
+  modules: "plugins/modules"
+  unit_tests: "tests/unit/modules/network/{platform}"
+  integration_tests: "tests/integration/targets"  # no {platform} — targets named by module prefix
