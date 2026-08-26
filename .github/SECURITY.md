@@ -22,9 +22,9 @@ When submitting a vulnerability report, include the following:
 
 ## Timeline
 
-* The Ansible Security Team aims to confirm receipt of vulnerability reports within one (1) business day.
-* Our goal is to assess the report, coordinate fix and disclosure as quickly as possible.
-* All confirmed vulnerabilities are addressed according to severity and impact.
+- The Ansible Security Team aims to confirm receipt of vulnerability reports within one (1) business day.
+- Our goal is to assess the report, coordinate fix and disclosure as quickly as possible.
+- All confirmed vulnerabilities are addressed according to severity and impact.
 
 ## Backports
 
