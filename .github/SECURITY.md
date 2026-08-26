@@ -10,15 +10,15 @@ Security vulnerabilities MUST NOT be reported through public channels such as Gi
 
 When submitting a vulnerability report, include the following:
 
-* **Title** (required): Clear, concise, descriptive summary.
-* **Impacted project** (required): Ideally a link to the GitHub project.
-* **Reporter details** (optional): Your name or handle and affiliation.
-* **Vulnerability description** (required): Technical details of the issue.
-* **Affected versions** (required): Known affected version(s), and ideally all affected versions.
-* **Reproduction steps** (required): Minimal example to reproduce the issue.
-* **Impact assessment** (required): Potential exploit scenarios and severity.
-* **Suggested fix** (optional): Proposed remediation, if any.
-* **Disclosure status** (required): Whether this has been shared with other parties or published and your plan for future sharing (e.g., at a conference).
+- **Title** (required): Clear, concise, descriptive summary.
+- **Impacted project** (required): Ideally a link to the GitHub project.
+- **Reporter details** (optional): Your name or handle and affiliation.
+- **Vulnerability description** (required): Technical details of the issue.
+- **Affected versions** (required): Known affected version(s), and ideally all affected versions.
+- **Reproduction steps** (required): Minimal example to reproduce the issue.
+- **Impact assessment** (required): Potential exploit scenarios and severity.
+- **Suggested fix** (optional): Proposed remediation, if any.
+- **Disclosure status** (required): Whether this has been shared with other parties or published and your plan for future sharing (e.g., at a conference).
 
 ## Timeline
 
