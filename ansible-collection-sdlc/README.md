@@ -59,13 +59,16 @@ See `ansible-release.conf.template` for all options and documentation.
 
 See **[SKILLS.md](../SKILLS.md#ansible-collection-sdlc)** for the complete list of skills in this module.
 
-Key skills include: changelog-fragment, commit, create-branch, create-pr, pr-review, release, run-tests, and SonarCloud integration (configure-sonarcloud-collection, configure-sonarcloud-coverage, sonarcloud-remediation).
+Key skills include: changelog-fragment, commit, create-branch, create-pr, pr-review, release, run-tests,
+validate-workflows, and SonarCloud integration (configure-sonarcloud-collection, configure-sonarcloud-coverage,
+sonarcloud-remediation).
 
 ### Commands
 
 - **/check-pr-actions** - Check GitHub Actions/GitLab CI status and analyze failures
 - **/check-pr-sonarcloud** - Check SonarCloud analysis results for the current pull request
 - **/setup-python-venv** - Set up or validate a project-local Python virtual environment
+- **/validate-workflows** - Validate GitHub Actions workflows for security and compliance
 
 ### Agents
 
@@ -96,6 +99,8 @@ ansible-collection-sdlc/
 - **gh CLI** (optional) - Used for GitHub/GitLab operations (PRs, releases, upstream detection)
 - **ansible-test** - Used for running sanity, unit, and integration tests
 - **curl** (optional) - Used for fetching SonarCloud analysis results
+- **yq** (v4+) - Used for YAML parsing in workflow validation
+- **jq** (optional) - Used for JSON processing in workflow validation
 
 ## License
 

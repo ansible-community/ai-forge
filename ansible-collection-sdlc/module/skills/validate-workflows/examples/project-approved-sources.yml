@@ -1,0 +1,59 @@
+---
+# Project-Specific Approved Sources Configuration
+#
+# Copy this file to .claude/approved-sources.yml in your project root
+# to customize validation rules for your organization.
+#
+# This config EXTENDS the community-maintained trusted-actions list from
+# ai-forge using additive keys. It does not replace the base list.
+
+# ============================================================================
+# ADDITIONAL TRUSTED SOURCES
+# ============================================================================
+# These extend the community-maintained trusted-actions list.
+# You do NOT need to repeat the base entries (actions, github, docker, etc.)
+
+# Additional trusted owners (your org, partners)
+additional_trusted_owners:
+  - your-org-name  # <-- Replace with your GitHub org
+  # - your-partner-org
+
+# Additional trusted repositories
+# additional_trusted_repos:
+#   - your-org/internal-deploy-action
+#   - your-org/custom-build-action
+#   - vendor/certified-action
+
+# Additional deprecated actions for your project
+# additional_deprecated_repos:
+#   - old-vendor/legacy-action@v1  # Use new-vendor/action@v2
+
+# ============================================================================
+# SECURITY POLICY OVERRIDES (optional)
+# ============================================================================
+# These replace the community defaults when present.
+# Omit a section to keep the default.
+
+# SHA pinning requirements
+# sha_pinning:
+#   required: true
+#   allow_version_tags_from_trusted: true
+#   forbid_mutable_refs: true
+#   exceptions:
+#     - "^\\./.*"  # Local actions
+
+# Permissions policy
+# permissions:
+#   require_explicit: true
+#   forbid_write_all: true
+#   max_default_scope: "read"
+#   elevated_permission_jobs:
+#     - release
+#     - publish
+#     - deploy
+
+# Additional secret patterns
+# secret_patterns:
+#   - pattern: "your-company-key-pattern"
+#     severity: critical
+#     description: "Your Company API Key"

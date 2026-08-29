@@ -1,0 +1,224 @@
+---
+# Trusted GitHub Actions Configuration
+#
+# Community-maintained list of trusted action sources, deprecated actions,
+# and default security policies for the validate-workflows skill.
+#
+# This file is the central source of truth, maintained in the ai-forge
+# repository. The skill auto-fetches the latest version from GitHub on
+# each run (with graceful fallback to this local copy).
+#
+# Project-specific overrides go in .claude/approved-sources.yml using
+# additive keys (additional_trusted_owners, additional_trusted_repos, etc.)
+
+# ============================================================================
+# COMMUNITY-MAINTAINED TRUSTED ACTIONS
+# ============================================================================
+# These lists are maintained centrally in ai-forge and fetched remotely.
+# To add project-specific entries, use .claude/approved-sources.yml with
+# additional_* keys rather than modifying this file.
+
+# Trusted action owners (GitHub orgs/users whose actions are pre-approved)
+trusted_owners:
+  # Official GitHub Actions
+  - actions
+  - github
+
+  # Container ecosystem
+  - docker
+
+  # Cloud provider official actions
+  - aws-actions
+  - azure
+  - google-github-actions
+
+  # Supply chain security
+  - ossf
+  - step-security
+
+  # Python packaging
+  - pypa
+
+  # Code coverage
+  - codecov
+  - coverallsapp
+
+  # Communication platforms
+  - slackapi
+
+  # Infrastructure as Code
+  - hashicorp
+
+  # Ansible ecosystem
+  - ansible
+  - ansible-community
+  - redhat-actions
+
+  # Code quality
+  - pre-commit
+  - reviewdog
+
+# Specific trusted repositories (for repos whose owner is not in
+# trusted_owners above — typically well-maintained personal repos
+# or repos from orgs that are only trusted for specific actions)
+trusted_repos:
+  # Language/runtime setup
+  - ruby/setup-ruby
+  - shivammathur/setup-php
+  - erlef/setup-beam
+  - haskell-actions/setup
+  - dtolnay/rust-toolchain
+
+  # PR and commit management
+  - peter-evans/create-pull-request
+  - peter-evans/create-or-update-comment
+  - EndBug/add-and-commit
+
+  # Release management
+  - softprops/action-gh-release
+  - ncipollo/release-action
+  - goreleaser/goreleaser-action
+  - cycjimmy/semantic-release-action
+  - mikepenz/release-changelog-builder-action
+
+  # GitHub Pages deployment
+  - peaceiris/actions-gh-pages
+  - JamesIves/github-pages-deploy-action
+
+  # Workflow utilities
+  - dorny/paths-filter
+  - dorny/test-reporter
+
+# Known deprecated or archived actions
+# Format: owner/repo or owner/repo@version
+# These trigger errors when found in workflows
+deprecated_repos:
+  # ── Old versions of official actions (Node 16 EOL) ──
+  - actions/checkout@v1
+  - actions/checkout@v2
+  - actions/checkout@v3
+  - actions/setup-node@v1
+  - actions/setup-node@v2
+  - actions/setup-node@v3
+  - actions/setup-python@v1
+  - actions/setup-python@v2
+  - actions/setup-python@v3
+  - actions/setup-python@v4
+  - actions/cache@v1
+  - actions/cache@v2
+  - actions/cache@v3
+  - actions/upload-artifact@v1
+  - actions/upload-artifact@v2
+  - actions/upload-artifact@v3
+  - actions/download-artifact@v1
+  - actions/download-artifact@v2
+  - actions/download-artifact@v3
+
+  # ── Archived official actions ──
+  - actions/create-release  # Archived. Use softprops/action-gh-release
+  - actions/upload-release-asset  # Archived. Use softprops/action-gh-release
+
+  # ── Archived third-party actions ──
+  - actions-rs/toolchain  # Archived. Use dtolnay/rust-toolchain
+  - actions-rs/cargo  # Archived. Use direct cargo commands in run steps
+  - actions-rs/clippy-check  # Archived. Use reviewdog or direct clippy
+
+  # ── Compromised actions (supply chain incidents) ──
+  # tj-actions/changed-files was compromised in March 2025.
+  # If used, must be pinned to a verified-clean SHA after the incident.
+  - tj-actions/changed-files
+
+# ============================================================================
+# DEFAULT SECURITY POLICY
+# ============================================================================
+# These settings provide sensible defaults. Projects can override any of
+# these sections in .claude/approved-sources.yml (direct replacement,
+# not additive).
+
+# Untrusted source detection patterns
+# Applied after checking trusted_owners and trusted_repos
+untrusted_patterns:
+  - pattern: "^[^/]+/[^/]+$"
+    severity: warning
+    description: "Personal repository - verify trustworthiness"
+
+  - pattern: ".*bot.*"
+    severity: info
+    description: "Bot account - verify it's official"
+
+  - pattern: "^(?!actions|github|docker|aws-actions|azure|google-github-actions).*"
+    severity: info
+    description: "Third-party action - review code before use"
+
+# SHA pinning policy
+sha_pinning:
+  required: true
+  allow_version_tags_from_trusted: true
+  forbid_mutable_refs: true
+  exceptions:
+    - "^\\./.*"  # Local actions (./path/to/action)
+
+# Permissions policy
+permissions:
+  require_explicit: true
+  forbid_write_all: true
+  max_default_scope: "read"
+  elevated_permission_jobs:
+    - "release"
+    - "publish"
+    - "deploy"
+
+# Secret exposure patterns to detect
+secret_patterns:
+  - pattern: "AKIA[0-9A-Z]{16}"
+    severity: critical
+    description: "AWS Access Key ID"
+
+  - pattern: "gh[pousr]_[A-Za-z0-9]{36,}"
+    severity: critical
+    description: "GitHub Personal Access Token"
+
+  - pattern: "xox[baprs]-[0-9]{10,12}-[0-9]{10,12}-[A-Za-z0-9]+"
+    severity: critical
+    description: "Slack Token"
+
+  - pattern: "[\"']?[a-zA-Z_]*(api|secret|key|token|password)[\"']?\\s*[:=]\\s*[\"'][a-zA-Z0-9_-]{20,}[\"']"
+    severity: error
+    description: "Potential hardcoded credential"
+
+  - pattern: "-----BEGIN (RSA |OPENSSH )?PRIVATE KEY-----"
+    severity: critical
+    description: "SSH Private Key"
+
+# Dangerous workflow patterns
+dangerous_patterns:
+  - pattern: "\\$\\{\\{.*secrets\\..*\\}\\}"
+    context: "run:|script:"
+    severity: error
+    description: "Secret used in shell command - may be logged"
+
+  - pattern: "echo.*\\$\\{\\{.*secrets\\."
+    severity: critical
+    description: "Secret echoed to logs"
+
+  - pattern: "console\\.log.*\\$\\{\\{.*secrets\\."
+    severity: critical
+    description: "Secret logged to console"
+
+  - pattern: "https?://[^/]*\\$\\{\\{.*secrets\\."
+    severity: critical
+    description: "Secret in URL - will be logged by proxies"
+
+# Dangerous trigger combinations
+dangerous_triggers:
+  - trigger: "pull_request_target"
+    with_secrets: true
+    severity: critical
+    description: >-
+      pull_request_target with secrets allows untrusted PR code
+      to access secrets
+
+  - trigger: "workflow_dispatch"
+    with_secrets: true
+    severity: warning
+    description: "Manual workflows with secrets - ensure proper authorization"

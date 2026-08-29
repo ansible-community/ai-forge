@@ -93,6 +93,7 @@ Full lifecycle: commits, PRs, releases, tests. Includes skills for changelog fra
 - `run-tests` - Run and write tests using ansible-test
 - `python-virtual-env` - Create or validate a project-local Python virtual environment for local pip installs and tooling
 - `sonarcloud-remediation` - Fetch, analyze, and fix SonarCloud issues with end-to-end automation
+- `validate-workflows` - Validate GitHub Actions workflows for security issues and best practices
 - `next-release` - Calculate next patch/minor/major versions for version_added tags
 - `current-release` - Fetch current release version (helper)
 - `get-branch-changes` - Determine merge-base and changed files (helper)
@@ -102,7 +103,10 @@ Full lifecycle: commits, PRs, releases, tests. Includes skills for changelog fra
 
 **Commands:**
 
+- `/check-pr-actions` - Check GitHub Actions/GitLab CI status and analyze failures
+- `/check-pr-sonarcloud` - Check SonarCloud analysis results for the current pull request
 - `/setup-python-venv` - Set up or validate a project-local Python virtual environment
+- `/validate-workflows` - Validate GitHub Actions workflows for security and compliance
 
 [Full documentation](./ansible-collection-sdlc/README.md)
 
