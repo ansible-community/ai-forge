@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Resource Module Specification",
+  "description": "Input specification for scaffolding a new Ansible network resource module",
+  "type": "object",
+  "required": ["resource_name", "collection"],
+  "properties": {
+    "resource_name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "The resource name in snake_case (e.g., 'track', 'bgp_global', 'vlans')"
+    },
+    "collection": {
+      "type": "string",
+      "pattern": "^[a-z_]+\\.[a-z_]+$",
+      "description": "Fully qualified collection name (e.g., 'cisco.ios', 'cisco.iosxr')"
+    },
+    "resource_type": {
+      "type": "string",
+      "enum": ["dict", "list"],
+      "default": "dict",
+      "description": "Whether the resource is single-instance (dict) or multi-instance (list)"
+    },
+    "list_key": {
+      "type": "string",
+      "description": "Required for list-type resources. The unique key field name (e.g., 'vlan_id', 'name', 'afi')"
+    },
+    "show_command": {
+      "type": "string",
+      "description": "The IOS show command used to gather facts (e.g., 'show running-config | section ^hostname')"
+    },
+    "resource_description": {
+      "type": "string",
+      "description": "Human-readable description of the resource (e.g., 'hostname', 'VLAN configurations')"
+    },
+    "config_attributes": {
+      "type": "array",
+      "description": "List of config attributes with their types",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Attribute name in snake_case"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["str", "int", "bool", "dict", "list"],
+            "description": "Ansible argument spec type"
+          },
+          "description": {
+            "type": "string",
+            "description": "What this attribute configures"
+          },
+          "choices": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Valid choices for this attribute (if applicable)"
+          },
+          "required": {
+            "type": "boolean",
+            "default": false
+          },
+          "cli_command": {
+            "type": "string",
+            "description": "The CLI command pattern (e.g., 'hostname {{ hostname }}')"
+          },
+          "cli_regex": {
+            "type": "string",
+            "description": "Regex to parse the attribute from running-config"
+          }
+        }
+      }
+    },
+    "version_added": {
+      "type": "string",
+      "description": "Collection version when this module was added"
+    },
+    "author": {
+      "type": "string",
+      "description": "Module author (e.g., 'Your Name (@github_handle)')"
+    }
+  },
+  "if": {
+    "properties": { "resource_type": { "const": "list" } }
+  },
+  "then": {
+    "required": ["list_key"]
+  }
+}
