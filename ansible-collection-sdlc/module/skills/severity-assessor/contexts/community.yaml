@@ -1,0 +1,29 @@
+# Severity Assessor — Community Collection Context
+#
+# Escalation rules for Ansible community collections.
+# Covers high-impact collections included in the ansible package
+# and those with large download volumes on Galaxy.
+
+name: community
+description: >-
+  Community collection triage context covering community.general,
+  community.crypto, community.docker, and other community-maintained
+  collections.
+
+collections:
+  - ansible-collections/community.general
+  - ansible-collections/community.crypto
+  - ansible-collections/community.docker
+  - ansible-collections/community.postgresql
+  - ansible-collections/community.mysql
+
+escalationRules:
+  - name: high-download-collection
+    condition: "Affected collection has >1M monthly Galaxy downloads"
+    action: "bump+1"
+    reason: "High community impact due to download volume"
+
+  - name: included-in-ansible-package
+    condition: "Collection is included in the ansible community package"
+    action: "bump+1"
+    reason: "Breakage affects all users who install the ansible meta-package"

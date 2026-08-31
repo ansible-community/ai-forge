@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ansible.dev/skills/severity-assessor/severity-assessment.schema.json",
+  "title": "Severity Assessment",
+  "description": "Structured output from the severity-assessor skill.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "category",
+    "severity",
+    "baseSeverity",
+    "escalatorsApplied",
+    "justification",
+    "source"
+  ],
+  "properties": {
+    "category": {
+      "$ref": "#/$defs/category"
+    },
+    "severity": {
+      "$ref": "#/$defs/severity"
+    },
+    "baseSeverity": {
+      "$ref": "#/$defs/severity",
+      "description": "Severity assigned from the category table before escalation."
+    },
+    "escalatorsApplied": {
+      "type": "array",
+      "description": "Escalation rules that fired and raised the severity.",
+      "items": {
+        "$ref": "#/$defs/escalator"
+      }
+    },
+    "justification": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable explanation of the category and severity assignment."
+    },
+    "source": {
+      "$ref": "#/$defs/source"
+    }
+  },
+  "$defs": {
+    "category": {
+      "type": "string",
+      "enum": ["bug", "downstream-fix", "feature", "test-infra", "chore"],
+      "description": "Issue or PR category determined by heuristic matching."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "major", "minor", "trivial"],
+      "description": "Triage severity level."
+    },
+    "escalator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "reason"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Short label identifying the escalation rule."
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Why this escalator fired and its impact on severity."
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["title", "labels"],
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "GitHub or GitLab URL of the assessed item."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Title of the issue or PR."
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Label names attached to the item."
+        },
+        "number": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Issue or PR number."
+        },
+        "repo": {
+          "type": "string",
+          "pattern": "^[^/]+/[^/]+$",
+          "description": "Repository in owner/name format."
+        }
+      }
+    }
+  }
+}
