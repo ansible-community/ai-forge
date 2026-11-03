@@ -22,7 +22,9 @@ Analyze Ansible collection stable branches for pending releases. This skill:
 - Calculates the next appropriate version number
 - Generates release recommendations
 
-**Scope note**: If a collection maintains more than two stable branches (e.g., `stable-9`, `stable-10`, `stable-11`), only the two most recent (`stable-11` and `stable-10`) are analyzed. This mirrors the default scope used by `collection-backport-status-check`.
+**Scope note**: If a collection maintains more than two stable branches (e.g., `stable-9`, `stable-10`, `stable-11`),
+only the two most recent (`stable-11` and `stable-10`) are analyzed.
+This mirrors the default scope used by `collection-backport-status-check`.
 
 ## When to Invoke
 
@@ -261,7 +263,11 @@ git fetch upstream --tags
 
 ### "⚠️  WARNING: 'git fetch upstream' failed"
 
-The script fetches from `upstream` before selecting branches and **loudly warns** (instead of silently continuing) if that fetch fails — e.g. SSH key not configured, no network access, or the remote is unreachable. When this warning appears, the local `upstream/*` refs may be stale, and the stable-X branch selection (latest and latest-1) could be based on outdated branches — potentially missing a newly cut stable branch (e.g. analyzing `stable-11`/`stable-10` when `stable-12` was just created upstream).
+The script fetches from `upstream` before selecting branches and **loudly warns** (instead of silently continuing)
+if that fetch fails — e.g. SSH key not configured, no network access, or the remote is unreachable.
+When this warning appears, the local `upstream/*` refs may be stale, and the stable-X branch selection
+(latest and latest-1) could be based on outdated branches — potentially missing a newly cut stable branch
+(e.g. analyzing `stable-11`/`stable-10` when `stable-12` was just created upstream).
 
 Fix: ensure the `upstream` remote is reachable, then re-run or fetch manually:
 
