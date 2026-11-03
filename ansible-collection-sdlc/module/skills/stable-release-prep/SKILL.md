@@ -180,6 +180,19 @@ cd SKILL_DIR && source .venv/bin/activate && \
 ./scripts/update-galaxy-version.py COLLECTION_PATH VERSION
 ```
 
+**IMPORTANT**: For `amazon.aws` and `community.aws` collections only, also update the version constant:
+
+```bash
+# Update AMAZON_AWS_COLLECTION_VERSION in plugins/module_utils/common.py
+sed -i.bak "s/AMAZON_AWS_COLLECTION_VERSION = .*/AMAZON_AWS_COLLECTION_VERSION = \"VERSION\"/" plugins/module_utils/common.py
+```
+
+Or use the Edit tool to update line 7 in `plugins/module_utils/common.py`:
+
+```python
+AMAZON_AWS_COLLECTION_VERSION = "VERSION"
+```
+
 ### Step 6 — Create release summary fragment
 
 **CRITICAL**: Module and plugin names MUST be wrapped in double backticks (\`\`name\`\`).
@@ -278,6 +291,7 @@ git diff --stat
 - Updated CHANGELOG.rst
 - Updated changelog.yaml
 - Deleted fragment files
+- (amazon.aws/community.aws only) Updated plugins/module_utils/common.py AMAZON_AWS_COLLECTION_VERSION
 
 Ask the user to confirm the changes look correct before proceeding.
 
@@ -409,5 +423,6 @@ Show final status with:
 - ✅ galaxy.yml updated: `CURRENT_VERSION` → `VERSION`
 - ✅ Release summary created
 - ✅ CHANGELOG generated
+- ✅ (amazon.aws/community.aws only) AMAZON_AWS_COLLECTION_VERSION updated
 
 List changed files and provide clear next steps.
