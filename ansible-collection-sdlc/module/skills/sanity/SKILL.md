@@ -55,17 +55,85 @@ DO NOT TRIGGER when:
 - Tests files changed since specified git ref
 - Requires `--since` parameter
 
+## Directory Structure Requirements
+
+**CRITICAL**: ansible-test requires collections to be in `ansible_collections/{namespace}/{name}/` structure.
+
+### Auto-Detection and Setup
+
+The skill automatically detects if you're in a correct structure and creates it if needed:
+
+```bash
+# Check current directory structure
+if [[ "$PWD" =~ ansible_collections/.+/.+/?$ ]]; then
+  echo "✓ Already in correct ansible_collections structure"
+  COLLECTION_PATH="$PWD"
+  CLEANUP_REQUIRED=false
+else
+  echo "⚠ Not in ansible_collections structure, creating temporary layout..."
+
+  # Extract namespace and name from galaxy.yml
+  if [ ! -f "galaxy.yml" ]; then
+    echo "Error: galaxy.yml not found. Are you in a collection directory?"
+    exit 1
+  fi
+
+  NAMESPACE=$(grep '^namespace:' galaxy.yml | awk '{print $2}' | tr -d '"' | tr -d "'")
+  NAME=$(grep '^name:' galaxy.yml | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if [ -z "$NAMESPACE" ] || [ -z "$NAME" ]; then
+    echo "Error: Could not extract namespace/name from galaxy.yml"
+    exit 1
+  fi
+
+  # Create temporary ansible_collections structure
+  TEMP_BASE=$(mktemp -d)
+  COLLECTION_PATH="$TEMP_BASE/ansible_collections/$NAMESPACE/$NAME"
+  mkdir -p "$COLLECTION_PATH"
+
+  echo "Creating temporary structure: $COLLECTION_PATH"
+
+  # Use rsync to copy collection (excludes .git, .tox, .venv by default)
+  rsync -a --exclude='.git' --exclude='.tox' --exclude='.venv' \
+        --exclude='*.pyc' --exclude='__pycache__' \
+        "$PWD/" "$COLLECTION_PATH/"
+
+  # Set cleanup flag and trap
+  CLEANUP_REQUIRED=true
+  trap "rm -rf $TEMP_BASE" EXIT
+
+  echo "✓ Temporary structure created"
+fi
+
+# Change to collection path for ansible-test
+cd "$COLLECTION_PATH"
+```
+
+**Why rsync instead of symlink:**
+
+- Symlinks can fail with some ansible-test versions
+- rsync ensures clean, isolated test environment
+- Excludes unnecessary files (.git, .tox, .venv)
+- More reliable across different systems
+
+**Automatic cleanup:**
+
+- Temporary structure removed automatically via `trap` on exit
+- No manual cleanup needed
+- Preserves disk space
+
 ## Usage
 
 ### Smart Mode (Recommended)
 
 ```bash
-cd /path/to/collection
+# Step 1: Setup directory structure (if needed)
+[Directory structure auto-detection code from above]
 
-# Find base reference (last tag on stable branch)
+# Step 2: Find base reference (last tag on stable branch)
 BASE_REF=$(git describe --tags --abbrev=0 2>/dev/null || echo "HEAD~10")
 
-# Detect changed plugin/module files
+# Step 3: Detect changed plugin/module files
 CHANGED_FILES=$(git diff --name-only ${BASE_REF}..HEAD | \
                 grep -E '^plugins/(modules|module_utils|action|lookup|filter|test|inventory)/')
 
@@ -94,7 +162,7 @@ fi
 ### Full Mode
 
 ```bash
-cd /path/to/collection
+# Setup directory structure first (see above)
 
 # Run full sanity test suite
 ansible-test sanity
@@ -105,7 +173,7 @@ echo "Tests run: validate-modules, pylint, import, compile, yamllint"
 ### Changed-Only Mode
 
 ```bash
-cd /path/to/collection
+# Setup directory structure first (see above)
 
 # Specify base reference
 SINCE_REF="origin/stable-11"
@@ -216,6 +284,8 @@ ansible-test sanity $CHANGED_FILES
 
 ### "Not an Ansible collection"
 
+The skill should auto-detect galaxy.yml, but if this fails:
+
 ```bash
 cd ~/dev/collections/ansible_collections/namespace/collection
 [ -f "galaxy.yml" ] && echo "Collection found"
@@ -226,6 +296,11 @@ cd ~/dev/collections/ansible_collections/namespace/collection
 ```bash
 pip install ansible-core
 ```
+
+### "No ansible_collections parent directory was found"
+
+This error should no longer occur with the auto-detection feature.
+If you see it, the auto-detection failed. Please report this as a bug.
 
 ### Takes too long
 

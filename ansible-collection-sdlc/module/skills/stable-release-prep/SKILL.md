@@ -76,9 +76,14 @@ The `--release-date` parameter allows you to set a custom date in `changelogs/ch
 
 ## Virtual Environment Management
 
-**CRITICAL**: This skill ALWAYS creates and uses a virtual environment.
+This skill supports shared virtual environments for better coordination with the release orchestrator.
 
-The virtual environment setup is automatic and includes:
+**Priority order:**
+
+1. Use `ANSIBLE_RELEASE_VENV` if provided by orchestrator (fastest - no installation)
+2. Create skill-specific `.venv` if not (fallback for standalone use)
+
+The virtual environment includes:
 
 - antsibull-changelog (for changelog generation)
 - ansible-core (provides ansible-doc for changelog)
@@ -88,15 +93,25 @@ The virtual environment setup is automatic and includes:
 
 ### Step 1 — Setup virtual environment and install dependencies
 
+Checks for shared venv from orchestrator first.
+
 ```bash
-cd SKILL_DIR && \
-python3 -m venv .venv 2>/dev/null || true && \
-source .venv/bin/activate && \
-if command -v uv &> /dev/null; then
-  uv pip install antsibull-changelog ansible-core pyyaml
+# Check if orchestrator provided a shared venv
+if [ -n "$ANSIBLE_RELEASE_VENV" ] && [ -d "$ANSIBLE_RELEASE_VENV" ]; then
+  echo "✓ Using shared virtual environment: $ANSIBLE_RELEASE_VENV"
+  source "$ANSIBLE_RELEASE_VENV/bin/activate"
 else
-  pip install --quiet --upgrade pip && \
-  pip install --quiet antsibull-changelog ansible-core pyyaml
+  echo "Creating skill-specific virtual environment..."
+  cd SKILL_DIR && \
+  python3 -m venv .venv 2>/dev/null || true && \
+  source .venv/bin/activate && \
+  if command -v uv &> /dev/null; then
+    uv pip install antsibull-changelog ansible-core pyyaml
+  else
+    pip install --quiet --upgrade pip && \
+    pip install --quiet antsibull-changelog ansible-core pyyaml
+  fi
+  echo "✓ Skill venv created"
 fi
 ```
 
@@ -198,15 +213,18 @@ cd SKILL_DIR && source .venv/bin/activate && \
 
 ### Step 7 — Run antsibull-changelog release
 
+Uses helper script to handle blocking IO requirement.
+
 ```bash
 cd COLLECTION_PATH && \
-source SKILL_DIR/.venv/bin/activate && \
-if [ -n "$RELEASE_DATE" ]; then
-  antsibull-changelog release --version VERSION --date "$RELEASE_DATE"
-else
-  antsibull-changelog release --version VERSION
-fi
+SKILL_DIR/scripts/run-antsibull-changelog.sh release --version VERSION \
+  ${RELEASE_DATE:+--date "$RELEASE_DATE"}
 ```
+
+**Why the helper script:**
+antsibull-changelog (via ansible-core) requires blocking IO on file descriptors.
+The helper script (`scripts/run-antsibull-changelog.sh`) automatically sets this up,
+eliminating the need for inline Python wrappers.
 
 **Parameters:**
 
@@ -285,6 +303,9 @@ export ANSIBLE_COLLECTIONS_PATH="~/dev/collections/ansible_collections"
 # Remote name for canonical repository (default: "upstream")
 # Set to "origin" if you use different remote naming convention
 export REMOTE_UPSTREAM="upstream"
+
+# Shared virtual environment (set by stable-release orchestrator)
+export ANSIBLE_RELEASE_VENV="/path/to/shared/.venv"
 ```
 
 **Note on remote naming**: This skill assumes the standard fork-and-pull workflow where:
@@ -303,6 +324,16 @@ The venv setup should prevent this. If it occurs:
 ```bash
 cd SKILL_DIR && source .venv/bin/activate && \
 pip install antsibull-changelog ansible-core
+```
+
+### "antsibull-changelog: blocking IO error"
+
+This should no longer occur with the helper script. If you see it:
+
+```bash
+# Verify helper script exists and is executable
+ls -la SKILL_DIR/scripts/run-antsibull-changelog.sh
+chmod +x SKILL_DIR/scripts/run-antsibull-changelog.sh
 ```
 
 ### "Version must be higher than current version"
@@ -341,12 +372,13 @@ yamllint changelogs/fragments/*.yml
 
 ## Script Files
 
-This skill includes Python scripts in `scripts/`:
+This skill includes scripts in `scripts/`:
 
+- `run-antsibull-changelog.sh` - Wrapper for antsibull-changelog with blocking IO fix
 - `generate-release-summary.py` - Auto-generate release summary with proper backticks
 - `update-galaxy-version.py` - Update galaxy.yml version field
 
-Both scripts support virtual environment activation and include dependency checks.
+All scripts support virtual environment activation and include dependency checks.
 
 ## Integration
 
