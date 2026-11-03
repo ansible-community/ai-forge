@@ -40,6 +40,7 @@ lola update
 ```
 
 If you installed via the local clone method, pull the latest changes first:
+
 ```bash
 cd /path/to/ai-forge
 git pull
