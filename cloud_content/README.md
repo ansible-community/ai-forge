@@ -10,7 +10,9 @@ Contains community-facing skills for cloud provider integrations, infrastructure
 pip install lola-ai
 
 # Register the module from GitHub
-lola mod add https://github.com/ansible-community/ai-forge/cloud_content
+lola mod add https://github.com/ansible-community/ai-forge.git \
+  --module-content cloud_content/module \
+  --name cloud_content
 
 # Or clone and register locally
 git clone https://github.com/ansible-community/ai-forge.git
@@ -25,6 +27,24 @@ lola install cloud_content -a cursor
 # Install to other assistants
 lola install cloud_content -a gemini-cli
 lola install cloud_content -a opencode
+```
+
+## Updating
+
+```bash
+# Update the module from its original source
+lola mod update cloud_content
+
+# Regenerate assistant files
+lola update
+```
+
+If you installed via the local clone method, pull the latest changes first:
+```bash
+cd /path/to/ai-forge
+git pull
+lola mod update cloud_content
+lola update
 ```
 
 ## Components
