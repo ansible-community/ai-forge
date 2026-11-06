@@ -89,13 +89,11 @@ def setup_collection_repo(collection_name: str) -> Path:
     print(f"Repository exists at {collection_path}", file=sys.stderr)
     print("Fetching from upstream...", file=sys.stderr)
 
+    fetch_ok, fetch_error = fetch_upstream_refs(collection_path)
+    if not fetch_ok:
+        warn_stale_refs(fetch_error)
+
     try:
-        subprocess.run(
-            ["git", "fetch", "upstream", "--tags"],
-            cwd=collection_path,
-            check=True,
-            capture_output=True
-        )
         subprocess.run(
             ["git", "checkout", "main"],
             cwd=collection_path,
@@ -109,10 +107,54 @@ def setup_collection_repo(collection_name: str) -> Path:
             capture_output=True
         )
         print(f"{colors.GREEN}✅{colors.RESET} Repository updated", file=sys.stderr)
-    except subprocess.CalledProcessError:
-        pass  # Continue anyway
+    except subprocess.CalledProcessError as e:
+        stderr = e.stderr.decode(errors="replace") if e.stderr else str(e)
+        print(f"{colors.YELLOW}⚠️  Could not update local 'main' branch: {stderr.strip()}{colors.RESET}", file=sys.stderr)
 
     return collection_path
+
+
+def fetch_upstream_refs(collection_path: Path, upstream: str = "upstream") -> Tuple[bool, str]:
+    """Fetch branches and tags from the upstream remote.
+
+    Returns (success, error_message). On failure the caller's local branch refs
+    (e.g. stable-X branches) may be stale, so failures must never be swallowed
+    silently -- a stale ref can make get_stable_branches() miss a newly cut
+    stable branch (e.g. stable-12) and silently analyze the wrong pair.
+    """
+    try:
+        subprocess.run(
+            ["git", "fetch", upstream, "--tags", "--prune"],
+            cwd=collection_path,
+            check=True,
+            capture_output=True
+        )
+        return True, ""
+    except subprocess.CalledProcessError as e:
+        stderr = e.stderr.decode(errors="replace").strip() if e.stderr else str(e)
+        return False, stderr
+    except FileNotFoundError as e:
+        return False, str(e)
+
+
+def warn_stale_refs(error_message: str) -> None:
+    """Print a highly visible warning that branch analysis may use stale refs."""
+    print(f"\n{colors.RED}{'=' * 70}{colors.RESET}", file=sys.stderr)
+    print(f"{colors.RED}⚠️  WARNING: 'git fetch upstream' failed{colors.RESET}", file=sys.stderr)
+    print(f"{colors.RED}{'=' * 70}{colors.RESET}", file=sys.stderr)
+    print(f"\n{error_message}\n", file=sys.stderr)
+    print(
+        "Local 'upstream/*' branch refs may be STALE. The stable-X branch "
+        "selection below (latest and latest-1) is based on whatever refs "
+        "already exist locally and may be missing a newly cut stable branch.",
+        file=sys.stderr
+    )
+    print(
+        "Fix: ensure the 'upstream' remote is reachable (check SSH keys / "
+        "network) and re-run, or manually run:\n"
+        "  git fetch upstream --tags --prune\n",
+        file=sys.stderr
+    )
 
 
 def get_collection_info(collection_path: Path) -> Dict[str, str]:
@@ -133,8 +175,12 @@ def get_collection_info(collection_path: Path) -> Dict[str, str]:
     }
 
 
-def get_stable_branches(collection_path: Path, upstream: str = "upstream") -> List[str]:
-    """Get list of stable branches from upstream."""
+def get_stable_branches(collection_path: Path, upstream: str = "upstream", limit: int = 2) -> List[str]:
+    """Get the most recent stable branches from upstream (latest and latest-1 by default).
+
+    Older stable-X branches are intentionally excluded: only the latest maintained
+    line and its immediate predecessor receive active backports/releases.
+    """
     try:
         result = subprocess.run(
             ["git", "branch", "-a"],
@@ -152,8 +198,9 @@ def get_stable_branches(collection_path: Path, upstream: str = "upstream") -> Li
             if match:
                 branches.append(f"stable-{match.group(1)}")
 
-        # Sort by version number
-        return sorted(branches, key=lambda x: int(x.split('-')[1]))
+        # Sort by version number, newest first, then keep only the most recent `limit`
+        branches = sorted(set(branches), key=lambda x: int(x.split('-')[1]), reverse=True)
+        return branches[:limit]
     except subprocess.CalledProcessError:
         return []
 
@@ -283,6 +330,13 @@ def main() -> int:
         collection_path = setup_collection_repo(args.collection)
     else:
         collection_path = Path(args.collection).resolve()
+        # setup_collection_repo() already fetches for the namespace.name path;
+        # an existing local path was never fetched, so do it here. Without this,
+        # stable-X branch selection silently relies on whatever local refs
+        # happen to exist and can miss a newly cut stable branch.
+        fetch_ok, fetch_error = fetch_upstream_refs(collection_path)
+        if not fetch_ok:
+            warn_stale_refs(fetch_error)
 
     # Get collection info
     info = get_collection_info(collection_path)
@@ -290,14 +344,14 @@ def main() -> int:
     print(f"Current version: {info['version']}")
     print()
 
-    # Get stable branches
+    # Get the most recent stable branches (latest + latest-1); older lines are skipped
     branches = get_stable_branches(collection_path)
 
     if not branches:
         print("No stable branches found")
         return 0
 
-    print(f"Stable branches found: {len(branches)}")
+    print(f"Analyzing: {', '.join(branches)} (older stable branches skipped)")
     print()
 
     # Check each branch

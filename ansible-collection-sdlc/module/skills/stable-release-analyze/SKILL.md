@@ -1,10 +1,12 @@
 ---
 name: stable-release-analyze
 description: >-
-  Analyzes Ansible collection stable branches to determine pending releases
-  and calculate appropriate SemVer versions. Checks for unreleased commits,
-  analyzes changelog fragments, and recommends next version. Use when asked
-  to check which collections need releases or what version to release.
+  Analyzes an Ansible collection's two most recent stable-X branches
+  (latest and latest-1) to determine pending releases and calculate
+  appropriate SemVer versions. Older stable branches are skipped.
+  Checks for unreleased commits, analyzes changelog fragments, and
+  recommends next version. Use when asked to check which collections
+  need releases or what version to release.
 user-invocable: false
 ---
 
@@ -14,11 +16,15 @@ user-invocable: false
 
 Analyze Ansible collection stable branches for pending releases. This skill:
 
-- Detects all stable-X branches
+- Analyzes **only** the **latest** `stable-X` branch and the **latest-1** `stable-X` branch — older stable branches are intentionally skipped (they are no longer actively maintained)
 - Counts unreleased commits since last tag
 - Analyzes changelog fragments to determine SemVer impact (MAJOR/MINOR/PATCH)
 - Calculates the next appropriate version number
 - Generates release recommendations
+
+**Scope note**: If a collection maintains more than two stable branches (e.g., `stable-9`, `stable-10`, `stable-11`),
+only the two most recent (`stable-11` and `stable-10`) are analyzed.
+This mirrors the default scope used by `collection-backport-status-check`.
 
 ## When to Invoke
 
@@ -116,8 +122,8 @@ The script will:
 
 1. Read `galaxy.yml` to extract collection metadata
 2. Fetch and sync with upstream remote
-3. Detect all `stable-X` branches
-4. For each stable branch:
+3. Detect all `stable-X` branches, then keep only the two most recent (latest and latest-1); older branches are skipped
+4. For each of the two selected stable branches:
    - Checkout and sync
    - Find last release tag
    - Count commits since tag
@@ -203,7 +209,10 @@ Based on Ansible changelog fragment types:
 Collection: amazon.ai
 Current version: 1.0.0
 
-Stable branches found: 1
+Analyzing: stable-2, stable-1 (older stable branches skipped)
+
+Checking stable-2...
+✓ stable-2: Up to date (2.0.0)
 
 Checking stable-1...
 ✅ stable-1: 1.0.0 → 1.0.1 (PATCH)
@@ -250,6 +259,20 @@ cd SKILL_DIR && source .venv/bin/activate && pip install pyyaml
 cd COLLECTION_PATH
 git remote add upstream https://github.com/ansible-collections/COLLECTION.git
 git fetch upstream --tags
+```
+
+### "⚠️  WARNING: 'git fetch upstream' failed"
+
+The script fetches from `upstream` before selecting branches and **loudly warns** (instead of silently continuing)
+if that fetch fails — e.g. SSH key not configured, no network access, or the remote is unreachable.
+When this warning appears, the local `upstream/*` refs may be stale, and the stable-X branch selection
+(latest and latest-1) could be based on outdated branches — potentially missing a newly cut stable branch
+(e.g. analyzing `stable-11`/`stable-10` when `stable-12` was just created upstream).
+
+Fix: ensure the `upstream` remote is reachable, then re-run or fetch manually:
+
+```bash
+git fetch upstream --tags --prune
 ```
 
 ### "No stable branches found"
