@@ -27,34 +27,149 @@ Orchestrates all release steps from analysis to PR creation for stable-branch wo
 and coordinates individual skills (stable-release-analyze, stable-release-prep, docs-generate,
 tox-lint, sanity) in the correct order with proper error handling and user interaction.
 
+## Pre-Flight Validation
+
+Before starting the release workflow, validate environment and prerequisites.
+
+```bash
+#!/usr/bin/env bash
+set -e
+
+echo "🔍 Running pre-flight checks..."
+
+# Check 1: Required tools
+MISSING_TOOLS=()
+for cmd in git gh tox ansible-test; do
+  if ! command -v $cmd &> /dev/null; then
+    MISSING_TOOLS+=("$cmd")
+  fi
+done
+
+# antsibull-changelog check (may be in venv)
+if ! command -v antsibull-changelog &> /dev/null && ! python3 -m pip show antsibull-changelog &> /dev/null; then
+  MISSING_TOOLS+=("antsibull-changelog")
+fi
+
+if [ ${#MISSING_TOOLS[@]} -gt 0 ]; then
+  echo "❌ Missing required tools: ${MISSING_TOOLS[*]}"
+  echo "   Install missing tools before proceeding"
+  exit 1
+fi
+echo "✓ All required tools present"
+
+# Check 2: gh CLI authentication
+if ! gh auth status &> /dev/null; then
+  echo "❌ gh CLI not authenticated"
+  echo "   Run: gh auth login"
+  exit 1
+fi
+echo "✓ gh CLI authenticated"
+
+# Check 3: Clean working tree (allow untracked files, but no modifications)
+if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+  echo "❌ Working tree has uncommitted changes"
+  echo ""
+  git status --short
+  echo ""
+  echo "Commit or stash changes before releasing"
+  exit 1
+fi
+echo "✓ Working tree clean"
+
+# Check 4: Target branch exists on upstream
+BRANCH="$1"
+if [ -n "$BRANCH" ]; then
+  if ! git rev-parse --verify "upstream/$BRANCH" &> /dev/null 2>&1; then
+    echo "❌ Branch upstream/$BRANCH does not exist"
+    echo "   Available branches:"
+    git branch -r | grep upstream/stable- | sed 's|^  ||'
+    exit 1
+  fi
+  echo "✓ Target branch exists: upstream/$BRANCH"
+fi
+
+# Check 5: Changelog fragments exist (if in a collection)
+if [ -f "galaxy.yml" ] && [ -d "changelogs/fragments" ]; then
+  # Count .yml files excluding .keep
+  FRAGMENT_COUNT=$(find changelogs/fragments -name '*.yml' ! -name '.keep' 2>/dev/null | wc -l)
+  if [ "$FRAGMENT_COUNT" -eq 0 ]; then
+    echo "⚠️  No changelog fragments found"
+    echo "   This may be intentional for a version-only release"
+  else
+    echo "✓ Found $FRAGMENT_COUNT changelog fragment(s)"
+  fi
+fi
+
+echo ""
+echo "✅ All pre-flight checks passed"
+echo ""
+```
+
+**Usage in orchestrator:**
+Run this before Step 1 (Analysis). If it fails, abort early and save time.
+
+## Shared Virtual Environment
+
+The orchestrator creates ONE virtual environment shared by all sub-skills.
+
+**Setup (at start of workflow):**
+
+```bash
+# Create shared venv with timestamp to avoid conflicts
+export ANSIBLE_RELEASE_VENV="$PWD/.venv-release-$(date +%s)"
+
+echo "Creating shared virtual environment: $ANSIBLE_RELEASE_VENV"
+python3 -m venv "$ANSIBLE_RELEASE_VENV"
+source "$ANSIBLE_RELEASE_VENV/bin/activate"
+
+# Install all dependencies at once (use uv for speed if available)
+if command -v uv &> /dev/null; then
+  uv pip install antsibull-changelog ansible-core tox pyyaml
+else
+  pip install --quiet antsibull-changelog ansible-core tox pyyaml
+fi
+
+echo "✓ Shared venv created and activated"
+```
+
+**Benefits:**
+
+- Sub-skills check `$ANSIBLE_RELEASE_VENV` and reuse if present
+- Saves ~30-45 seconds (no duplicate venv creation)
+- Ensures version consistency across skills
+- Automatic cleanup at end
+
+**Cleanup (at end of workflow):**
+
+```bash
+# After PR creation or on error
+if [ -n "$ANSIBLE_RELEASE_VENV" ] && [ -d "$ANSIBLE_RELEASE_VENV" ]; then
+  rm -rf "$ANSIBLE_RELEASE_VENV"
+  echo "✓ Cleaned up shared venv"
+fi
+```
+
 ## File Operations - Batch Processing
 
 **CRITICAL**: This orchestrator must minimize permission prompts by batching operations.
 
 **Key principles**:
 
-1. **Virtual environment first**: Set up .venv with all required dependencies (antsibull-changelog, ansible-core, tox)
-2. **Batch all file reads**: Read galaxy.yml, changelog fragments, and other files in ONE message with parallel tool calls
-3. **Parallel quality checks**: Run `/tox-lint` and `/sanity` in parallel using background agents
-4. **Sequential git operations**: Git operations via Bash tool are naturally batched in commands
+1. **Pre-flight validation first**: Check prerequisites before any operations
+2. **Shared virtual environment**: Set up ONE .venv with all required dependencies
+3. **Batch all file reads**: Read galaxy.yml, changelog fragments, and other files in ONE message with parallel tool calls
+4. **Parallel quality checks**: Run `/tox-lint` and `/sanity` in parallel using background agents
+5. **Sequential git operations**: Git operations via Bash tool are naturally batched in commands
 
 **Example flow**:
 
 ```
-Message 1: Setup venv with uv/pip (antsibull-changelog, ansible-core, tox)
-Message 2: Read galaxy.yml + all changelog fragments (parallel)
-Message 3: Run git operations (single bash command with &&)
-Message 4: Invoke /tox-lint and /sanity (parallel, run_in_background)
-Message 5: Write/Edit files after analysis complete
-```
-
-**Virtual environment setup** (use uv for speed):
-
-```bash
-python3 -m venv .venv && source .venv/bin/activate && \
-(command -v uv &> /dev/null && \
-  uv pip install antsibull-changelog ansible-core tox || \
-  pip install --quiet antsibull-changelog ansible-core tox)
+Message 1: Run pre-flight validation
+Message 2: Setup shared venv with uv/pip (antsibull-changelog, ansible-core, tox)
+Message 3: Read galaxy.yml + all changelog fragments (parallel)
+Message 4: Run git operations (single bash command with &&)
+Message 5: Invoke /tox-lint and /sanity (parallel, run_in_background)
+Message 6: Write/Edit files after analysis complete
 ```
 
 ## Configuration
@@ -65,7 +180,7 @@ Reads from `~/.ansible-release.conf`:
 export GITHUB_USERNAME="alinabuzachis"
 export ANSIBLE_COLLECTIONS_PATH="~/dev/collections/ansible_collections"
 export SANITY_MODE="smart"
-export AUTO_CREATE_PR="prompt"  # true | false | prompt
+export AUTO_CREATE_PR="prompt" # true | false | prompt
 export LINT_ON_COMMIT="true"
 export SANITY_ON_COMMIT="true"
 ```
@@ -105,8 +220,66 @@ export SANITY_ON_COMMIT="true"
 
 ## Workflow Steps
 
-See [references/workflow-steps.md](references/workflow-steps.md) for the full six-step
-orchestration sequence from analysis through pull request creation.
+The orchestrator executes in this order:
+
+### Step 0: Pre-Flight Validation
+
+- Check required tools (git, gh, tox, ansible-test, antsibull-changelog)
+- Verify gh CLI authentication
+- Ensure clean working tree
+- Validate target branch exists
+- Confirm changelog fragments exist
+
+**On failure:** Abort immediately, provide actionable error message
+
+### Step 1: Setup Shared Environment
+
+- Create shared virtual environment
+- Install all dependencies once
+- Export `ANSIBLE_RELEASE_VENV` for sub-skills
+- Activate venv for current session
+
+### Step 2: Analysis
+
+- Run `stable-release-analyze` to determine version needed
+- Calculate SemVer bump from changelog fragments
+- Prompt user to proceed (unless `--auto`)
+
+### Step 3: Preparation
+
+- Run `stable-release-prep` (reuses shared venv)
+- Update galaxy.yml version
+- Generate changelog with antsibull-changelog
+- Create release summary fragment
+
+### Step 4: Documentation (Optional)
+
+- Run `docs-generate` if not `--skip-docs`
+- Update module RST files and README.md
+
+### Step 5: Quality Checks (Parallel)
+
+- Run `tox-lint` and `sanity` in parallel
+- Unless `--skip-lint` or `--skip-sanity`
+- Fail workflow if checks fail (unless `--force`)
+
+### Step 6: Commit & Push
+
+- Stage all changes
+- Create commit with standard message
+- Push to origin (fork)
+
+### Step 7: Pull Request (Conditional)
+
+- Create PR if `--create-pr` or `AUTO_CREATE_PR=true`
+- Otherwise prompt user
+
+### Step 8: Cleanup
+
+- Remove shared virtual environment
+- Display summary and next steps
+
+See [references/workflow-steps.md](references/workflow-steps.md) for detailed command examples.
 
 ## Complete Output Example
 
@@ -137,7 +310,7 @@ non-recoverable errors and resume capability.
 This orchestrator imports:
 
 - `/stable-release-analyze` - Determine version needed
-- `/stable-release-prep` - Create branch and changelog
+- `/stable-release-prep` - Create branch and changelog (uses shared venv)
 - `/docs-generate` - Update documentation
 - `/tox-lint` - Run linters
 - `/sanity` - Run sanity tests
@@ -148,27 +321,29 @@ This orchestrator imports:
 ### System Requirements
 
 - `git` with configured remotes
-- `tox` with lint and add_docs environments
-- `antsibull-changelog` installed
+- `tox` with lint environments
+- `antsibull-changelog` (installed in shared venv)
+- `ansible-test` for sanity checks
 - `gh` CLI (for PR creation)
 
 ### Repository Requirements
 
 - Git remotes: `origin` (fork), `upstream` (canonical)
 - `galaxy.yml` with valid version
-- `tox.ini` with lint and add_docs envs
+- `tox.ini` with lint environments
 - `changelogs/fragments/` with at least one fragment
 
 ### Configuration Requirements
 
-- `~/.ansible-release.conf` with GITHUB_USERNAME
+- `~/.ansible-release.conf` with GITHUB_USERNAME (optional)
 - SSH keys or HTTPS credentials for GitHub
+- gh CLI authenticated (`gh auth login`)
 
 ## Exit Codes
 
 - `0`: Release workflow completed successfully
 - `1`: Workflow failed at any step
-- `2`: Configuration error or missing requirements
+- `2`: Configuration error or missing requirements (from pre-flight)
 - `130`: User aborted (Ctrl+C)
 
 ## Implementation Notes
