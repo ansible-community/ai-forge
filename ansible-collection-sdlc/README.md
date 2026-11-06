@@ -11,7 +11,9 @@ production release.
 pip install lola-ai
 
 # Register the module from GitHub
-lola mod add https://github.com/ansible-community/ai-forge/ansible-collection-sdlc
+lola mod add https://github.com/ansible-community/ai-forge.git \
+  --module-content ansible-collection-sdlc/module \
+  --name ansible-collection-sdlc
 
 # Or clone and register locally
 git clone https://github.com/ansible-community/ai-forge.git
@@ -26,6 +28,25 @@ lola install ansible-collection-sdlc -a cursor
 # Install to other assistants
 lola install ansible-collection-sdlc -a gemini-cli
 lola install ansible-collection-sdlc -a opencode
+```
+
+## Updating
+
+```bash
+# Update the module from its original source
+lola mod update ansible-collection-sdlc
+
+# Regenerate assistant files
+lola update
+```
+
+If you installed via the local clone method, pull the latest changes first:
+
+```bash
+cd /path/to/ai-forge
+git pull
+lola mod update ansible-collection-sdlc
+lola update
 ```
 
 ## Configuration (Optional)
