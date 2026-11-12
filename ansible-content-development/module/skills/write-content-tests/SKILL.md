@@ -109,7 +109,10 @@ Write functional assertions based on Step 2. Use the patterns from the **Functio
 #### Step 5 — Post-Write Guidance
 
 1. Suggest running `molecule test --scenario-name <name>` to validate
-2. Suggest `pip install molecule containers.podman` if container-based testing is not installed
+2. If the Podman Molecule driver is needed, suggest installing its PyPI distribution with
+   `python -m pip install "molecule-plugins[podman]"`. Do not install `containers.podman` with pip;
+   it is an Ansible Galaxy collection. If the scenario uses that collection, install it with
+   `ansible-galaxy collection install containers.podman`.
 3. Suggest ensuring Podman or Docker is available
 4. If testing a collection role, point the user to the shared-state layout in [reference.md](reference.md) instead of trying to infer it from the standalone template
 

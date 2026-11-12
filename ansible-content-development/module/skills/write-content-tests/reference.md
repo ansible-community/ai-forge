@@ -158,8 +158,13 @@ pip install molecule
 For container-based testing (recommended):
 
 ```bash
-pip install molecule containers.podman
+python -m pip install "molecule-plugins[podman]"
 ```
+
+`molecule-plugins[podman]` is the PyPI distribution for Molecule's Podman driver. `containers.podman`
+is an Ansible Galaxy collection, not a PyPI package. Install that collection separately with
+`ansible-galaxy collection install containers.podman` only when the scenario uses its modules or
+connection plugin.
 
 ### CLI commands
 
@@ -629,6 +634,6 @@ In GitHub Actions:
 ```yaml
 - name: Run Molecule tests
   run: |
-    pip install molecule containers.podman
+    python -m pip install "molecule-plugins[podman]"
     molecule test --all --report
 ```
