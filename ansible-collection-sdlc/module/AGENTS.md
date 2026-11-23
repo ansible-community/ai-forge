@@ -308,6 +308,8 @@ When transitioning between agent roles:
 
 - **get-upstream-info skill**: Helper skill that determines upstream repository information and service identifiers (GitHub/GitLab). Used internally by other skills.
 
+- **severity-assessor skill**: Helper skill that categorizes issues/PRs and assigns severity (critical/major/minor/trivial) with configurable escalation rules. Used internally by triage and workflow skills.
+
 ## Configuration
 
 **Optional Dependencies:**

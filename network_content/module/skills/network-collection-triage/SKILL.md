@@ -25,6 +25,8 @@ allowed-tools:
   - Write
   - Glob
   - Grep
+invokes:
+  - severity-assessor
 argument-hint: "[<github-issue-url>] [--scan]"
 ---
 
@@ -33,10 +35,14 @@ argument-hint: "[<github-issue-url>] [--scan]"
 ## Purpose
 
 Triage bug reports, CI failures, and GitHub issues across Ansible network
-collections. Categorize items, check known network CI failure patterns,
-assess severity with cross-collection cascade detection for shared
-dependencies (`ansible.netcommon`, `ansible.utils`, `ansible.pylibssh`), and produce structured
-JSON and markdown output suitable for downstream dashboards or reports.
+collections. Check known network CI failure patterns, detect cross-collection
+cascade risks for shared dependencies (`ansible.netcommon`, `ansible.utils`,
+`ansible.pylibssh`), and produce structured JSON and markdown output suitable
+for downstream dashboards or reports.
+
+Categorization and severity assessment are delegated to the
+`severity-assessor` skill (in `ansible-collection-sdlc`), which is invoked
+with network-specific escalation rules from `contexts/network.yaml`.
 
 ### Why network-specific
 
@@ -184,31 +190,7 @@ Use the five most recent runs from the query (`--limit 5`). Count a run as passi
 `conclusion` is `success`; any other conclusion or a missing run slot counts
 as non-passing for health (`green` 5/5, `yellow` 3–4/5, `red` 0–2/5).
 
-### Step 3 — Categorize every item
-
-Examine each issue/PR title, labels, and body to assign a category:
-
-| Category | Base Severity | Rationale |
-|---|---|---|
-| Bug report | **Major** | User-facing issue, needs investigation |
-| Downstream fix | **Major** | Upstream breakage actively affecting this collection |
-| New feature PR | **Minor** | No urgency unless tied to release deadline |
-| Test infrastructure | **Minor** | Strategic work enabling CI reliability |
-| Chore / CI / Modernization | **Trivial** | No functional change, auto-merge candidate if CI green |
-
-**Heuristics for categorization:**
-
-- Label `bug` or title contains "fix", "broken", "error" → Bug report
-- Title references another collection's PR/issue or "bump dependency" → Downstream fix
-- Label `enhancement` or `feature` or title contains "add support" → New feature PR
-- Title mentions "test", "molecule", "mock", "integration target" → Test infrastructure
-- Title mentions "dependabot", "bump", "ci:", "chore:", "linting" → Chore
-
-**Key distinction:** A Molecule/CISSHGO PR building mock-device test
-scenarios is test INFRASTRUCTURE (Minor). A Dependabot bump or
-pyproject.toml cleanup is a Chore (Trivial).
-
-### Step 4 — Check for known CI failure patterns
+### Step 3 — Check for known CI failure patterns
 
 Check whether any failing CI or reported issue matches a known pattern.
 If a known pattern matches, note it in the triage output and use the
@@ -238,17 +220,7 @@ and does not reset it when the task scope ends, causing subsequent tasks
 to fail with stale values.
 *Resolution*: Add `ansible.builtin.meta: reset_connection` after the test.
 
-### Step 5 — Apply severity escalators
-
-Escalators can only raise severity, never lower it.
-
-| Condition | Action |
-|---|---|
-| Bug in `ansible.netcommon`, `ansible.utils` or `ansible.pylibssh` | **Critical** — Potential cascade risk, assign based on the severity of the bug |
-| Data loss or security issue | **Critical** |
-| Multiple collections failing with same root cause | **Critical** — cascade event |
-
-### Step 6 — Detect cross-collection signals
+### Step 4 — Detect cross-collection signals
 
 If a bug or failing CI is in `ansible.netcommon`, `ansible.utils` or `ansible.pylibssh`:
 
@@ -266,7 +238,37 @@ ansible.netcommon ──→ cisco.ios, cisco.iosxr, cisco.nxos,
 ansible.utils ────→ (same downstream consumers), ansible.scm
 ```
 
-### Step 7 — Generate structured output
+Build matched escalation rules based on findings. Rules are defined in
+`contexts/network.yaml` (in the `severity-assessor` skill directory):
+
+- Confirmed downstream breakage (multiple collections failing) →
+  include `shared-dependency-cascade` rule
+- Bug in shared dependency but downstream impact not yet confirmed →
+  include `shared-dependency-risk` rule
+- Affected collection is Red Hat certified →
+  include `certified-collection` rule
+
+### Step 5 — Assess severity via severity-assessor
+
+For each issue or PR, invoke the `severity-assessor` skill with:
+
+1. **Structured data** from Step 1: `{ title, labels, body, repo, number, url }`
+2. **Matched escalation rules** from Step 4 (only rules whose conditions
+   were confirmed)
+
+The severity-assessor handles:
+
+- **Categorization**: classifies the item as bug, downstream-fix, feature,
+  test-infra, or chore using priority-ordered heuristics
+- **Base severity**: assigns severity from the category (bug=Major,
+  feature=Minor, chore=Trivial, etc.)
+- **Universal escalators**: data loss and security issues → Critical
+- **Caller-supplied escalators**: applies the matched rules from Step 4
+
+Use the returned `{ category, severity, baseSeverity, escalatorsApplied,
+justification }` for each item in the triage report.
+
+### Step 6 — Generate structured output
 
 Save two files:
 
@@ -285,17 +287,17 @@ python network-collection-triage/scripts/validate_triage_report.py triage-report
 
 Fix any schema or consistency errors reported by the validator.
 
-### Step 7.1 — Present results
+### Step 6.1 — Present results
 
 Share both file links and a brief summary: total items, breakdown by
 severity, any critical items or cross-collection signals that need
 immediate attention.
 
-### Step 7.2 — Generate the markdown
+### Step 6.2 — Generate the markdown
 
 Create a detailed markdown report of the triage results, ensuring all the issues and PRs are listed in the report. It should be written in the user's current working directory.
 
-### Step 7.3 — Generate the JSON
+### Step 6.3 — Generate the JSON
 
 Generate a JSON file of the triage results, ensuring all the issues and PRs are listed in the JSON file.
 It should be written in the user's current working directory.
@@ -409,17 +411,19 @@ gh pr view <number> --repo ansible-collections/<collection> --json title,body,la
 
 ### Step 2 — Check for known CI failure patterns
 
-Check whether the failure matches a known pattern (see Step 4 in scan
+Check whether the failure matches a known pattern (see Step 3 in scan
 mode). If a known pattern matches, document it and skip to resolution.
 
 ### Step 3 — Cross-collection dependency check
 
 If the bug is in `ansible.netcommon`, `ansible.utils` or `ansible.pylibssh`, check the
-dependency chain (same as scan mode Step 6).
+dependency chain (same as scan mode Step 4). Build matched escalation
+rules based on findings.
 
-### Step 4 — Apply severity escalators
+### Step 4 — Assess severity
 
-Same table as scan mode Step 5.
+Invoke the `severity-assessor` skill with the issue/PR data and any
+matched escalation rules from Step 3 (same as scan mode Step 5).
 
 ### Step 5 — Produce triage report
 

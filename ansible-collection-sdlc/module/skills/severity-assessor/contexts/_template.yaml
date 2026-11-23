@@ -1,0 +1,34 @@
+# Severity Assessor — Context Profile Template
+#
+# Copy this file and rename it for your collection domain
+# (e.g. security.yaml, devtools.yaml).
+#
+# The calling skill loads this file and passes the matched
+# escalation rules to the severity-assessor skill at invocation time.
+
+name: ""                # Short identifier (e.g. "network", "cloud")
+description: ""         # What this context covers
+
+# Repositories this context applies to.
+# Used by the calling skill to decide which context profile to load.
+collections:
+  # - ansible-collections/example.collection
+  # - ansible-collections/example.other
+
+# Domain-specific escalation rules.
+# Each rule that matches is passed to severity-assessor at invocation time.
+#
+# Fields:
+#   name      — Short label (used in output)
+#   condition — Human-readable description of when this rule fires
+#   action    — "critical", "major", "minor", or "bump+1"
+#   reason    — Justification text included in the assessment
+#
+# Action values:
+#   "critical" / "major" / "minor" — set severity to this level (only if higher)
+#   "bump+1" — raise severity by one level (trivial→minor→major→critical)
+escalationRules:
+  # - name: example-rule
+  #   condition: "Describe when this rule should fire"
+  #   action: "bump+1"
+  #   reason: "Why this escalation matters"
