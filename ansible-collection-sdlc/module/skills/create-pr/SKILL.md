@@ -143,7 +143,7 @@ Component: <component-name>
 ##### ADDITIONAL INFORMATION
 <any additional context from user>
 
-Assisted-by: <AI model and version>
+Assisted by AI
 ```
 
 **Create draft PR**:
@@ -151,7 +151,7 @@ Assisted-by: <AI model and version>
 - Use `get-upstream-info` to get upstream repository path
 - Run: `gh pr create --draft --repo <upstream-repo> --title "<title>" --body "<formatted-body>"`
 - Parse PR number from output
-- **IMPORTANT**: Assisted-by line must NOT be commented out
+- **IMPORTANT**: "Assisted by" (or similar) line must NOT be commented out
 - **IMPORTANT**: Do NOT add a "Generated with Claude Code" line
 
 **Apply labels**:
